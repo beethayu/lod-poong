@@ -1923,13 +1923,26 @@ function load(force) {
     netErr = e.message; render();
   });
 }
+// เช็กเวอร์ชันใหม่: iPhone จำหน้าเก่าได้ ~10 นาที → ดึงหน้าจริงแบบไม่ใช้แคช ถ้าเนื้อหาเปลี่ยนให้โหลดใหม่ (รอให้ส่งข้อมูลค้างเสร็จก่อน)
+function checkUpdate() {
+  if (location.protocol === 'file:') return;
+  fetch(location.pathname + '?nc=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
+    if (!t) return;
+    let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0;
+    const old = lsGet('lp_build'); lsSet('lp_build', String(h));
+    if (old === String(h) || pending || syncing || syncQ.length) return;
+    const q = new URLSearchParams(location.search); q.set('v', Date.now());
+    location.replace(location.pathname + '?' + q.toString());
+  }).catch(() => {});
+}
 (function init() {
   try { const ui = JSON.parse(lsGet(UI_STORE) || '{}'); if (ui.tab && Date.now() - ui.at < 30 * 60e3) tab = ui.tab; } catch (e) {}
   try { const c = JSON.parse(lsGet(DATA_STORE) || 'null'); if (c && c.log) { D = c; dDate = c.today; } } catch (e) {}
   render();
   load();
+  checkUpdate();
   if (tab === 'coach') scrollChat();
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && D && !pending && !syncing && !syncQ.length) load(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && D && !pending && !syncing && !syncQ.length) { load(); checkUpdate(); } });
 })();
 </script>
 </body>
