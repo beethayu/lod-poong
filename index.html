@@ -160,6 +160,18 @@
     .sugg .chip { height: auto; min-height: 36px; padding: 5px 12px; white-space: normal; text-align: left; }
     .sugg .chip small { color: var(--muted); margin-left: 4px; }
     .aibox { margin-top: 10px; }
+    .srch { display: flex; align-items: center; gap: 8px; height: 44px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; margin: 12px 0 4px; }
+    .srch input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; height: 100%; }
+    .prow { display: flex; align-items: center; gap: 4px; border-top: 1px solid var(--line); }
+    .prow:first-child { border-top: 0; }
+    .prow .pb { flex: 1; min-width: 0; text-align: left; padding: 9px 4px 9px 14px; }
+    .prow .star, .prow .plus { width: 44px; height: 52px; display: grid; place-items: center; font-size: 20px; flex: none; }
+    .prow .star { color: #c9ccc5; } .prow .star.on { color: #e3a400; }
+    .prow .plus span { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--brand); color: var(--brand); display: grid; place-items: center; font-size: 20px; line-height: 1; font-weight: 600; }
+    .prow .plus.done span { background: var(--brand); color: #fff; }
+    .mac { font-size: 12.5px; color: var(--muted); }
+    .mac b { font-weight: 600; }
+    .exprev { padding: 12px 14px; border-top: 1px solid var(--line); background: var(--brand-soft); color: var(--brand-d); font-size: 14px; }
     .aibox .note { margin: 6px 2px 0; }
     .amtbox { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.12); border-radius: 14px; height: 72px; padding: 0 16px; margin-top: 12px; }
     .amtbox input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 38px; font-weight: 700; text-align: right; height: 100%; padding: 0; color: #fff; }
@@ -415,7 +427,7 @@ function calcTarget(s, lw) {
 }
 
 // ===== หน้าจอ =====
-const PARENT = { add: 'diary', set: 'today' };
+const PARENT = { add: 'diary', set: 'today', pick: 'diary' };
 function go(t) { tab = t; openRow = ''; lsSet(UI_STORE, JSON.stringify({ tab: PARENT[t] || t, at: Date.now() })); render(); document.getElementById('app').scrollTop = 0; if (t === 'coach') scrollChat(); }
 function render() {
   const app = document.getElementById('app');
@@ -425,7 +437,7 @@ function render() {
   if (!D) { app.innerHTML = '<div class="hd"><div class="hd-in"><div class="hd-top"><div class="hd-title">ลดพุง</div></div></div></div><div class="empty">กำลังโหลด…</div>'; return; }
   if (D.needsSetup) { app.innerHTML = '<div class="hd"><div class="hd-in"><div class="hd-top"><div class="hd-title">ลดพุง</div></div></div></div><div class="wrap"><div class="empty">ตั้งค่าครั้งแรกก่อนใช้</div><button class="btn pri full" onclick="showSetup()">เริ่มตั้งค่า</button></div>'; return; }
   const net = netErr ? `<div class="netbar"><span>⚠️ ${esc(netErr)} (ข้อมูลล่าสุดที่จำไว้)</span><button class="lnk" onclick="load(true)">ลองใหม่</button></div>` : '';
-  const f = { today: todayHtml, diary: diaryHtml, coach: coachHtml, train: trainHtml, sum: sumHtml, add: addHtml, set: setHtml }[tab] || todayHtml;
+  const f = { pick: pickHtml, today: todayHtml, diary: diaryHtml, coach: coachHtml, train: trainHtml, sum: sumHtml, add: addHtml, set: setHtml }[tab] || todayHtml;
   app.innerHTML = net + f();
   if (tab === 'today') maybeTip();
 }
@@ -529,16 +541,17 @@ function water(ml) {
 function logRow(l, compact) {
   const k = KIND[l.kind] || KIND.food;
   let title = esc(l.name), right = '', sub = '';
-  if (l.kind === 'food') { title += l.qty ? ` <small>${esc(l.qty)}</small>` : ''; right = `${fmt(num(l.kcal))} <small>แคล</small>`; }
+  if (l.kind === 'food') { sub = [esc(l.qty || ''), macroTxt(l)].filter(Boolean).join(' · '); right = `${fmt(num(l.kcal))} <small>แคล</small>`; }
   if (l.kind === 'exercise') { title += l.minutes ? ` <small>${num(l.minutes)} นาที</small>` : ''; right = `${fmt(num(l.kcal))} <small>แคล</small>`; }
   if (l.kind === 'water') { title = 'น้ำ'; right = `${fmt(num(l.ml))} <small>มล.</small>`; }
   if (l.kind === 'weight') { title = `${num(l.weight)} กก.${num(l.fat_pct) ? ` <small>ไขมัน ${num(l.fat_pct)}%</small>` : ''}`; }
   const on = openRow === l.log_id;
   return `<button class="row" onclick="toggleRow('${l.log_id}')"><div class="ico">${l.kind === 'food' ? (MEALS.find(m => m[0] === l.meal) || MEALS[3])[2] : k[1]}</div>
-    <div class="grow"><div class="t1">${title}</div>${on || compact ? '' : ''}</div><div class="amt">${right}</div></button>
-    ${on ? `<div class="t2" style="padding:0 12px 6px 56px;white-space:normal">${esc(l.time || '')}${l.kind === 'food' ? ` · โปรตีน ${num(l.protein)} คาร์บ ${num(l.carb)} ไขมัน ${num(l.fat)} ก.` : ''}${l.source === 'chat' ? ' · จดจากแชต' : l.source === 'shortcut' ? ' · Apple Health' : ''}${l.photo_id ? ` · <a class="lnk" onclick="showPhoto('${l.photo_id}')">ดูรูป</a>` : ''}${l.note ? ' · ' + esc(l.note) : ''}</div>
+    <div class="grow"><div class="t1">${title}</div>${sub ? `<div class="t2">${sub}</div>` : ''}</div><div class="amt">${right}</div></button>
+    ${on ? `<div class="t2" style="padding:0 12px 6px 56px;white-space:normal">${esc(l.time || '')}${l.source === 'chat' ? ' · จดจากแชต' : l.source === 'shortcut' ? ' · Apple Health' : ''}${l.photo_id ? ` · <a class="lnk" onclick="showPhoto('${l.photo_id}')">ดูรูป</a>` : ''}${l.note ? ' · ' + esc(l.note) : ''}</div>
       <div class="acts" style="padding-left:56px"><button class="btn sm" onclick="editLog('${l.log_id}')">แก้</button><button class="btn sm red" onclick="delLog('${l.log_id}')">ลบ</button></div>` : ''}`;
 }
+function macroTxt(l) { return `โปรตีน ${fmt(num(l.protein))} · คาร์บ ${fmt(num(l.carb))} · ไขมัน ${fmt(num(l.fat))} ก.`; }
 function toggleRow(id) { openRow = openRow === id ? '' : id; const sc = document.getElementById('app').scrollTop; render(); document.getElementById('app').scrollTop = sc; }
 function diaryHtml() {
   const tg = calcTarget(S()), list = dayLogs(dDate), t = totals(list);
@@ -546,7 +559,7 @@ function diaryHtml() {
   const meals = MEALS.map(([m, name, ic]) => {
     const it = list.filter(l => l.kind === 'food' && l.meal === m), k = it.reduce((s, l) => s + num(l.kcal), 0);
     return `<div class="sec"><h3>${ic} ${name}</h3><span class="sm">${it.length ? fmt(k) + ' แคล' : ''}</span></div>
-      <div class="card">${it.length ? it.map(l => logRow(l)).join('') : `<button class="row" onclick="openForm('food','${m}')"><div class="ico" style="background:none;color:var(--faint)">＋</div><div class="grow t2">เพิ่ม${name}</div></button>`}</div>`;
+      <div class="card">${it.map(l => logRow(l)).join('')}<button class="row" onclick="openPick('${m}')"><div class="ico" style="background:none;color:var(--brand)">＋</div><div class="grow t2" style="color:var(--brand)">เพิ่ม${name}</div></button></div>`;
   }).join('');
   const ex = list.filter(l => l.kind === 'exercise'), wt = list.filter(l => l.kind === 'weight');
   return `<div class="hd"><div class="hd-in">
@@ -554,7 +567,7 @@ function diaryHtml() {
         <label class="dnav" style="position:relative"><b>${dayLabel(dDate)}</b>
           <input type="date" value="${dDate}" max="${todayIso()}" onchange="if(this.value){dDate=this.value;openRow='';render()}" style="position:absolute;inset:0;opacity:0;width:100%"></label>
         <button class="hd-btn" onclick="shiftDay(1)" ${dDate >= todayIso() ? 'disabled style="opacity:.35"' : ''}>›</button>
-        <button class="hd-btn" onclick="openForm('food')" aria-label="เพิ่ม">＋</button></div>
+        <button class="hd-btn" onclick="openPick()" aria-label="เพิ่ม">＋</button></div>
       <div class="tri"><div><small>กิน</small><b>${fmt(t.kcal)}</b></div><div><small>ออกกำลัง</small><b>${fmt(t.ex)}</b></div>
         <div><small>${left < 0 ? 'เกินเป้า' : 'เหลือ'}</small><b>${fmt(Math.abs(left))}</b></div></div>
     </div></div>
@@ -598,8 +611,11 @@ function addHtml() {
       <div class="aibox"><button class="btn full" id="aiBtn" onclick="aiEstimate()">✨ ไม่รู้แคล? ให้ AI ประมาณจากชื่อ + ปริมาณ</button><div class="note" id="aiNote"></div></div>
       <div class="flbl">เคยกิน (แตะเพื่อใช้ค่าเดิม)</div><div class="sugg" id="sugg">${suggHtml(F.name)}</div>`;
   } else if (k === 'exercise') {
-    rows = `<div class="flbl">รายละเอียด</div><div class="card fcard">${row('ชื่อ', 'name', 'text', '', 'placeholder="เช่น เดินเร็ว"')}${row('แคลอรี่', 'kcal', 'num', 'แคล', 'placeholder="ว่าง = ประมาณให้"')}</div>
-      <div class="flbl">ประมาณจากชนิด (ว่างช่องแคลอรี่)</div><div class="hscroll">${EX_MET.map(([n, m]) => `<button class="chip ${F.name === n ? 'on' : ''}" onclick="readForm();F.name='${n}';render()">${n}</button>`).join('')}</div>`;
+    rows = `<div class="flbl">ทำอะไร (แตะเลือก หรือพิมพ์เอง)</div><div class="sugg">${EX_MET.map(([n]) => `<button class="chip ${F.name === n ? 'on' : ''}" onclick="readForm();F.name='${n}';render()">${n}</button>`).join('')}</div>
+      <div class="flbl">นานเท่าไร (หรือพิมพ์บนหัว)</div><div class="hscroll">${[10, 15, 20, 30, 45, 60, 90].map(m => `<button class="chip ${num(F.minutes) === m ? 'on' : ''}" onclick="readForm();F.minutes=${m};render()">${m} นาที</button>`).join('')}</div>
+      <div class="flbl">รายละเอียด</div><div class="card fcard">${row('ชื่อ', 'name', 'text', '', 'placeholder="เช่น เดินเร็ว" oninput="exPrev()"')}${row('แคลอรี่', 'kcal', 'num', 'แคล', 'placeholder="ว่าง = คิดให้" oninput="exPrev()"')}
+        <div class="exprev" id="exPrev">${exPrevTxt()}</div></div>
+      <p class="note" style="margin:8px 2px">จำนาทีไม่ได้? ใส่ประมาณก็พอ หรือบอกโค้ช เช่น "เดินไปตลาดกลับ 2 กม." ให้ AI คิดให้</p>`;
   } else if (k === 'water') {
     rows = `<div class="flbl">ปริมาณ</div><div class="hscroll">${[[250, '1 แก้ว'], [500, '2 แก้ว'], [600, 'ขวดเล็ก'], [1500, 'ขวดใหญ่']].map(([m, n]) => `<button class="chip ${num(F.ml) === m ? 'on' : ''}" onclick="readForm();F.ml=${m};render()">${n} ${m}</button>`).join('')}</div>`;
   } else {
@@ -609,11 +625,82 @@ function addHtml() {
     <label class="frow tall"><span>โน้ต</span><textarea id="f_note" placeholder="ไม่ใส่ก็ได้">${v('note')}</textarea></label></div>`;
   return `<div class="hd"><div class="hd-in"><div class="hd-top"><button class="hd-btn" onclick="cancelForm()">‹</button>
       <div class="hd-title">${isNew ? 'เพิ่ม' + KIND[k][0] : 'แก้' + KIND[k][0]}</div>${!isNew ? `<button class="hd-btn" onclick="delLog('${F.log_id}')" aria-label="ลบ">🗑️</button>` : ''}</div>
-      ${seg}<label class="amtbox"><input id="f_${big[0]}" type="text" inputmode="decimal" placeholder="${big[2]}" value="${v(big[0])}"><span>${big[1]}</span></label>
+      ${seg}<label class="amtbox"><input id="f_${big[0]}" type="text" inputmode="decimal" placeholder="${big[2]}" value="${v(big[0])}" ${k === 'exercise' ? 'oninput="exPrev()"' : ''}><span>${big[1]}</span></label>
     </div></div>
     <div class="wrap">${rows}
       <div style="display:flex;gap:8px;margin-top:16px"><button class="btn" style="flex:1" onclick="cancelForm()">ยกเลิก</button><button class="btn pri" style="flex:2" onclick="saveForm()">บันทึก</button></div>
     </div>`;
+}
+// ---------- หน้าเลือกอาหาร (ประวัติ / โปรด) ----------
+let P = null;
+function openPick(meal) {
+  const date = tab === 'diary' ? dDate : todayIso();
+  P = { meal: meal || (date === todayIso() ? mealOf(nowHM()) : 'lunch'), date, q: '', seg: favs().length ? 'fav' : 'hist', added: {} };
+  go('pick');
+}
+const favs = () => (S().favs || []).map(x => String(x).toLowerCase());
+const foodKey = n => String(n || '').trim().toLowerCase();
+function pickHtml() {
+  const mealName = (MEALS.find(m => m[0] === P.meal) || MEALS[3])[1];
+  return `<div class="hd"><div class="hd-in">
+      <div class="hd-top"><button class="hd-btn" onclick="P=null;go('diary')">‹</button><div class="hd-title">เพิ่ม${mealName} <span class="hd-sub" style="font-weight:400">${dayLabel(P.date)}</span></div>
+        <button class="btn sm" style="background:#fff;color:var(--brand);border:0" onclick="dDate=P.date;P=null;go('diary')">เสร็จ</button></div>
+      <div class="seg-dk">${MEALS.map(([m, n]) => `<button class="${P.meal === m ? 'on' : ''}" onclick="P.meal='${m}';render()">${n}</button>`).join('')}</div>
+      <div class="seg-dk">${[['hist', 'ประวัติ'], ['fav', '⭐ รายการโปรด']].map(([v, n]) => `<button class="${P.seg === v ? 'on' : ''}" onclick="P.seg='${v}';render()">${n}</button>`).join('')}</div>
+    </div></div>
+    <div class="wrap">
+      <label class="srch">🔍<input id="pq" placeholder="ค้นหาอาหารที่เคยกิน" value="${esc(P.q)}" oninput="P.q=this.value;pickList()" autocomplete="off"></label>
+      <div id="plist">${pickListHtml()}</div>
+    </div>`;
+}
+function pickList() { const el = document.getElementById('plist'); if (el) el.innerHTML = pickListHtml(); }
+function pickListHtml() {
+  const q = foodKey(P.q), fv = favs();
+  let list = pastFoods();
+  if (P.seg === 'fav' && !q) list = list.filter(o => fv.indexOf(foodKey(o.l.name)) >= 0);
+  if (q) list = list.filter(o => foodKey(o.l.name).indexOf(q) >= 0);
+  else list = list.slice(0, 60);
+  const rows = list.map(o => {
+    const l = o.l, k = foodKey(l.name), on = fv.indexOf(k) >= 0, n = P.added[k] || 0;
+    return `<div class="prow"><button class="pb" onclick="pickEdit('${l.log_id}')"><div class="t1">${esc(l.name)}</div>
+        <div class="t2"><b style="color:var(--ink)">${fmt(num(l.kcal))} แคล</b>${l.qty ? ' · ' + esc(l.qty) : ''}${o.n > 1 ? ' · กิน ' + o.n + ' ครั้ง' : ''}</div><div class="mac">${macroTxt(l)}</div></button>
+      <button class="star ${on ? 'on' : ''}" onclick="toggleFav('${l.log_id}')" aria-label="รายการโปรด">${on ? '★' : '☆'}</button>
+      <button class="plus ${n ? 'done' : ''}" onclick="quickAdd('${l.log_id}')" aria-label="เพิ่ม"><span>${n ? (n > 1 ? n : '✓') : '+'}</span></button></div>`;
+  }).join('');
+  const empty = !list.length ? `<div class="empty">${q ? 'ยังไม่เคยจด "' + esc(P.q) + '"' : P.seg === 'fav' ? 'ยังไม่มีรายการโปรด — ไปที่ ประวัติ แล้วแตะ ☆ อาหารที่กินประจำ' : 'ยังไม่มีประวัติ จดไปเรื่อย ๆ แล้วจะขึ้นตรงนี้'}</div>` : '';
+  return `${list.length ? `<div class="card">${rows}</div><p class="note" style="margin:6px 2px">แตะ ＋ = จดเลย (ค่าเดิม) · แตะชื่อ = แก้ปริมาณก่อนจด · ☆ = รายการโปรด</p>` : empty}
+    <div class="sec"><h3>${q ? 'ไม่ใช่อันนี้?' : 'เมนูใหม่'}</h3></div>
+    <div class="card"><button class="row" onclick="pickNew(true)"><div class="ico">✨</div><div class="grow"><div class="t1">ให้ AI ประมาณ${q ? ' "' + esc(P.q) + '"' : ''}</div><div class="t2">พิมพ์ชื่อ + ปริมาณ แล้ว AI เติมแคลให้</div></div><span>›</span></button>
+      <button class="row" onclick="pickNew(false)"><div class="ico">✏️</div><div class="grow"><div class="t1">กรอกเอง</div><div class="t2">รู้ค่าจากฉลาก/แอปอื่น</div></div><span>›</span></button>
+      <button class="row" onclick="go('coach')"><div class="ico">📷</div><div class="grow"><div class="t1">ถ่ายรูปอาหาร/ฉลากส่งโค้ช</div><div class="t2">AI ดูรูปแล้วจดให้</div></div><span>›</span></button></div>`;
+}
+function pickTime() { return P.date === todayIso() ? nowHM() : { breakfast: '08:00', lunch: '12:00', dinner: '18:30', snack: '15:00' }[P.meal]; }
+function quickAdd(id) {
+  const l = logs().find(x => x.log_id === id); if (!l) return;
+  const o = { log_id: newLogId(), date: P.date, time: pickTime(), kind: 'food', meal: P.meal, name: l.name, qty: l.qty,
+    kcal: num(l.kcal), protein: num(l.protein), carb: num(l.carb), fat: num(l.fat), source: 'manual' };
+  const k = foodKey(l.name);
+  P.added[k] = (P.added[k] || 0) + 1;
+  sync('saveLog', [o], () => D.log.push(o));
+  toast(`เพิ่ม ${l.name} ${fmt(o.kcal)} แคล`);
+}
+function toggleFav(id) {
+  const l = logs().find(x => x.log_id === id); if (!l) return;
+  const k = foodKey(l.name); let f = favs();
+  f = f.indexOf(k) >= 0 ? f.filter(x => x !== k) : f.concat([k]);
+  sync('saveSettings', [{ favs: f }], () => { D.settings.favs = f; });
+}
+function pickEdit(id) {
+  const l = logs().find(x => x.log_id === id); if (!l) return;
+  openForm('food', P.meal);
+  Object.assign(F, { name: l.name, qty: l.qty, kcal: l.kcal, protein: l.protein, carb: l.carb, fat: l.fat, date: P.date, time: pickTime(), back: 'pick' });
+  render();
+}
+function pickNew(ai) {
+  openForm('food', P.meal);
+  Object.assign(F, { name: P.q.trim(), date: P.date, time: pickTime(), back: 'pick' });
+  render();
+  if (ai && F.name) aiEstimate();
 }
 // อาหารที่เคยกิน: ชื่อเดียวกันใช้ค่าล่าสุด เรียงตามที่กินบ่อย
 function pastFoods() {
@@ -659,7 +746,18 @@ function aiEstimate() {
     alert(e.message);
   });
 }
-const EX_MET = [['เดินเร็ว', 4.3], ['เดินชิล', 3], ['ปั่นจักรยาน', 6], ['ว่ายน้ำ', 6], ['เวทเทรนนิ่ง', 5], ['วิ่ง', 8], ['งานไร่', 5], ['ยืดเหยียด', 2.5]];
+const EX_MET = [['เดินเร็ว', 4.3], ['เดินชิล', 3], ['เดินขึ้นบันได', 8], ['ปั่นจักรยาน', 6], ['วิ่ง', 8], ['ว่ายน้ำ', 6], ['เวทเทรนนิ่ง', 5], ['บอดี้เวท/วิดพื้น', 3.8],
+  ['แอโรบิก', 6.5], ['แบดมินตัน', 5.5], ['ฟุตบอล', 7], ['งานไร่/งานสวน', 5], ['งานบ้าน', 3], ['โยคะ/ยืดเหยียด', 2.5]];
+function exMet(name) { const e = EX_MET.find(x => name && (name.indexOf(x[0]) >= 0 || x[0].indexOf(name) >= 0)); return e ? e[1] : 4; }
+function exKcal(name, min) { return Math.round(exMet(name) * (latestW() || { weight: 100 }).weight * num(min) / 60); }
+function exPrevTxt() {
+  const name = F.name, min = num(F.minutes), k = num(F.kcal);
+  if (k) return `ใช้ ${fmt(k)} แคล ตามที่กรอก · บวกคืนโควต้าครึ่งเดียว = +${fmt(k / 2)}`;
+  if (!min) return 'ใส่จำนวนนาทีบนหัว แล้วแอปคิดแคลให้';
+  const w = (latestW() || { weight: 100 }).weight, kc = exKcal(name, min);
+  return `≈ <b>${fmt(kc)} แคล</b> (${esc(name || 'ทั่วไป')} ${exMet(name)} MET × ${w} กก. × ${min} นาที) · บวกคืนโควต้า +${fmt(kc / 2)}`;
+}
+function exPrev() { readForm(); const el = document.getElementById('exPrev'); if (el) el.innerHTML = exPrevTxt(); }
 function readForm() {
   ['name', 'qty', 'kcal', 'protein', 'carb', 'fat', 'minutes', 'ml', 'weight', 'fat_pct', 'muscle', 'date', 'time', 'note'].forEach(n => {
     const el = document.getElementById('f_' + n); if (el) F[n] = el.value.trim();
@@ -673,19 +771,20 @@ function saveForm() {
   if (o.kind === 'exercise') {
     if (!o.name) return alert('ใส่ชื่อการออกกำลัง');
     if (!num(o.kcal) && num(o.minutes)) {
-      const met = (EX_MET.find(e => o.name.indexOf(e[0]) >= 0) || [0, 4])[1];
-      o.kcal = Math.round(met * (latestW() || { weight: 100 }).weight * num(o.minutes) / 60);
+      o.kcal = exKcal(o.name, o.minutes);
     }
   }
   if (!o.time) o.time = { breakfast: '08:00', lunch: '12:00', dinner: '18:30', snack: '15:00' }[o.meal] || '12:00';
   const back = F.back;
+  delete o.back;
   if (!o.log_id) o.log_id = newLogId();
   if (o.kind === 'food' && !o.meal) o.meal = mealOf(o.time);
   ['kcal', 'protein', 'carb', 'fat', 'minutes', 'ml', 'weight'].forEach(k => { if (o[k] !== '' && o[k] != null) o[k] = num(o[k]); });
   sync('saveLog', [o], () => {
     const i = D.log.findIndex(l => l.log_id === o.log_id);
     if (i >= 0) D.log[i] = Object.assign({}, D.log[i], o); else D.log.push(o);
-    dDate = o.date; F = null; tab = back === 'add' ? 'diary' : back || 'diary'; openRow = '';
+    if (back === 'pick' && P) { const k = foodKey(o.name); P.added[k] = (P.added[k] || 0) + 1; } else dDate = o.date;
+    F = null; tab = back === 'add' ? 'diary' : back || 'diary'; openRow = '';
   });
   document.getElementById('app').scrollTop = 0;
   toast('บันทึกแล้ว');
