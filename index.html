@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-  <!-- กฎ iOS 26 (จากแอปไร่อ้อย ห้ามเปลี่ยนกลับ): status-bar-style = default, ห้ามมีกล่องเลื่อนได้ใต้แถบสถานะ, ปุ่ม color: inherit -->
+  <!-- กฎ iOS 26 (จากแอปไร่อ้อย ห้ามเปลี่ยนกลับ): status-bar-style = default, ห้ามมีกล่องเลื่อนได้ใต้แถบสถานะ, ปุ่ม color: inherit · html และ body ต้องสีเดียวกับ theme-color (iOS 26 ใช้สี body ทาแถบสถานะ) พื้นเทาอยู่ที่ #app -->
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -25,10 +25,10 @@
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html { background: #1E4D45; height: 100%; overflow: hidden; overscroll-behavior: none; }
-    body { margin: 0; background: var(--ground); height: 100%; overflow: hidden; overscroll-behavior: none;
+    body { margin: 0; background: #1E4D45; height: 100%; overflow: hidden; overscroll-behavior: none;
       font-family: 'IBM Plex Sans Thai', 'Sarabun', system-ui, sans-serif; color: var(--ink); font-size: 16px; line-height: 1.45; }
     #sbar { position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top); background: #1E4D45; z-index: 3000; pointer-events: none; }
-    #app { position: fixed; top: env(safe-area-inset-top); left: 0; right: 0; bottom: 0; overflow-y: auto; overflow-x: hidden;
+    #app { position: fixed; top: env(safe-area-inset-top); left: 0; right: 0; bottom: 0; overflow-y: auto; overflow-x: hidden; background: var(--ground);
       -webkit-overflow-scrolling: touch; overscroll-behavior: none; padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
     #app.chat { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
     html, body { touch-action: manipulation; }
