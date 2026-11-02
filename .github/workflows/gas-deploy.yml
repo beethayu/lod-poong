@@ -1,0 +1,58 @@
+# ส่งโค้ดใน gas/ ขึ้น Apps Script แล้ว deploy เวอร์ชันใหม่ให้ URL เดิม
+# ต้องมี GitHub Secret ชื่อ CLASPRC_JSON (เนื้อหา ~/.clasprc.json ของบัญชี bee.prettyboy — ใช้ค่าเดียวกับ kep-tang ได้)
+name: Deploy Apps Script
+
+on:
+  push:
+    branches: ["main"]
+    paths: ["gas/**", ".clasp.json"]
+  workflow_dispatch:
+
+concurrency:
+  group: "gas"
+  cancel-in-progress: false
+
+env:
+  # deployment ที่หน้าเว็บใช้อยู่  ห้ามเปลี่ยน
+  DEPLOYMENT_ID: AKfycbzh7rtLdGZsLiAxsb4vaAZrMLoRUB5jLt27X9tYF2GRJSmtFwJe61v-JlTqsIXpMc6y
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install clasp
+        run: npm i -g @google/clasp@3
+
+      - name: Write credentials
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+        run: |
+          if [ -z "$CLASPRC_JSON" ]; then echo "::error::ยังไม่ได้ใส่ Secret CLASPRC_JSON"; exit 1; fi
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+          chmod 600 ~/.clasprc.json
+
+      - name: Push code
+        run: clasp push --force
+
+      - name: Deploy new version (same URL)
+        run: |
+          MSG="$(git log -1 --pretty=%s | cut -c1-90)"
+          clasp update-deployment "$DEPLOYMENT_ID" --description "GitHub: $MSG"
+          clasp list-deployments
+
+      - name: Smoke test
+        run: |
+          URL="https://script.google.com/macros/s/$DEPLOYMENT_ID/exec"
+          OUT=$(curl -sSL "$URL" | head -c 300)
+          echo "$OUT"
+          echo "$OUT" | grep -q '"ok":true' || { echo "::error::หน้าเว็บไม่ตอบ ok:true"; exit 1; }
+
+      - name: Clean up
+        if: always()
+        run: rm -f ~/.clasprc.json

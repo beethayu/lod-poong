@@ -57,6 +57,22 @@ IF จับเวลาอดอาหาร · รูปความคืบ�
 รอบ 1: ชีต + สคริปต์ + Pages · โค้ชแชต (จดอาหาร/น้ำหนัก/น้ำ) · วันนี้ · ไดอารี่ · สรุป · ตั้งค่าเป้า · ทางลัด Xiaomi
 รอบ 2: ระบบฝึกทั้งหมด + จดฝึกผ่านแชต + สรุปรายสัปดาห์
 
-== สถานะล่าสุด (2 พ.ย. 2569 20:40) — แชตออกแบบ ==
-✅ ออกแบบครบ (ด้านบน) · ผู้ใช้สร้าง repo beethayu/lod-poong แล้ว (มีแค่ไฟล์นี้)
-⏳ ถัดไป: เริ่มรอบ 1 — สร้างชีต/สคริปต์ด้วย clasp, เขียน gas/ + index.html, Action deploy, บอกผู้ใช้ใส่ Secret CLASPRC_JSON + เปิด Pages ทีละขั้น
+== ของจริงที่สร้างแล้ว (รอบ 1) ==
+- ชีต "ลดพุง" (bee.prettyboy) https://docs.google.com/spreadsheets/d/1evbmk31PwczCSotKTLTRM9nPceKdgiqEDwBE3B92TjM/edit
+- Script ID 1HaaGOvd50QIS-D5GzDp6_damjqT9furmzPQlfWkU96nQRlnPquDEDsXS (ผู้ใช้รัน authorizeAll แล้ว)
+  URL: https://script.google.com/macros/s/AKfycbzh7rtLdGZsLiAxsb4vaAZrMLoRUB5jLt27X9tYF2GRJSmtFwJe61v-JlTqsIXpMc6y/exec
+- Pages: https://beethayu.github.io/lod-poong/ · Action gas-deploy.yml (DEPLOYMENT_ID ตามข้างบน) + static.yml
+- gas/: Api.gs (doPost, initSetup, authorizeAll) · Code.gs (ชีต, saveLog/deleteLog/addWater/saveSettings/importHealth, calcTarget_) · Coach.gs (coachSend, coachUndo, getTip, clearChat, getPhoto)
+- ชีต: Log (log_id, date, time, kind food/exercise/water/weight, meal, name, qty, kcal, protein, carb, fat, ml, weight, fat_pct, muscle, minutes, source manual/chat/tap/shortcut, msg_id, photo_id, note, created_at)
+  Chat (msg_id, at, role user/model, text, photo_id, log_ids, undone) · Settings (key, value JSON) · Tips (date, text — การ์ดโค้ชวันละครั้ง)
+- initSetup ใส่น้ำหนักแรก 18/10 108.0 กก. 32.3% · ค่าเริ่ม activity 1.375 (1.2 + ลด 2 กก. ต่ำกว่า BMR ทันที)
+- โค้ช: AI คืน {reply, replace_last, entries[]} → จดทันที msg_id เดียวกัน · ยกเลิก = coachUndo ลบตาม msg_id · ผู้ใช้พิมพ์แก้ → replace_last ลบของข้อความก่อนแล้วจดใหม่
+- importHealth(text): บรรทัด "w <ISO วันที่> <กก.>" / "f <ISO วันที่> <%>" · วันละค่าล่าสุด · วันที่มีน้ำหนักแล้วไม่ลงซ้ำ (เติม % ไขมันได้) — วิธีตั้งทางลัดอยู่ในแอป ตั้งค่า → ทางลัดเครื่องชั่ง
+- localStorage: lp_key, lp_data, lp_ui · ลิงก์ ?k=รหัส จำรหัสให้
+- iOS: แชตมีช่องพิมพ์ fixed เหนือเมนูล่าง · คีย์บอร์ดขึ้น (visualViewport) → ซ่อนเมนูล่าง ช่องพิมพ์ติดคีย์บอร์ด (ยังไม่ได้ลองบน iPhone จริง)
+
+== สถานะล่าสุด (2 พ.ย. 2569 21:00) — แชตรอบ 1 ==
+✅ ชีต + สคริปต์ (clasp ในแชต) + deploy @2 + หน้าเว็บครบ: วันนี้ / ไดอารี่ / ฟอร์มเพิ่ม (แท็บจริง) / โค้ช / ฝึก (ชั่วคราว) / สรุป / ตั้งค่า — ทดสอบหน้าตา playwright ข้อมูลจำลองแล้ว
+⚠️ ยังไม่ได้ทดสอบกับของจริง: initSetup, coachSend (Gemini จริง/รูป), getTip, importHealth ผ่านทางลัด (POST redirect ของ GAS), คีย์บอร์ด iPhone ในแชต
+⏳ รอผู้ใช้: ใส่ Secret CLASPRC_JSON ใน repo นี้ · เปิด Pages · เปิดแอป ตั้งรหัส + GEMINI_KEY · ลองจดผ่านโค้ช · ตั้งทางลัด Xiaomi
+ถัดไป: แก้ตามผลลองจริง → รอบ 2 (ระบบฝึก + จดฝึกผ่านแชต + สรุปรายสัปดาห์)
