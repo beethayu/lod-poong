@@ -1452,8 +1452,8 @@ function exThumb(x) {
   const g = (x || {}).g || '';
   return `<div class="extag g-${g}">${GTAG[g] || 'ท่า'}</div>`;
 }
-// ภาพกล้าม/วิดีโอสวย ๆ จากเว็บ: เปิดผลค้นหาด้วยชื่ออังกฤษ (ไม่เก็บภาพลิขสิทธิ์ไว้ในแอป)
-const exLinks = x => x && !x.custom ? `<div class="exlinks"><a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(x.n + ' exercise muscles worked')}" target="_blank" rel="noopener">🖼️ ดูภาพกล้ามที่ใช้</a><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(x.n + ' proper form')}" target="_blank" rel="noopener">▶️ วิดีโอท่าที่ถูก</a></div>` : '';
+// ภาพกล้าม/วิดีโอสวย ๆ จากเว็บ: เปิดผลค้นหาด้วยชื่ออังกฤษ เน้น WeightTraining.guide (ผู้ใช้ชอบ) ไม่มีก็ขึ้นเว็บอื่น (ห้ามเก็บ/ฝังภาพลิขสิทธิ์ในแอป · ฝัง iframe ไม่ได้ เว็บบล็อก)
+const exLinks = x => x && !x.custom ? `<div class="exlinks"><a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(x.n + ' weighttraining.guide muscles worked')}" target="_blank" rel="noopener">🖼️ ดูภาพกล้ามที่ใช้</a><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(x.n + ' proper form')}" target="_blank" rel="noopener">▶️ วิดีโอท่าที่ถูก</a></div>` : '';
 const exPics = x => x && EXIMG.has(x.id) ? `<div class="expics"><img src="img/ex/${x.id}-0.jpg" loading="lazy" alt=""><img src="img/ex/${x.id}-1.jpg" loading="lazy" alt=""></div>` : '';
 const libAll = () => LIB.concat((S().my_ex || []).map(x => Object.assign({ custom: 1, u: 'r', how: '' }, x)));
 const exOf = id => libAll().find(x => x.id === id);
