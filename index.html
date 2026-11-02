@@ -1357,7 +1357,7 @@ function sumHtml() {
 
 // ===================== ระบบฝึก =====================
 // อุปกรณ์: none ตัวเปล่า (มีเสมอ) · db ดัมเบล · band ยางยืด · bar บาร์โหนประตู · bench ม้านั่ง · gym ยิม
-const EQ = [['none', 'ตัวเปล่า', '🙌'], ['db', 'ดัมเบล', '🏋️'], ['band', 'ยางยืด', '🎗️'], ['bar', 'บาร์โหนประตู', '🚪'], ['bench', 'ม้านั่ง', '🪑'], ['ez', 'EZ bar', '〰️'], ['sand', 'กระสอบทราย', '🎒'], ['gym', 'ยิม', '🏢']];
+const EQ = [['none', 'ตัวเปล่า', '🙌'], ['db', 'ดัมเบล', '🏋️'], ['band', 'ยางยืด', '🎗️'], ['bar', 'บาร์โหนประตู', '🚪'], ['bench', 'ม้านั่ง', '🪑'], ['ez', 'EZ bar', '〰️'], ['sand', 'แซนด์แบ็ก', '🎒'], ['gym', 'ยิม', '🏢']];
 const GROUPS = [['chest', 'อก', '🫁'], ['shoulder', 'ไหล่', '🤷'], ['back', 'หลัง', '🧗'], ['arm', 'แขน', '💪'], ['leg', 'ขา/สะโพก', '🦵'], ['core', 'หน้าท้อง', '🎯']];
 // u: r = นับครั้ง, s = วินาที · k = ไม่กระแทกเข่า · iso = ท่าเล็ก · next = ท่ายากขึ้น
 const LIB = [
@@ -1412,11 +1412,13 @@ const LIB = [
   { id: 'ez_row', n: 'EZ bar โรว์ก้มตัว', g: 'back', eq: 'ez', u: 'r', k: 1, how: 'งอเข่าเล็กน้อย ก้มตัว 45° หลังตรง ดึงบาร์เข้าหาท้อง บีบสะบัก ลดลงช้า ๆ' },
   { id: 'ez_rdl', n: 'EZ bar โรมาเนียนเดดลิฟต์', g: 'leg', eq: 'ez', u: 'r', k: 1, how: 'ยืนถือบาร์ เข่างอนิด ดันก้นไปข้างหลัง บาร์ไถลลงตามขา หลังตรง รู้สึกตึงหลังขาแล้วยืนขึ้น' },
   { id: 'ez_press', n: 'EZ bar ดันไหล่ (ยืน)', g: 'shoulder', eq: 'ez', u: 'r', k: 1, how: 'ถือบาร์ระดับอก เกร็งท้อง ดันขึ้นเหนือหัว ไม่แอ่นหลัง ลดลงช้า ๆ' },
-  { id: 'sand_carry', n: 'กอดกระสอบทรายเดิน', g: 'core', eq: 'sand', u: 's', k: 1, how: 'ยกกระสอบกอดแนบอก หลังตรง เกร็งท้อง เดินช้า ๆ หายใจปกติ' },
-  { id: 'sand_shoulder', n: 'แบกกระสอบบ่าเดิน', g: 'core', eq: 'sand', u: 's', k: 1, how: 'พาดกระสอบบนบ่าข้างเดียว ลำตัวตั้งตรงไม่เอียง เดินครบเวลาแล้วสลับบ่า' },
-  { id: 'sand_squat', n: 'กอดกระสอบสควอท', g: 'leg', eq: 'sand', u: 'r', how: 'กอดกระสอบแนบอก นั่งลงถึงระดับที่เข่าไม่เจ็บ แล้วลุกขึ้น' },
-  { id: 'sand_row', n: 'กระสอบทรายโรว์', g: 'back', eq: 'sand', u: 'r', k: 1, how: 'ก้มตัว 45° หลังตรง จับหูกระสอบ ดึงเข้าหาท้อง ลดลงช้า ๆ' },
-  { id: 'sand_drag', n: 'ยกกระสอบขึ้นอกจากพื้น', g: 'leg', eq: 'sand', u: 'r', k: 1, how: 'ย่อสะโพก หลังตรง กอดกระสอบที่พื้นยกขึ้นแนบอก ยืนตรง แล้ววางลงช้า ๆ' }
+  { id: 'sand_carry', n: 'กอดแซนด์แบ็กเดิน', g: 'core', eq: 'sand', u: 's', k: 1, how: 'ยกแซนด์แบ็กกอดแนบอก หลังตรง เกร็งท้อง เดินช้า ๆ หายใจปกติ' },
+  { id: 'sand_shoulder', n: 'แบกแซนด์แบ็กบนบ่าเดิน', g: 'core', eq: 'sand', u: 's', k: 1, how: 'พาดแซนด์แบ็กบนบ่าข้างเดียว ลำตัวตั้งตรงไม่เอียง เดินครบเวลาแล้วสลับบ่า' },
+  { id: 'sand_squat', n: 'กอดแซนด์แบ็กสควอท', g: 'leg', eq: 'sand', u: 'r', how: 'กอดแซนด์แบ็กแนบอก นั่งลงถึงระดับที่เข่าไม่เจ็บ แล้วลุกขึ้น' },
+  { id: 'sand_row', n: 'แซนด์แบ็กโรว์', g: 'back', eq: 'sand', u: 'r', k: 1, how: 'ก้มตัว 45° หลังตรง จับหูแซนด์แบ็ก ดึงเข้าหาท้อง ลดลงช้า ๆ' },
+  { id: 'sand_rlunge', n: 'แซนด์แบ็กลันจ์ถอยหลัง', g: 'leg', eq: 'sand', u: 'r', next: 'sand_wlunge', how: 'แบกแซนด์แบ็กบนบ่าหรือหลังคอ ก้าวถอยหลังแล้วย่อเข่าหลังลงใกล้พื้น ดันกลับยืน นับครั้งต่อข้าง · ถอยหลังถนอมเข่ากว่าก้าวหน้า' },
+  { id: 'sand_wlunge', n: 'แซนด์แบ็กลันจ์เดิน', g: 'leg', eq: 'sand', u: 'r', how: 'แบกแซนด์แบ็กบนบ่า/หลังคอ โน้มตัวหน้าเล็กน้อย ก้าวยาวย่อเข่าหลังลงใกล้พื้น แล้วก้าวต่อ เท้าห่างกันพอดีสะโพก (ไม่เดินบนเส้นเดียว) นับก้าวรวม · เจ็บเข่าให้ใช้ลันจ์ถอยหลังแทน' },
+  { id: 'sand_drag', n: 'ยกแซนด์แบ็กขึ้นอกจากพื้น', g: 'leg', eq: 'sand', u: 'r', k: 1, how: 'ย่อสะโพก หลังตรง กอดแซนด์แบ็กที่พื้นยกขึ้นแนบอก ยืนตรง แล้ววางลงช้า ๆ' }
 ];
 const libAll = () => LIB.concat((S().my_ex || []).map(x => Object.assign({ custom: 1, u: 'r', how: '' }, x)));
 const exOf = id => libAll().find(x => x.id === id);
@@ -1455,13 +1457,13 @@ function prog(item) {
   const low = s => s.sets.some(x => num(x.reps) < item.lo) || s.feel === 'hard';
   if (ss.length === 2 && top(ss[0]) && top(ss[1]) && ss[0].feel !== 'hard') {
     if (ex.u === 's') return { dir: 'up', text: `ค้างได้ครบ 2 ครั้งติด → เพิ่มเป็น ${item.lo + 10}–${item.hi + 10} วิ`, ch: { lo: item.lo + 10, hi: item.hi + 10 } };
-    if (num(item.kg) > 0) { const k = nextKg(num(item.kg), true); if (k) return { dir: 'up', text: `ครบเพดานทุกเซ็ต 2 ครั้งติด → เพิ่มเป็น ${k} กก.`, ch: { kg: k } }; }
+    if (ex.eq === 'db' && num(item.kg) > 0) { const k = nextKg(num(item.kg), true); if (k) return { dir: 'up', text: `ครบเพดานทุกเซ็ต 2 ครั้งติด → เพิ่มเป็น ${k} กก.`, ch: { kg: k } }; }
     if (ex.next && exOf(ex.next)) return { dir: 'up', text: `ครบเพดาน 2 ครั้งติด → ลองท่ายากขึ้น: ${exOf(ex.next).n}`, ch: { id: ex.next, name: exOf(ex.next).n } };
     return { dir: 'up', text: `ครบเพดาน 2 ครั้งติด → เพิ่มเป็น ${item.lo + 2}–${item.hi + 2} ครั้ง`, ch: { lo: item.lo + 2, hi: item.hi + 2 } };
   }
   if (low(ss[0]) && (ss[0].feel === 'hard' || (ss[1] && low(ss[1])))) {
     const prev = libAll().find(x => x.next === item.id);
-    if (num(item.kg) > 0) { const k = nextKg(num(item.kg), false); if (k !== null && k < num(item.kg)) return { dir: 'down', text: `${ss[0].feel === 'hard' ? 'ครั้งก่อนยาก' : 'ไม่ถึงขั้นต่ำ 2 ครั้ง'} → ลดเป็น ${k} กก. ทำท่าให้สวยก่อน`, ch: { kg: k } }; }
+    if (ex.eq === 'db' && num(item.kg) > 0) { const k = nextKg(num(item.kg), false); if (k !== null && k < num(item.kg)) return { dir: 'down', text: `${ss[0].feel === 'hard' ? 'ครั้งก่อนยาก' : 'ไม่ถึงขั้นต่ำ 2 ครั้ง'} → ลดเป็น ${k} กก. ทำท่าให้สวยก่อน`, ch: { kg: k } }; }
     if (prev) return { dir: 'down', text: `ยังหนักไป → กลับไปท่า ${prev.n} ก่อน`, ch: { id: prev.id, name: prev.n } };
     if (item.lo > 4) return { dir: 'down', text: `ยังหนักไป → ลดเป็น ${Math.max(3, item.lo - 2)}–${Math.max(5, item.hi - 2)} ${unitTxt(ex)}`, ch: { lo: Math.max(3, item.lo - 2), hi: Math.max(5, item.hi - 2) } };
   }
@@ -1486,7 +1488,7 @@ function itemOf(id, g) {
   const x = exOf(id), l = (S().db_kg || []).map(Number).filter(Boolean).sort((a, b) => a - b);
   // น้ำหนักเริ่มแบบมือใหม่: ท่าเล็ก ~5 ท่าใหญ่ ~8 ถือเดิน ~16 กก. แล้วปัดเข้าขั้นที่มีจริง
   const want = id === 'farmer' ? 16 : x.iso ? 5 : 8;
-  const kg = x.eq === 'db' ? (l.length ? l.reduce((b, k) => Math.abs(k - want) < Math.abs(b - want) ? k : b, l[0]) : want) : 0;
+  const kg = x.eq === 'sand' ? num(S().sand_kg) : x.eq === 'db' ? (l.length ? l.reduce((b, k) => Math.abs(k - want) < Math.abs(b - want) ? k : b, l[0]) : want) : 0;
   return x.u === 's' ? { id, name: x.n, sets: 3, lo: id === 'farmer' || x.eq === 'sand' ? 30 : 20, hi: id === 'farmer' || x.eq === 'sand' ? 45 : 40, kg } : { id, name: x.n, sets: 3, lo: x.iso ? 10 : 8, hi: x.iso ? 15 : 12, kg };
 }
 // แผนแนะนำจากอุปกรณ์ (ไม่ใช้ AI)
@@ -1496,7 +1498,7 @@ function templatePlan() {
   const SL = {
     push1: ['gym_chest', 'db_press', 'band_press', 'pu_knee'], push2: ['band_press', 'pu_knee', 'db_fly', 'pike'],
     pull1: ['gym_lat', 'neg_pull', 'db_row', 'ez_row', 'band_row', 'table_row'], pull2: ['ez_row', 'sand_row', 'db_row', 'band_row', 'table_row', 'superman'],
-    squat: ['gym_legpress', 'db_goblet', 'sand_squat', 'box_squat'], squat2: ['box_squat', 'step_up', 'band_walk', 'side_leg'],
+    squat: ['gym_legpress', 'db_goblet', 'sand_squat', 'box_squat'], squat2: ['sand_rlunge', 'box_squat', 'step_up', 'band_walk', 'side_leg'],
     hinge: ['db_rdl', 'ez_rdl', 'hip_thrust', 'glute_bridge'], shoulder: ['db_ohp', 'band_pull', 'pike'], shoulder2: ['db_lat', 'band_pull'],
     arms: ['ez_curl', 'db_curl', 'band_curl', 'hammer'], tri: ['ez_skull', 'db_tri', 'dip_chair'], calf: ['calf'],
     core1: ['dead_bug'], core2: ['plank'], core3: ['sand_carry', 'farmer', 'bird_dog', 'side_plank'], core4: ['sand_shoulder', 'farmer', 'hang_knee', 'leg_raise']
@@ -1554,12 +1556,15 @@ function eqSetupHtml(first) {
     <div class="flbl" style="margin-top:4px">อุปกรณ์ที่มี (เลือกได้หลายอย่าง)</div>
     <div class="sugg">${EQ.slice(1).map(([k, n, ic]) => `<button class="chip ${eq.indexOf(k) >= 0 ? 'on' : ''}" onclick="toggleEq('${k}')">${ic} ${n}</button>`).join('')}</div>
     ${eq.indexOf('db') >= 0 ? dbSetupHtml() : ''}
+    ${eq.indexOf('sand') >= 0 ? `<div class="flbl">แซนด์แบ็ก</div><div class="setrows" style="margin-top:0"><label class="setrow"><span>หนัก (ไม่รู้ เว้นไว้)</span><input inputmode="decimal" placeholder="?" value="${num(S().sand_kg) || ''}" onchange="setSandKg(this.value)"><i>กก.</i></label></div>
+      <p class="note" style="margin:6px 0 0">ชั่งเอง: ยืนบนเครื่องชั่งถือถุง แล้วลบน้ำหนักตัว</p>` : ''}
     <div class="flbl">วันที่สะดวกฝึก (${days.length} วัน/สัปดาห์)</div>
     <div class="daypick">${['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map((n, i) => `<button class="${days.indexOf(i) >= 0 ? 'on' : ''}" onclick="toggleDay(${i})">${n}</button>`).join('')}</div>
     <p class="note" style="margin:8px 0 0">ตัวเปล่าทำได้เสมอ · ม้านั่งใช้เก้าอี้แข็งแรงแทนได้</p>
     ${first ? `<button class="btn pri full" style="margin-top:12px" onclick="eqDone()">ถัดไป ›</button>` : ''}</div>`;
 }
 function toggleEq(k) { let e = (S().equip || []).slice(); e = e.indexOf(k) >= 0 ? e.filter(x => x !== k) : e.concat([k]); sync('saveSettings', [{ equip: e }], () => { D.settings.equip = e; }); keepScroll(); }
+function setSandKg(v) { const k = Math.max(0, Number(v) || 0); sync('saveSettings', [{ sand_kg: k }], () => { D.settings.sand_kg = k; }); keepScroll(); }
 function setDbKg(v) { const l = String(v).split(/[ ,/]+/).map(Number).filter(x => x > 0).sort((a, b) => a - b); sync('saveSettings', [{ db_kg: l }], () => { D.settings.db_kg = l; }); }
 function toggleDay(i) { let d = (S().train_days || [1, 3, 5]).slice(); d = d.indexOf(i) >= 0 ? d.filter(x => x !== i) : d.concat([i]).sort(); if (d.length < 1) return; sync('saveSettings', [{ train_days: d }], () => { D.settings.train_days = d; }); keepScroll(); }
 function eqDone() {
