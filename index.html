@@ -263,6 +263,9 @@
   .tcard.go { background: linear-gradient(180deg,#F4F0FE,#fff 50%); }
   .tch { font-weight: 700; font-size: 16px; color: #5B3FB0; }
   .trow { padding: 10px 0; border-top: 1px solid #EEE9FA; display: flex; gap: 10px; align-items: flex-start; }
+  .extag { width: 48px; height: 48px; border-radius: 14px; flex: none; display: grid; place-items: center; font-weight: 700; font-size: 16px; background: #EEF0EC; color: #3B4446; }
+  .g-chest { background: #FFE4DE; color: #B4361E; } .g-shoulder { background: #FFF0D6; color: #9A5200; } .g-back { background: #E1EEFB; color: #1F5F91; }
+  .g-arm { background: #EEE7FD; color: #5B3FB0; } .g-leg { background: #E2F4EA; color: #17694D; } .g-core { background: #FDE5F0; color: #A3245E; }
   .exico { width: 54px; height: 54px; border-radius: 12px; font-size: 24px; }
   .exth { width: 54px; height: 54px; border-radius: 12px; object-fit: cover; flex: none; background: #EEE; }
   .exlinks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
@@ -1443,9 +1446,11 @@ const LIB = [
 // รูปท่า: free-exercise-db (สาธารณสมบัติ) img/ex/<id>-0.jpg ท่าเริ่ม, -1.jpg ท่าจบ
 const EXIMG = new Set(["band_pull", "band_row", "band_walk", "box_squat", "calf", "crunch", "db_curl", "db_fly", "db_goblet", "db_lat", "db_ohp", "db_press", "db_rdl", "db_row", "db_tri", "dead_bug", "dip_chair", "ez_curl", "ez_press", "ez_rdl", "ez_rev", "ez_row", "ez_skull", "farmer", "glute_bridge", "gym_chest", "gym_lat", "gym_legpress", "hammer", "hang_knee", "hip_thrust", "leg_raise", "neg_pull", "plank", "pu", "pu_decline", "pu_wall", "pullup", "sand_drag", "sand_rlunge", "sand_row", "sand_squat", "sand_wlunge", "side_leg", "side_plank", "squat", "step_up", "superman", "table_row"]);
 const exName = it => (exOf(it.id || it.ex_id) || {}).n || it.name || it.ex_name || '';
+// ไอคอนท่าในรายการ = ป้ายสีตามกลุ่มกล้าม (ผู้ใช้ไม่ชอบรูปถ่ายเป็นไอคอน · รูปถ่ายอยู่ในวิธีทำเท่านั้น)
+const GTAG = { chest: 'อก', shoulder: 'ไหล่', back: 'หลัง', arm: 'แขน', leg: 'ขา', core: 'ท้อง' };
 function exThumb(x) {
-  if (x && EXIMG.has(x.id)) return `<img class="exth" src="img/ex/${x.id}-0.jpg" loading="lazy" alt="">`;
-  return `<div class="ico exico">${(GROUPS.find(g => g[0] === (x || {}).g) || ['', '', '🏋️'])[2]}</div>`;
+  const g = (x || {}).g || '';
+  return `<div class="extag g-${g}">${GTAG[g] || 'ท่า'}</div>`;
 }
 // ภาพกล้าม/วิดีโอสวย ๆ จากเว็บ: เปิดผลค้นหาด้วยชื่ออังกฤษ (ไม่เก็บภาพลิขสิทธิ์ไว้ในแอป)
 const exLinks = x => x && !x.custom ? `<div class="exlinks"><a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(x.n + ' exercise muscles worked')}" target="_blank" rel="noopener">🖼️ ดูภาพกล้ามที่ใช้</a><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(x.n + ' proper form')}" target="_blank" rel="noopener">▶️ วิดีโอท่าที่ถูก</a></div>` : '';
