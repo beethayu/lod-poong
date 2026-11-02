@@ -7,7 +7,8 @@ const SH_ = {
   CHAT: { name: 'Chat', head: ['msg_id', 'at', 'role', 'text', 'photo_id', 'log_ids', 'undone'] },
   SET: { name: 'Settings', head: ['key', 'value'] },
   TIP: { name: 'Tips', head: ['date', 'text', 'created_at'] },
-  BODY: { name: 'BodyPhotos', head: ['photo_id', 'date', 'pose', 'file_id', 'thumb', 'created_at'] }
+  BODY: { name: 'BodyPhotos', head: ['photo_id', 'date', 'pose', 'file_id', 'thumb', 'created_at'] },
+  SETS: { name: 'Sets', head: ['set_id', 'date', 'session_id', 'day_idx', 'ex_id', 'ex_name', 'set_no', 'reps', 'kg', 'feel', 'msg_id', 'created_at'] }
 };
 const TXT_COLS_ = ['date', 'time', 'at', 'key', 'value', 'qty'];
 const KINDS_ = ['food', 'exercise', 'water', 'weight'];
@@ -182,6 +183,7 @@ function getAll() {
     chat: chat.slice(-80),
     tip: tip ? tip.text : '',
     photos: bodyPhotos_(),
+    sets: rows_(SH_.SETS).filter(x => String(x.date) >= addDays_(t, -180)),
     gemini: !!props.getProperty('GEMINI_KEY'),
     sheetUrl: ss_().getUrl()
   };
@@ -358,4 +360,39 @@ function changeApiKey(newKey) {
   if (newKey.length < 4) throw new Error('รหัสสั้นเกินไป');
   PropertiesService.getScriptProperties().setProperty('API_KEY', newKey);
   return true;
+}
+
+// ===== ระบบฝึก =====
+// บันทึกการฝึกหนึ่งครั้ง: w = {date, day_idx, name, minutes, items:[{ex_id, ex_name, feel, sets:[{reps, kg}]}]}
+function saveWorkout(w) {
+  w = w || {};
+  const date = isoDate_(w.date || today_());
+  const sid = newId_('W');
+  const rows = [];
+  (w.items || []).forEach(it => {
+    (it.sets || []).forEach((st, i) => {
+      if (!(num_(st.reps) > 0)) return;
+      rows.push({ set_id: newId_('S'), date: date, session_id: sid, day_idx: w.day_idx === undefined ? '' : w.day_idx,
+        ex_id: String(it.ex_id || ''), ex_name: String(it.ex_name || '').slice(0, 80), set_no: i + 1,
+        reps: num_(st.reps), kg: num_(st.kg), feel: i === it.sets.length - 1 ? (it.feel || '') : '', msg_id: '', created_at: nowStr_() });
+    });
+  });
+  if (!rows.length) throw new Error('ยังไม่ได้ทำเซ็ตไหนเลย');
+  return withLock_(() => {
+    appendMany_(SH_.SETS, rows);
+    const lw = latestWeight_(rows_(SH_.LOG)) || { weight: 100 };
+    const min = Math.max(5, Math.round(num_(w.minutes)) || rows.length * 3);
+    upsert_(SH_.LOG, cleanLog_({ kind: 'exercise', date: date, time: w.time || nowTime_(), name: 'เวท: ' + (w.name || 'ฝึก'),
+      minutes: min, kcal: Math.round(5 * lw.weight * min / 60), source: 'workout', msg_id: sid,
+      note: rows.length + ' เซ็ต' }));
+    return getAll();
+  });
+}
+
+function deleteWorkout(sessionId) {
+  return withLock_(() => {
+    deleteWhere_(SH_.SETS, x => x.session_id === sessionId);
+    deleteWhere_(SH_.LOG, l => l.msg_id === sessionId);
+    return getAll();
+  });
 }

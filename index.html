@@ -161,6 +161,145 @@
     .sugg .chip small { color: var(--muted); margin-left: 4px; }
 .aibox { margin-top: 10px; }
 
+  .float { position: relative; margin: -42px 0 0; background: #fff; border-radius: 18px; box-shadow: 0 6px 22px rgba(20,54,48,.16); overflow: hidden; }
+  .stat3c { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px; }
+  .sc { border-radius: 14px; padding: 9px 10px; }
+  .sc small { display: block; font-size: 12px; font-weight: 600; opacity: .85; }
+  .sc b { font-size: 20px; letter-spacing: -.3px; }
+  .sc.eat { background: #FFF1E6; color: #9A4A12; } .sc.ex { background: #F1ECFD; color: #5B3FB0; }
+  .sc.left { background: #E3F5EC; color: #17694D; } .sc.over { background: #FDE8E5; color: #B3261E; }
+  .sc.blue { background: #EAF3FB; color: #1f5f91; } .sc.orange { background: #FFF1E6; color: #9A4A12; }
+  .kbar { height: 8px; border-radius: 99px; background: #EEF0EC; margin: 0 12px 12px; overflow: hidden; display: flex; }
+  .kbar i { display: block; height: 100%; }
+  /* แถบวัน */
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 10px; }
+  .wd { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 0 6px; border-radius: 12px; font-size: 12px; color: rgba(255,255,255,.75); }
+  .wd.on { background: rgba(255,255,255,.14); color: #fff; }
+  .wd svg { width: 34px; height: 34px; }
+  .wd b { font-size: 13px; }
+  .wd.fut { opacity: .4; }
+  /* การ์ดมื้อ */
+  .meal { margin-top: 12px; border-radius: 16px; overflow: hidden; background: #fff; border: 1px solid var(--line); }
+  .meal .mh { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+  .meal .mh .mi { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; font-size: 20px; background: rgba(255,255,255,.75); }
+  .meal .mh b { flex: 1; font-size: 16px; }
+  .meal .mh span { font-weight: 700; font-size: 15px; }
+  .meal .mh span small { font-weight: 500; opacity: .75; font-size: 12px; }
+  .meal .row { border-top: 1px solid rgba(0,0,0,.05); }
+  .meal .addr { display: flex; align-items: center; gap: 8px; width: 100%; padding: 11px 14px; font-weight: 600; font-size: 14.5px; border-top: 1px solid rgba(0,0,0,.05); }
+  .m-breakfast .mh { background: linear-gradient(90deg,#FFF3D6,#FFF9EC); color: #8A5A00; } .m-breakfast .addr { color: #B07400; }
+  .m-lunch .mh { background: linear-gradient(90deg,#FFE7D6,#FFF4EC); color: #9A4A12; } .m-lunch .addr { color: #C2581A; }
+  .m-dinner .mh { background: linear-gradient(90deg,#E7E8FB,#F3F3FD); color: #3B3F9E; } .m-dinner .addr { color: #4A4FC4; }
+  .m-snack .mh { background: linear-gradient(90deg,#FCE4EF,#FDF1F6); color: #9C2F63; } .m-snack .addr { color: #C03D7C; }
+  .m-ex .mh { background: linear-gradient(90deg,#EEE8FD,#F7F4FE); color: #5B3FB0; } .m-ex .addr { color: #6B4FD0; }
+  .m-water .mh { background: linear-gradient(90deg,#E3F0FB,#F1F8FE); color: #1f5f91; }
+  .m-weight .mh { background: linear-gradient(90deg,#E3F5EC,#F1FAF5); color: #17694D; } .m-weight .addr { color: #17694D; }
+  .meal .ico { background: #F5F6F3; }
+  .wmini { display: flex; align-items: center; gap: 8px; padding: 8px 12px 12px; }
+  .wmini .bar { flex: 1; height: 10px; margin: 0; background: #E6EEF6; }
+  .wmini .bar i { background: linear-gradient(90deg,#7cc0f0,#3d8fd6); }
+  .wsm { height: 38px; padding: 0 12px; border-radius: 10px; background: #EAF3FB; color: #1f5f91; font-weight: 700; font-size: 14px; }
+  /* โค้ช */
+  .coachhd { display: flex; align-items: center; gap: 10px; }
+  .coachhd .av { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg,#7fd8b2,#2f9e78); display: grid; place-items: center; font-size: 22px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  .coachhd .st { font-size: 12.5px; opacity: .8; }
+  .coachhd .st::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #7CF0B6; margin-right: 5px; vertical-align: 1px; }
+  .qchips { display: flex; gap: 6px; overflow-x: auto; padding: 0 12px 12px; scrollbar-width: none; }
+  .qchips::-webkit-scrollbar { display: none; }
+  .qchip { flex: none; height: 36px; padding: 0 13px; border-radius: 99px; font-size: 14px; font-weight: 600; white-space: nowrap; }
+  .q1 { background: #FFF1E6; color: #9A4A12; } .q2 { background: #E3F5EC; color: #17694D; } .q3 { background: #F1ECFD; color: #5B3FB0; } .q4 { background: #EAF3FB; color: #1f5f91; }
+  .msgs2 { padding: 14px 0 8px; display: flex; flex-direction: column; gap: 10px; }
+  .mrow { display: flex; gap: 8px; align-items: flex-end; }
+  .mrow .mav { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg,#7fd8b2,#2f9e78); display: grid; place-items: center; font-size: 16px; flex: none; }
+  .mrow.u { justify-content: flex-end; }
+  .bub { max-width: 82%; padding: 10px 14px; border-radius: 18px; font-size: 15.5px; white-space: pre-wrap; word-wrap: break-word; }
+  .mrow.u .bub { background: linear-gradient(135deg,#2f7a6b,#1E4D45); color: #fff; border-bottom-right-radius: 6px; }
+  .mrow.m .bub { background: #fff; border: 1px solid #DCEDE4; border-bottom-left-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+  .bub .at { display: block; font-size: 11px; opacity: .6; margin-top: 2px; text-align: right; }
+  .bub .ph { display: block; font-size: 13px; opacity: .9; margin-bottom: 2px; }
+  .ec2 { margin-left: 38px; width: calc(86% - 38px); background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #CFE8DA; box-shadow: 0 2px 8px rgba(23,105,77,.08); }
+  .ec2 .eh { background: linear-gradient(90deg,#E3F5EC,#F3FBF7); color: #17694D; font-weight: 700; font-size: 13.5px; padding: 8px 12px; display: flex; justify-content: space-between; }
+  .ec2 .row { min-height: 46px; padding: 7px 12px; }
+  .ec2 .acts { padding: 6px 12px 10px; }
+  .daysep { text-align: center; } .daysep span { display: inline-block; font-size: 12px; color: var(--muted); background: #E8EAE5; padding: 2px 10px; border-radius: 99px; }
+  /* ฝึก */
+  .actbars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 92px; padding: 0 12px; }
+  .actbars div { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; font-size: 11.5px; color: var(--muted); }
+  .actbars i { width: 100%; max-width: 28px; border-radius: 8px 8px 4px 4px; background: linear-gradient(180deg,#A78BFA,#6B4FD0); display: block; }
+  .actbars i.zero { background: #EEEBF6; height: 6px !important; }
+  .teaser { margin-top: 14px; border-radius: 18px; padding: 16px; color: #fff; background: linear-gradient(135deg,#6B4FD0,#9C6ADE 60%,#C084FC); box-shadow: 0 6px 18px rgba(107,79,208,.3); }
+  .teaser b { font-size: 17px; }
+  .teaser ul { margin: 8px 0 0; padding-left: 0; list-style: none; font-size: 14.5px; }
+  .teaser li { padding: 3px 0; }
+  .teaser .tag { display: inline-block; font-size: 12px; font-weight: 700; background: rgba(255,255,255,.22); padding: 2px 9px; border-radius: 99px; margin-bottom: 6px; }
+  .exq { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 4px; }
+  .exq button { height: 64px; border-radius: 14px; background: #fff; border: 1px solid #E0D8F7; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13.5px; font-weight: 600; color: #5B3FB0; }
+  .exq button span { font-size: 22px; }
+  /* สรุป */
+  .big2 { padding: 14px 14px 4px; display: flex; align-items: baseline; gap: 8px; }
+  .big2 b { font-size: 34px; letter-spacing: -.5px; color: #17694D; }
+  .big2 span { color: var(--muted); font-size: 14px; }
+  .ccard { border-radius: 16px; overflow: hidden; background: #fff; border: 1px solid var(--line); margin-top: 12px; }
+  .ccard .ch { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+  .ccard .ch .mi { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; font-size: 18px; background: rgba(255,255,255,.75); }
+  .ccard .ch b { flex: 1; font-size: 15.5px; }
+  .ccard .ch span { font-size: 13px; font-weight: 600; }
+  .c-w .ch { background: linear-gradient(90deg,#E3F0FB,#F4F9FE); color: #1f5f91; }
+  .c-f .ch { background: linear-gradient(90deg,#FFE9DC,#FFF5EE); color: #9A4A12; }
+  .c-k .ch { background: linear-gradient(90deg,#E3F5EC,#F3FBF7); color: #17694D; }
+  .c-t .ch { background: linear-gradient(90deg,#F1ECFD,#F8F6FE); color: #5B3FB0; }
+  .tbl td.g { color: #17694D; font-weight: 700; } .tbl td.r { color: #B3261E; font-weight: 700; }
+  .tbl tr td:first-child { font-weight: 600; }
+  
+  .tcard { background: #fff; border: 1px solid #E0D8F7; border-radius: 16px; padding: 14px; margin-top: 12px; }
+  .tcard.go { background: linear-gradient(180deg,#F4F0FE,#fff 50%); }
+  .tch { font-weight: 700; font-size: 16px; color: #5B3FB0; }
+  .trow { padding: 10px 0; border-top: 1px solid #EEE9FA; }
+  .kn { font-size: 11px; background: #E3F5EC; color: #17694D; padding: 1px 6px; border-radius: 99px; font-weight: 600; vertical-align: 2px; }
+  .hint { display: block; text-align: left; margin-top: 6px; font-size: 13px; padding: 6px 10px; border-radius: 10px; font-weight: 600; width: 100%; }
+  .hint.up { background: #E3F5EC; color: #17694D; } .hint.down { background: #FFF1E6; color: #9A4A12; }
+  .startbtn { margin-top: 12px; height: 52px; font-size: 17px; background: linear-gradient(135deg,#6B4FD0,#9C6ADE); border: 0; }
+  .bigbtn2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bigbtn2 button { border-radius: 14px; padding: 12px 10px; background: linear-gradient(135deg,#F1ECFD,#fff); border: 1px solid #E0D8F7; display: flex; flex-direction: column; align-items: center; gap: 2px; color: #5B3FB0; }
+  .bigbtn2 span { font-size: 24px; } .bigbtn2 small { font-size: 12px; color: var(--muted); text-align: center; }
+  .daypick { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+  .daypick button { height: 40px; border-radius: 10px; border: 1px solid var(--line2); background: #fff; font-weight: 600; }
+  .daypick button.on { background: #6B4FD0; color: #fff; border-color: #6B4FD0; }
+  .wfloat .wtop { display: flex; align-items: center; gap: 10px; padding: 12px 12px 8px; }
+  .wex { background: #fff; border: 1px solid #E0D8F7; border-radius: 16px; margin-top: 10px; padding: 12px; }
+  .wex.fin { background: linear-gradient(180deg,#F1FAF5,#fff); border-color: #CFE8DA; }
+  .wexh { display: flex; gap: 8px; align-items: flex-start; }
+  .how { font-size: 14px; color: #3b4446; background: #F7F5FD; border-radius: 10px; padding: 8px 10px; margin: 8px 12px 10px; }
+  .wex .how { margin: 8px 0 0; }
+  .circles { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .cir { width: 58px; height: 58px; border-radius: 50%; border: 3px solid #D9D0F5; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05; color: #5B3FB0; background: #fff; }
+  .cir b { font-size: 18px; } .cir small { font-size: 10.5px; opacity: .8; }
+  .cir.on { background: linear-gradient(135deg,#8B6FE6,#6B4FD0); border-color: #6B4FD0; color: #fff; }
+  .cir.sel { box-shadow: 0 0 0 3px #F3C94D; }
+  .cir.add { border-style: dashed; font-size: 22px; color: #9C8BD8; }
+  .seted { background: #F7F5FD; border-radius: 12px; padding: 8px 10px; margin-top: 10px; }
+  .stp { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  .stp > span:first-child { width: 64px; color: var(--muted); font-size: 14px; }
+  .stp button { width: 38px; height: 38px; border-radius: 10px; background: #fff; border: 1px solid #D9D0F5; font-size: 20px; color: #5B3FB0; }
+  .stp b { min-width: 44px; text-align: center; font-size: 18px; }
+  .feel { display: flex; gap: 6px; margin-top: 10px; }
+  .feel button { flex: 1; height: 38px; border-radius: 10px; background: #F5F6F3; font-size: 14px; font-weight: 600; }
+  .feel button.on { background: #6B4FD0; color: #fff; }
+  #restbar { position: fixed; left: 12px; right: 12px; bottom: calc(70px + env(safe-area-inset-bottom)); z-index: 1200; display: none; align-items: center; gap: 8px;
+    background: linear-gradient(135deg,#6B4FD0,#9C6ADE); color: #fff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 6px 18px rgba(107,79,208,.35); max-width: 540px; margin: 0 auto; }
+  #restbar b { font-size: 24px; flex: 1; }
+  #restbar button { height: 36px; padding: 0 12px; border-radius: 10px; background: rgba(255,255,255,.2); font-weight: 600; }
+  .pday { background: #fff; border: 1px solid #E0D8F7; border-radius: 16px; overflow: hidden; margin-top: 12px; }
+  .pdh { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: linear-gradient(90deg,#EEE8FD,#F7F4FE); }
+  .pdh input { flex: 1; min-width: 0; border: 0; background: transparent; font-weight: 700; font-size: 16px; color: #5B3FB0; outline: 0; height: 36px; }
+  .xbtn2 { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,.7); }
+  .pday .addr { display: flex; width: 100%; padding: 11px 14px; font-weight: 600; border-top: 1px solid var(--line); }
+  .tgl2 { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); margin: 8px 2px; }
+  .tgl2 input { width: 20px; height: 20px; accent-color: #6B4FD0; }
+  .plusb { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #6B4FD0; color: #6B4FD0; display: grid; place-items: center; font-size: 20px; font-weight: 700; flex: none; }
+  .trow-go .gobtn { background: #6B4FD0; color: #fff; padding: 6px 12px; border-radius: 99px; font-weight: 700; font-size: 14px; }
+
+
   .hd.tall { padding-bottom: 54px; }
   .coach { position: relative; margin: -42px 0 0; background: #fff; border-radius: 18px; box-shadow: 0 6px 22px rgba(20,54,48,.16); overflow: hidden; }
   .coach .top { display: flex; gap: 12px; padding: 14px 14px 10px; }
@@ -335,6 +474,7 @@
   <div class="sh-bd" id="shBody"></div><div class="sh-ft" id="shFoot" style="display:none"></div></div>
 <div id="busy"><div><div class="spin"></div><div id="busyMsg">กำลังโหลด…</div></div></div>
 <div id="toast"></div>
+<div id="restbar">⏱️ พัก <b id="restT">1:00</b><button onclick="restEnd+=15000;tickRest()">+15 วิ</button><button onclick="stopRest()">ข้าม</button></div>
 <div id="syncdot">กำลังบันทึก…</div>
 <input type="file" id="bodyFile" accept="image/*" style="position:fixed;left:-9999px;opacity:0;width:1px;height:1px" onchange="onBodyFile(this)">
 <input type="file" id="photoFile" accept="image/*" multiple style="position:fixed;left:-9999px;opacity:0;width:1px;height:1px" onchange="onPhoto(this)">
@@ -543,7 +683,7 @@ function todayHtml() {
       <div class="sec"><h3>📸 รูปหุ่น</h3>${(D.photos || []).length ? `<a class="lnk" onclick="go('body')">เทียบ ›</a>` : ''}</div>
       ${bodyCard()}
       <div class="sec"><h3>🏃 ออกกำลัง / ฝึกวันนี้</h3><a class="lnk" onclick="openForm('exercise')">＋ เพิ่ม</a></div>
-      <div class="card excard">${ex.length ? ex.map(l => logRow(l, true)).join('') : `<button class="row" onclick="openForm('exercise')"><div class="ico">🏃</div><div class="grow t2" style="white-space:normal">ยังไม่มี · แตะเพื่อเพิ่ม หรือบอกโค้ชว่า "เดินเร็ว 30 นาที"</div></button>`}</div>
+      <div class="card excard">${trainCardToday()}${ex.map(l => logRow(l, true)).join('')}</div>
     </div>`;
 }
 
@@ -767,34 +907,6 @@ function logRow(l, compact) {
 }
 function macroTxt(l) { return `โปรตีน ${fmt(num(l.protein))} · คาร์บ ${fmt(num(l.carb))} · ไขมัน ${fmt(num(l.fat))} ก.`; }
 function toggleRow(id) { openRow = openRow === id ? '' : id; const sc = document.getElementById('app').scrollTop; render(); document.getElementById('app').scrollTop = sc; }
-function diaryHtml() {
-  const tg = calcTarget(S()), list = dayLogs(dDate), t = totals(list);
-  const left = Math.round(tg.kcal + t.ex / 2 - t.kcal);
-  const meals = MEALS.map(([m, name, ic]) => {
-    const it = list.filter(l => l.kind === 'food' && l.meal === m), k = it.reduce((s, l) => s + num(l.kcal), 0);
-    return `<div class="sec"><h3>${ic} ${name}</h3><span class="sm">${it.length ? fmt(k) + ' แคล' : ''}</span></div>
-      <div class="card">${it.map(l => logRow(l)).join('')}<button class="row" onclick="openPick('${m}')"><div class="ico" style="background:none;color:var(--brand)">＋</div><div class="grow t2" style="color:var(--brand)">เพิ่ม${name}</div></button></div>`;
-  }).join('');
-  const ex = list.filter(l => l.kind === 'exercise'), wt = list.filter(l => l.kind === 'weight');
-  return `<div class="hd"><div class="hd-in">
-      <div class="hd-top"><button class="hd-btn" onclick="shiftDay(-1)">‹</button>
-        <label class="dnav" style="position:relative"><b>${dayLabel(dDate)}</b>
-          <input type="date" value="${dDate}" max="${todayIso()}" onchange="if(this.value){dDate=this.value;openRow='';render()}" style="position:absolute;inset:0;opacity:0;width:100%"></label>
-        <button class="hd-btn" onclick="shiftDay(1)" ${dDate >= todayIso() ? 'disabled style="opacity:.35"' : ''}>›</button>
-        <button class="hd-btn" onclick="openPick()" aria-label="เพิ่ม">＋</button></div>
-      <div class="tri"><div><small>กิน</small><b>${fmt(t.kcal)}</b></div><div><small>ออกกำลัง</small><b>${fmt(t.ex)}</b></div>
-        <div><small>${left < 0 ? 'เกินเป้า' : 'เหลือ'}</small><b>${fmt(Math.abs(left))}</b></div></div>
-    </div></div>
-    <div class="wrap">${meals}
-      <div class="sec"><h3>🏃 ออกกำลัง</h3><span class="sm">${ex.length ? fmt(t.ex) + ' แคล' : ''}</span></div>
-      <div class="card">${ex.length ? ex.map(l => logRow(l)).join('') : `<button class="row" onclick="openForm('exercise')"><div class="ico" style="background:none;color:var(--faint)">＋</div><div class="grow t2">เพิ่มการออกกำลัง</div></button>`}</div>
-      <div class="sec"><h3>💧 น้ำ</h3><span class="sm">${fmt(t.water)} มล.</span></div>
-      <div class="card"><div class="water"><div class="grow t2">${list.filter(l => l.kind === 'water').length} ครั้ง · แตะ +1 แก้ว = 250 มล.</div>
-        ${t.water ? `<button class="wbtn alt" onclick="water(-1)">−</button>` : ''}<button class="wbtn" onclick="water(250)">+1</button></div></div>
-      <div class="sec"><h3>⚖️ น้ำหนัก</h3></div>
-      <div class="card">${wt.length ? wt.map(l => logRow(l)).join('') : `<button class="row" onclick="openForm('weight')"><div class="ico" style="background:none;color:var(--faint)">＋</div><div class="grow t2">เพิ่มน้ำหนัก</div></button>`}</div>
-    </div>`;
-}
 function shiftDay(k) { const n = addDays(dDate, k); if (n > todayIso()) return; dDate = n; openRow = ''; render(); }
 
 // ---------- ฟอร์มเพิ่ม/แก้ (แท็บจริง ไม่ใช่หน้าต่างเด้ง) ----------
@@ -1015,46 +1127,6 @@ function delLog(id) {
 
 // ---------- โค้ช (แชต) ----------
 let pending = null, photos = [];
-function coachHtml() {
-  const tg = calcTarget(S()), t = totals(dayLogs(todayIso()));
-  const left = Math.round(tg.kcal + t.ex / 2 - t.kcal), pl = Math.round(tg.protein - t.protein);
-  const quick = ['เย็นนี้กินอะไรดี', 'สรุปวันนี้', 'ฝึกอะไรวันนี้'];
-  const chat = (D.chat || []).filter(c => c.role === 'user' || c.role === 'model');
-  let lastDay = '';
-  const items = chat.map(c => {
-    const day = String(c.at).slice(0, 10), out = [];
-    if (day !== lastDay) { lastDay = day; out.push(`<div class="note" style="text-align:center;margin:6px 0">${dayLabel(day)}</div>`); }
-    if (c.role === 'user') {
-      out.push(`<div class="msg u">${c.photo_id ? `<a class="ph" onclick="showPhoto('${c.photo_id}')">📷 รูป ${String(c.photo_id).split(',').length} รูป</a>` : ''}${esc(c.text)}<span class="at">${String(c.at).slice(11, 16)}</span></div>`);
-    } else {
-      out.push(`<div class="msg m">${esc(c.text)}</div>`);
-      const ids = String(c.log_ids || '').split(',').filter(Boolean);
-      if (ids.length) out.push(entryCard(c, ids));
-    }
-    return out.join('');
-  }).join('');
-  const wait = pending ? `<div class="msg u">${pending.n ? `<span class="ph">📷 รูป ${pending.n} รูป</span>` : ''}${esc(pending.text)}</div><div class="msg m wait"><span class="spin sm"></span> โค้ชกำลังคิด…</div>` : '';
-  return `<div class="hd"><div class="hd-in">
-      <div class="hd-top"><div class="hd-title">โค้ช</div>${chat.length ? `<button class="hd-btn" onclick="clearChat()" aria-label="ล้างแชต">🧹</button>` : ''}</div>
-      <div class="tri" style="grid-template-columns:1fr 1fr"><div><small>${left < 0 ? 'เกินเป้าวันนี้' : 'เหลือกินได้วันนี้'}</small><b>${fmt(Math.abs(left))} แคล</b></div>
-        <div><small>${pl > 0 ? 'โปรตีนขาดอีก' : 'โปรตีน'}</small><b>${pl > 0 ? fmt(pl) + ' ก.' : 'ครบแล้ว'}</b></div></div>
-      <div class="hscroll" style="margin-top:10px">${quick.map(q => `<button class="chip" onclick="sendChat('${q}')">${q}</button>`).join('')}</div>
-    </div></div>
-    <div class="wrap"><div class="msgs" id="msgs">
-      ${!chat.length && !pending ? `<div class="card pad note" style="font-size:14.5px">พิมพ์หรือถ่ายรูปได้เลย โค้ชจะจดให้ทันที เช่น<br>• "เช้ากินข้าวมันไก่ 1 จาน กาแฟเย็น"<br>• "น้ำหนัก 107.4"<br>• "เมื่อวานเย็นกินหมูกระทะ"<br>• "เดินเร็ว 40 นาที ดื่มน้ำ 2 แก้ว"<br>• ถาม "เหลืออีกเท่าไร กินอะไรดี"<br>จดผิดกด <b>ยกเลิก</b> หรือพิมพ์บอกให้แก้</div>` : ''}
-      ${items}${wait}</div></div>`;
-}
-function entryCard(c, ids) {
-  const list = ids.map(id => logs().find(l => l.log_id === id)).filter(Boolean);
-  const off = isTrue(c.undone) || !list.length;
-  const kc = list.filter(l => l.kind === 'food').reduce((s, l) => s + num(l.kcal), 0);
-  return `<div class="ecard ${off ? 'off' : ''}"><div class="eh">${off ? 'ยกเลิกแล้ว' : '✓ จดแล้ว' + (kc ? ' · ' + fmt(kc) + ' แคล' : '')}</div>
-    ${list.map(l => `<button class="row" ${off ? '' : `onclick="editLog('${l.log_id}')"`}><div class="ico">${l.kind === 'food' ? (MEALS.find(m => m[0] === l.meal) || MEALS[3])[2] : KIND[l.kind][1]}</div>
-      <div class="grow"><div class="t1">${esc(l.kind === 'water' ? 'น้ำ' : l.kind === 'weight' ? 'น้ำหนัก ' + num(l.weight) + ' กก.' : l.name)}${l.qty ? ` <small>${esc(l.qty)}</small>` : ''}</div>
-        <div class="t2">${l.date !== String(c.at).slice(0, 10) ? dayLabel(l.date) + ' · ' : ''}${l.kind === 'food' ? (MEALS.find(m => m[0] === l.meal) || MEALS[3])[1] + ' · P' + num(l.protein) + ' C' + num(l.carb) + ' F' + num(l.fat) : l.kind === 'exercise' ? num(l.minutes) + ' นาที' : l.kind === 'water' ? '' : (num(l.fat_pct) ? 'ไขมัน ' + num(l.fat_pct) + '%' : '')}</div></div>
-      <div class="amt">${l.kind === 'water' ? fmt(num(l.ml)) + ' <small>มล.</small>' : l.kind === 'weight' ? '' : fmt(num(l.kcal)) + ' <small>แคล</small>'}</div></button>`).join('')}
-    ${off ? '' : `<div class="acts"><button class="btn sm" onclick="${list.length === 1 ? `editLog('${list[0].log_id}')` : `toast('แตะรายการที่จะแก้')`}">แก้</button><button class="btn sm red" onclick="undoMsg('${c.msg_id}')">ยกเลิก</button></div>`}</div>`;
-}
 function scrollChat() { setTimeout(() => { const a = document.getElementById('app'); a.scrollTop = a.scrollHeight; }, 30); }
 function growTa(el) { el.style.height = '42px'; el.style.height = Math.min(120, el.scrollHeight + 2) + 'px'; }
 function sendChat(q) {
@@ -1120,19 +1192,101 @@ if (window.visualViewport) {
   vv.addEventListener('resize', onVV); vv.addEventListener('scroll', onVV);
 }
 
-// ---------- ฝึก (รอบ 2) ----------
-function trainHtml() {
-  const td = todayIso(), week = [];
-  for (let i = 6; i >= 0; i--) { const d = addDays(td, -i), t = totals(dayLogs(d)); week.push({ d, ...t }); }
-  const ex = logs().filter(l => l.kind === 'exercise').sort((a, b) => (a.date + a.time) < (b.date + b.time) ? 1 : -1).slice(0, 15);
-  return `<div class="hd"><div class="hd-in"><div class="hd-top"><div class="hd-title">ฝึก</div><button class="hd-btn" onclick="openForm('exercise')" aria-label="เพิ่ม">＋</button></div>
-      <div class="tri"><div><small>7 วัน (นาที)</small><b>${fmt(week.reduce((s, w) => s + w.exMin, 0))}</b></div><div><small>7 วัน (แคล)</small><b>${fmt(week.reduce((s, w) => s + w.ex, 0))}</b></div>
-        <div><small>วันที่ได้ขยับ</small><b>${week.filter(w => w.exMin).length} / 7</b></div></div></div></div>
-    <div class="wrap">
-      <div class="alert info">ระบบฝึก (ท่า แผน นับเซ็ต เพิ่มความยาก) มาในรอบ 2 — ตอนนี้จดผ่านโค้ช เช่น "เดินเร็ว 30 นาที" หรือกด ＋</div>
-      <div class="sec"><h3>ล่าสุด</h3></div>
-      <div class="card">${ex.length ? ex.map(l => logRow(l)).join('') : '<div class="empty">ยังไม่มีการออกกำลัง</div>'}</div>
+const MEAL_CLS = { breakfast: 'm-breakfast', lunch: 'm-lunch', dinner: 'm-dinner', snack: 'm-snack' };
+function miniRing(p, today, fut) {
+  const r = 14, c = 2 * Math.PI * r, q = Math.max(0, Math.min(1, p));
+  const col = p > 1.05 ? '#ffb4a8' : '#9fe0c4';
+  return `<svg viewBox="0 0 34 34" style="transform:rotate(-90deg)"><circle cx="17" cy="17" r="${r}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="4"/>
+    ${fut ? '' : `<circle cx="17" cy="17" r="${r}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(c * q).toFixed(1)} ${c.toFixed(1)}"/>`}</svg>`;
+}
+function weekStrip(sel, tg) {
+  const d0 = new Date(sel + 'T12:00:00'), mon = addDays(sel, -((d0.getDay() + 6) % 7)), td = todayIso();
+  const L = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
+  return `<div class="week">${L.map((n, i) => { const d = addDays(mon, i), t = totals(dayLogs(d)), fut = d > td;
+    return `<button class="wd ${d === sel ? 'on' : ''} ${fut ? 'fut' : ''}" ${fut ? '' : `onclick="dDate='${d}';openRow='';render()"`}>${n}${miniRing(t.kcal / tg.kcal, d === td, fut || !t.n)}<b>${new Date(d + 'T12:00:00').getDate()}</b></button>`; }).join('')}</div>`;
+}
+function statFloat(t, tg, extra) {
+  const budget = tg.kcal + t.ex / 2, left = Math.round(budget - t.kcal), over = left < 0;
+  const pe = Math.min(100, t.kcal / Math.max(budget, 1) * 100);
+  return `<div class="float"><div class="stat3c"><div class="sc eat"><small>🍽️ กิน</small><b>${fmt(t.kcal)}</b></div><div class="sc ex"><small>🏃 ออกกำลัง</small><b>${fmt(t.ex)}</b></div>
+      <div class="sc ${over ? 'over' : 'left'}"><small>${over ? '⚠️ เกิน' : '✅ เหลือ'}</small><b>${fmt(Math.abs(left))}</b></div></div>
+    <div class="kbar"><i style="width:${pe}%;background:${over ? 'linear-gradient(90deg,#f6a07a,#e2553a)' : 'linear-gradient(90deg,#9fe0c4,#2f9e78)'}"></i></div>${extra || ''}</div>`;
+}
+
+// ---------- ไดอารี่ ----------
+function diaryHtml() {
+  const tg = calcTarget(S()), list = dayLogs(dDate), t = totals(list);
+  const meals = MEALS.map(([m, name, ic]) => {
+    const it = list.filter(l => l.kind === 'food' && l.meal === m), k = it.reduce((s, l) => s + num(l.kcal), 0);
+    return `<div class="meal ${MEAL_CLS[m]}"><div class="mh"><div class="mi">${ic}</div><b>${name}</b><span>${it.length ? fmt(k) + ' <small>แคล</small>' : ''}</span></div>
+      ${it.map(l => logRow(l)).join('')}<button class="addr" onclick="openPick('${m}')">＋ เพิ่ม${name}</button></div>`;
+  }).join('');
+  const ex = list.filter(l => l.kind === 'exercise'), wt = list.filter(l => l.kind === 'weight');
+  const wg = num(S().water_goal) || 2500;
+  return `<div class="hd tall"><div class="hd-in">
+      <div class="hd-top"><label class="dnav" style="position:relative;justify-content:flex-start"><b style="text-align:left;font-size:19px">📒 ${dayLabel(dDate)} ▾</b>
+          <input type="date" value="${dDate}" max="${todayIso()}" onchange="if(this.value){dDate=this.value;openRow='';render()}" style="position:absolute;inset:0;opacity:0;width:100%"></label>
+        <button class="hd-btn" onclick="openPick()" aria-label="เพิ่ม">＋</button></div>
+      ${weekStrip(dDate, tg)}
+    </div></div>
+    <div class="wrap">${statFloat(t, tg)}
+      ${meals}
+      <div class="meal m-ex"><div class="mh"><div class="mi">🏃</div><b>ออกกำลัง</b><span>${ex.length ? fmt(t.ex) + ' <small>แคล</small>' : ''}</span></div>
+        ${ex.map(l => logRow(l)).join('')}<button class="addr" onclick="openForm('exercise')">＋ เพิ่มการออกกำลัง</button></div>
+      <div class="meal m-water"><div class="mh"><div class="mi">💧</div><b>น้ำ</b><span>${fmt(t.water)} <small>/ ${fmt(wg)} มล.</small></span></div>
+        <div class="wmini"><div class="bar"><i style="width:${Math.min(100, t.water / wg * 100)}%"></i></div>${t.water ? `<button class="wsm" onclick="water(-1)">−</button>` : ''}<button class="wsm" onclick="water(250)">+250</button></div></div>
+      <div class="meal m-weight"><div class="mh"><div class="mi">⚖️</div><b>น้ำหนัก</b><span>${wt.length ? num(wt[wt.length - 1].weight) + ' <small>กก.</small>' : ''}</span></div>
+        ${wt.map(l => logRow(l)).join('')}${wt.length ? '' : `<button class="addr" onclick="openForm('weight')">＋ บันทึกน้ำหนัก</button>`}</div>
     </div>`;
+}
+
+// ---------- โค้ช ----------
+function coachHtml() {
+  const tg = calcTarget(S()), t = totals(dayLogs(todayIso()));
+  const left = Math.round(tg.kcal + t.ex / 2 - t.kcal), pl = Math.round(tg.protein - t.protein);
+  const h = Number(nowHM().split(':')[0]);
+  const quick = [h < 15 ? 'มื้อต่อไปกินอะไรดี' : 'เย็นนี้กินอะไรดี', 'สรุปวันนี้', 'ฝึกอะไรวันนี้', 'ทำไมน้ำหนักไม่ลง'];
+  const chat = (D.chat || []).filter(c => c.role === 'user' || c.role === 'model');
+  let lastDay = '';
+  const items = chat.map(c => {
+    const day = String(c.at).slice(0, 10), out = [];
+    if (day !== lastDay) { lastDay = day; out.push(`<div class="daysep"><span>${dayLabel(day)}</span></div>`); }
+    if (c.role === 'user') out.push(`<div class="mrow u"><div class="bub">${c.photo_id ? `<a class="ph" onclick="showPhoto('${c.photo_id}')">📷 รูป ${String(c.photo_id).split(',').length} รูป</a>` : ''}${esc(c.text)}<span class="at">${String(c.at).slice(11, 16)}</span></div></div>`);
+    else {
+      out.push(`<div class="mrow m"><div class="mav">🧑‍🏫</div><div class="bub">${esc(c.text)}</div></div>`);
+      const ids = String(c.log_ids || '').split(',').filter(Boolean);
+      if (ids.length) out.push(entryCard2(c, ids));
+    }
+    return out.join('');
+  }).join('');
+  const wait = pending ? `<div class="mrow u"><div class="bub">${pending.n ? `<span class="ph">📷 รูป ${pending.n} รูป</span>` : ''}${esc(pending.text)}</div></div><div class="mrow m"><div class="mav">🧑‍🏫</div><div class="bub" style="color:var(--muted)"><span class="spin sm"></span> โค้ชกำลังคิด…</div></div>` : '';
+  return `<div class="hd tall"><div class="hd-in">
+      <div class="hd-top"><div class="coachhd grow"><div class="av">🧑‍🏫</div><div><div class="hd-title" style="font-size:18px">โค้ชลดพุง</div><div class="st">พร้อมจด · ถามได้ทุกเรื่อง</div></div></div>
+        ${chat.length ? `<button class="hd-btn" onclick="clearChat()" aria-label="ล้างแชต">🧹</button>` : ''}</div>
+    </div></div>
+    <div class="wrap">
+      <div class="float"><div class="stat3c" style="grid-template-columns:1fr 1fr"><div class="sc ${left < 0 ? 'over' : 'left'}"><small>${left < 0 ? '⚠️ เกินวันนี้' : '✅ เหลือกินได้'}</small><b>${fmt(Math.abs(left))} <small style="display:inline;font-size:13px">แคล</small></b></div>
+          <div class="sc blue"><small>💪 โปรตีน${pl > 0 ? 'ขาดอีก' : ''}</small><b>${pl > 0 ? fmt(pl) + ' <small style="display:inline;font-size:13px">ก.</small>' : 'ครบ 🎉'}</b></div></div>
+        <div class="qchips">${quick.map((q, i) => `<button class="qchip q${i + 1}" onclick="sendChat('${q}')">${q}</button>`).join('')}</div></div>
+      <div class="msgs2" id="msgs">
+        ${!chat.length && !pending ? `<div class="mrow m"><div class="mav">🧑‍🏫</div><div class="bub">สวัสดีครับ พิมพ์หรือถ่ายรูปได้เลย ผมจดให้ทันที เช่น
+• เช้ากินข้าวมันไก่ 1 จาน กาแฟเย็น
+• น้ำหนัก 107.4
+• เมื่อวานเย็นกินหมูกระทะ
+• เดินเร็ว 40 นาที ดื่มน้ำ 2 แก้ว
+จดผิดกด ยกเลิก หรือพิมพ์บอกให้แก้</div></div>` : ''}
+        ${items}${wait}</div></div>`;
+}
+function entryCard2(c, ids) {
+  const list = ids.map(id => logs().find(l => l.log_id === id)).filter(Boolean);
+  const off = isTrue(c.undone) || !list.length;
+  const kc = list.filter(l => l.kind === 'food').reduce((s, l) => s + num(l.kcal), 0);
+  return `<div class="ec2 ${off ? 'ecard off' : ''}"><div class="eh"><span>${off ? 'ยกเลิกแล้ว' : '✓ จดแล้ว ' + list.length + ' รายการ'}</span><span>${kc ? fmt(kc) + ' แคล' : ''}</span></div>
+    ${list.map(l => `<button class="row" ${off ? '' : `onclick="editLog('${l.log_id}')"`}><div class="ico">${l.kind === 'food' ? (MEALS.find(m => m[0] === l.meal) || MEALS[3])[2] : KIND[l.kind][1]}</div>
+      <div class="grow"><div class="t1">${esc(l.kind === 'water' ? 'น้ำ' : l.kind === 'weight' ? 'น้ำหนัก ' + num(l.weight) + ' กก.' : l.name)}</div>
+        <div class="t2">${l.date !== String(c.at).slice(0, 10) ? dayLabel(l.date) + ' · ' : ''}${l.kind === 'food' ? [l.qty, (MEALS.find(m => m[0] === l.meal) || MEALS[3])[1], 'P' + num(l.protein) + ' C' + num(l.carb) + ' F' + num(l.fat)].filter(Boolean).join(' · ') : l.kind === 'exercise' ? num(l.minutes) + ' นาที' : ''}</div></div>
+      <div class="amt">${l.kind === 'water' ? fmt(num(l.ml)) + ' <small>มล.</small>' : l.kind === 'weight' ? '' : fmt(num(l.kcal)) + ' <small>แคล</small>'}</div></button>`).join('')}
+    ${off ? '' : `<div class="acts"><button class="btn sm" onclick="${list.length === 1 ? `editLog('${list[0].log_id}')` : `toast('แตะรายการที่จะแก้')`}">✏️ แก้</button><button class="btn sm red" onclick="undoMsg('${c.msg_id}')">ยกเลิก</button></div>`}</div>`;
 }
 
 // ---------- สรุป ----------
@@ -1140,38 +1294,406 @@ function sumHtml() {
   const s = S(), tg = calcTarget(s), td = todayIso();
   const from = sumRange ? addDays(td, -sumRange + 1) : '0000';
   const dw = dailyWeights(), dwr = dw.filter(w => w.date >= from);
-  const first = dw[0], lw = latestW();
+  const first = dw[0], lw = latestW(), g = num(s.goal_weight);
   const lost = first && lw ? r1(first.w - lw.weight) : 0;
-  // แคลรายวัน 14 วัน
+  const span = first ? first.w - g : 0, pct = span > 0 && lw ? Math.max(0, Math.min(1, (first.w - lw.weight) / span)) : 0;
   const days = []; for (let i = 13; i >= 0; i--) { const d = addDays(td, -i); days.push({ d, ...totals(dayLogs(d)) }); }
-  // รายสัปดาห์ (จันทร์–อาทิตย์) 6 สัปดาห์
   const wk = [], mon = addDays(td, -((new Date(td + 'T12:00:00').getDay() + 6) % 7));
   for (let i = 0; i < 6; i++) {
-    const a = addDays(mon, -7 * i), b = addDays(a, 6);
-    const dd = []; for (let k = 0; k < 7; k++) { const d = addDays(a, k); if (d > td) break; const t = totals(dayLogs(d)); if (t.n) dd.push(t); }
+    const a = addDays(mon, -7 * i), b = addDays(a, 6), dd = [];
+    for (let k = 0; k < 7; k++) { const d = addDays(a, k); if (d > td) break; const t = totals(dayLogs(d)); if (t.n) dd.push(t); }
     const ws = dw.filter(w => w.date >= a && w.date <= b);
-    wk.push({ a, n: dd.length, kcal: dd.length ? dd.reduce((s, t) => s + t.kcal, 0) / dd.length : 0, pro: dd.length ? dd.reduce((s, t) => s + t.protein, 0) / dd.length : 0,
-      w: ws.length ? ws.reduce((s, x) => s + x.w, 0) / ws.length : 0 });
+    wk.push({ a, n: dd.length, kcal: dd.length ? dd.reduce((s, t) => s + t.kcal, 0) / dd.length : 0, pro: dd.length ? dd.reduce((s, t) => s + t.protein, 0) / dd.length : 0, w: ws.length ? ws.reduce((s, x) => s + x.w, 0) / ws.length : 0 });
   }
-  return `<div class="hd"><div class="hd-in"><div class="hd-top"><div class="hd-title">สรุป</div></div>
-      <div class="tri"><div><small>ลดไปแล้ว</small><b>${lost > 0 ? lost : 0} กก.</b></div><div><small>ล่าสุด</small><b>${lw ? lw.weight : '-'}</b></div>
-        <div><small>อีกถึงเป้า</small><b>${lw ? Math.max(0, r1(lw.weight - num(s.goal_weight))) : '-'} กก.</b></div></div>
-      <div class="seg-dk">${[[30, '30 วัน'], [90, '90 วัน'], [0, 'ทั้งหมด']].map(([v, n]) => `<button class="${sumRange === v ? 'on' : ''}" onclick="sumRange=${v};render()">${n}</button>`).join('')}</div>
-    </div></div>
+  return `<div class="hd tall"><div class="hd-in"><div class="hd-top"><div class="hd-title">📊 สรุป</div></div>
+      <div class="seg-dk">${[[30, '30 วัน'], [90, '90 วัน'], [0, 'ทั้งหมด']].map(([v, n]) => `<button class="${sumRange === v ? 'on' : ''}" onclick="sumRange=${v};render()">${n}</button>`).join('')}</div></div></div>
     <div class="wrap">
-      <div class="sec"><h3>น้ำหนัก (กก.)</h3><span class="sm">${tg.days ? 'ถึงเป้าราว ' + thDate(addDays(td, tg.days)) : ''}</span></div>
-      <div class="card chart"><div class="legend"><span><i class="dot" style="background:#9cc0ea"></i>รายวัน</span><span><i style="background:var(--c-w)"></i>เฉลี่ย 7 วัน</span><span><i style="background:var(--muted);height:0;border-top:2px dashed var(--muted)"></i>เป้า</span></div>
-        ${lineChart('cw', dwr, 'w', 'var(--c-w)', '#9cc0ea', num(s.goal_weight))}<div class="ctip" id="cw_tip"></div></div>
-      <div class="sec"><h3>% ไขมัน</h3></div>
-      <div class="card chart">${dwr.filter(w => w.f).length ? lineChart('cf', dwr.filter(w => w.f), 'f', 'var(--c-f)', '#f4b596') + '<div class="ctip" id="cf_tip"></div>' : '<div class="empty">ยังไม่มีข้อมูล % ไขมัน (มาจากเครื่องชั่งผ่านทางลัด)</div>'}</div>
-      <div class="sec"><h3>แคลอรี่ 14 วัน</h3><span class="sm">เป้า ${fmt(tg.kcal)}</span></div>
-      <div class="card chart">${kcalChart(days, tg)}<div class="ctip" id="ck_tip">แตะแท่งเพื่อดูตัวเลข</div></div>
-      <div class="sec"><h3>รายสัปดาห์ (เฉลี่ยต่อวันที่จด)</h3></div>
-      <div class="card"><table class="tbl"><tr><th>สัปดาห์</th><th>แคล</th><th>โปรตีน</th><th>น้ำหนัก</th></tr>
-        ${wk.map(w => `<tr><td>${thDate(w.a).replace(/ \d+$/, '')}${w.a === mon ? ' (นี้)' : ''}</td><td>${w.n ? fmt(w.kcal) : '-'}</td><td>${w.n ? fmt(w.pro) + ' ก.' : '-'}</td><td>${w.w ? r1(w.w) : '-'}</td></tr>`).join('')}</table></div>
+      <div class="float"><div class="big2"><b>−${lost > 0 ? lost : 0} กก.</b><span>ลดไปแล้ว ตั้งแต่ ${first ? thDate(first.date) : '-'}</span></div>
+        <div class="coach" style="margin:0;box-shadow:none;border-radius:0;background:none"><div class="goal" style="background:none;border:0"><div class="gl"><span>เริ่ม ${first ? first.w : '-'}</span><b>ล่าสุด ${lw ? lw.weight : '-'} · ${Math.round(pct * 100)}%</b><span>เป้า ${g}</span></div>
+          <div class="gbar"><i style="width:${pct * 100}%"></i><em style="left:${pct * 100}%"></em></div>
+          <div class="gl"><span>เหลือ ${lw ? Math.max(0, r1(lw.weight - g)) : '-'} กก.</span><span>${tg.days ? 'ถึงเป้าราว ' + thDate(addDays(td, tg.days)) : ''}</span></div></div></div></div>
+      <div class="ccard c-w"><div class="ch"><div class="mi">⚖️</div><b>น้ำหนัก</b><span>เส้น = เฉลี่ย 7 วัน</span></div>
+        <div class="chart">${lineChart('cw', dwr, 'w', 'var(--c-w)', '#9cc0ea', g)}<div class="ctip" id="cw_tip">แตะกราฟเพื่อดูค่า</div></div></div>
+      <div class="ccard c-f"><div class="ch"><div class="mi">🔥</div><b>% ไขมัน</b><span>${lw && lw.fat_pct ? 'ล่าสุด ' + lw.fat_pct + '%' : ''}</span></div>
+        <div class="chart">${dwr.filter(w => w.f).length ? lineChart('cf', dwr.filter(w => w.f), 'f', 'var(--c-f)', '#f4b596') + '<div class="ctip" id="cf_tip"></div>' : '<div class="empty">ยังไม่มีข้อมูล % ไขมัน</div>'}</div></div>
+      <div class="ccard c-k"><div class="ch"><div class="mi">🍽️</div><b>แคลอรี่ 14 วัน</b><span>เป้า ${fmt(tg.kcal)}</span></div>
+        <div class="chart">${kcalChart(days, tg)}<div class="ctip" id="ck_tip">แตะแท่งเพื่อดูตัวเลข</div></div></div>
+      <div class="ccard c-t"><div class="ch"><div class="mi">📅</div><b>รายสัปดาห์</b><span>เฉลี่ยต่อวันที่จด</span></div>
+        <table class="tbl"><tr><th>สัปดาห์</th><th>แคล</th><th>โปรตีน</th><th>น้ำหนัก</th></tr>
+        ${wk.map((w, i) => { const nw = wk[i + 1]; const dlt = w.w && nw && nw.w ? r1(w.w - nw.w) : null;
+          return `<tr><td>${thDate(w.a).replace(/ \d+$/, '')}${w.a === mon ? ' (นี้)' : ''}</td><td class="${w.n ? (w.kcal > tg.kcal + 100 ? 'r' : 'g') : ''}">${w.n ? fmt(w.kcal) : '-'}</td>
+            <td class="${w.n ? (w.pro >= tg.protein * 0.9 ? 'g' : '') : ''}">${w.n ? fmt(w.pro) + ' ก.' : '-'}</td><td>${w.w ? r1(w.w) : '-'}${dlt != null ? ` <small class="${dlt <= 0 ? 'down' : 'up'}">${dlt > 0 ? '+' : ''}${dlt}</small>` : ''}</td></tr>`; }).join('')}</table></div>
       <p class="note" style="margin:10px 2px">เป้าต่อวัน ${fmt(tg.kcal)} แคล · โปรตีน ${tg.protein} คาร์บ ${tg.carb} ไขมัน ${tg.fat} ก. · BMR ${fmt(tg.bmr)} · TDEE ${fmt(tg.tdee)}</p>
     </div>`;
 }
+
+// ===================== ระบบฝึก =====================
+// อุปกรณ์: none ตัวเปล่า (มีเสมอ) · db ดัมเบล · band ยางยืด · bar บาร์โหนประตู · bench ม้านั่ง · gym ยิม
+const EQ = [['none', 'ตัวเปล่า', '🙌'], ['db', 'ดัมเบล', '🏋️'], ['band', 'ยางยืด', '🎗️'], ['bar', 'บาร์โหนประตู', '🚪'], ['bench', 'ม้านั่ง', '🪑'], ['gym', 'ยิม', '🏢']];
+const GROUPS = [['chest', 'อก', '🫁'], ['shoulder', 'ไหล่', '🤷'], ['back', 'หลัง', '🧗'], ['arm', 'แขน', '💪'], ['leg', 'ขา/สะโพก', '🦵'], ['core', 'หน้าท้อง', '🎯']];
+// u: r = นับครั้ง, s = วินาที · k = ไม่กระแทกเข่า · iso = ท่าเล็ก · next = ท่ายากขึ้น
+const LIB = [
+  { id: 'pu_wall', n: 'วิดพื้นกับผนัง', g: 'chest', eq: 'none', u: 'r', k: 1, next: 'pu_knee', how: 'ยืนห่างผนัง 1 ก้าว มือดันผนังระดับไหล่ งอศอกให้อกเข้าใกล้ผนัง แล้วดันกลับ' },
+  { id: 'pu_knee', n: 'วิดพื้นเข่า', g: 'chest', eq: 'none', u: 'r', k: 1, next: 'pu', how: 'คุกเข่าบนเบาะ ลำตัวตรงจากเข่าถึงหัว ลดอกลงใกล้พื้น ดันขึ้น' },
+  { id: 'pu', n: 'วิดพื้น', g: 'chest', eq: 'none', u: 'r', k: 1, next: 'pu_decline', how: 'ตัวตรงเป็นแผ่นกระดาน มือกว้างกว่าไหล่เล็กน้อย ลดอกลงเกือบแตะพื้น ดันขึ้น' },
+  { id: 'pu_decline', n: 'วิดพื้นยกเท้า', g: 'chest', eq: 'none', u: 'r', k: 1, how: 'วางเท้าบนเก้าอี้/ขั้นบันได ทำเหมือนวิดพื้นปกติ เน้นอกส่วนบน' },
+  { id: 'db_press', n: 'ดัมเบลดันอก (นอน)', g: 'chest', eq: 'db', u: 'r', k: 1, how: 'นอนพื้นหรือม้านั่ง ถือดัมเบลข้างอก ดันขึ้นจนแขนเกือบตึง ลดลงช้า ๆ' },
+  { id: 'db_fly', n: 'ดัมเบลฟลาย', g: 'chest', eq: 'db', u: 'r', k: 1, iso: 1, how: 'นอนหงาย แขนงอเล็กน้อย กางดัมเบลออกข้างลำตัวช้า ๆ แล้วโอบกลับ' },
+  { id: 'band_press', n: 'ยางยืดดันอก', g: 'chest', eq: 'band', u: 'r', k: 1, how: 'คล้องยางหลังหลัง/เสา ดันมือไปข้างหน้าระดับอก ค้าง 1 วิ ผ่อนกลับช้า ๆ' },
+  { id: 'gym_chest', n: 'แมชชีนดันอก', g: 'chest', eq: 'gym', u: 'r', k: 1, how: 'ปรับเบาะให้ด้ามจับอยู่ระดับอก ดันออก ผ่อนกลับช้า ๆ' },
+  { id: 'db_ohp', n: 'ดัมเบลดันเหนือหัว (นั่ง)', g: 'shoulder', eq: 'db', u: 'r', k: 1, how: 'นั่งหลังตรง ถือดัมเบลระดับหู ดันขึ้นเหนือหัว ลดลงช้า ๆ ไม่แอ่นหลัง' },
+  { id: 'db_lat', n: 'ยกดัมเบลด้านข้าง', g: 'shoulder', eq: 'db', u: 'r', k: 1, iso: 1, how: 'ยืนตรง ยกดัมเบลออกข้างถึงระดับไหล่ ศอกงอนิด ลดลงช้า ๆ ใช้น้ำหนักเบา' },
+  { id: 'band_pull', n: 'ยางยืดดึงแยก', g: 'shoulder', eq: 'band', u: 'r', k: 1, iso: 1, how: 'จับยางระดับอก แขนตรง ดึงแยกออกจนยางแตะอก บีบสะบัก แล้วผ่อน' },
+  { id: 'pike', n: 'วิดพื้นสะโพกสูง (ไพค์)', g: 'shoulder', eq: 'none', u: 'r', k: 1, how: 'ท่าตัว ∧ สะโพกสูง ลดหัวลงระหว่างมือ แล้วดันขึ้น' },
+  { id: 'db_row', n: 'ดัมเบลโรว์', g: 'back', eq: 'db', u: 'r', k: 1, how: 'มือหนึ่งเท้าเก้าอี้ หลังตรง ดึงดัมเบลขึ้นข้างเอว บีบสะบัก ลดลงช้า ๆ' },
+  { id: 'band_row', n: 'ยางยืดดึงเข้าหาตัว', g: 'back', eq: 'band', u: 'r', k: 1, how: 'นั่งเหยียดขา คล้องยางที่เท้า ดึงมือเข้าหาท้อง ศอกชิดลำตัว บีบสะบัก' },
+  { id: 'table_row', n: 'โรว์ใต้โต๊ะ', g: 'back', eq: 'none', u: 'r', k: 1, how: 'นอนใต้โต๊ะแข็งแรง จับขอบ ดึงอกขึ้นหาโต๊ะ ตัวตรง ลดลงช้า ๆ' },
+  { id: 'superman', n: 'ซูเปอร์แมน', g: 'back', eq: 'none', u: 'r', k: 1, how: 'นอนคว่ำ ยกแขนและขาขึ้นพร้อมกันเล็กน้อย ค้าง 2 วิ แล้ววางลง' },
+  { id: 'hang', n: 'ห้อยบาร์', g: 'back', eq: 'bar', u: 's', k: 1, next: 'neg_pull', how: 'จับบาร์ปล่อยตัวห้อย ไหล่ดึงลงเล็กน้อย หายใจปกติ' },
+  { id: 'neg_pull', n: 'ดึงข้อแบบลงช้า', g: 'back', eq: 'bar', u: 'r', k: 1, next: 'pullup', how: 'ยืนบนเก้าอี้ให้คางอยู่เหนือบาร์ แล้วค่อย ๆ ลดตัวลงช้า 3–5 วิ' },
+  { id: 'pullup', n: 'ดึงข้อ', g: 'back', eq: 'bar', u: 'r', k: 1, how: 'ห้อยแขนตึง ดึงตัวขึ้นจนคางพ้นบาร์ ลดลงช้า ๆ' },
+  { id: 'gym_lat', n: 'แมชชีนดึงลง', g: 'back', eq: 'gym', u: 'r', k: 1, how: 'นั่งล็อกเข่า ดึงบาร์ลงหน้าอก อกยืด บีบสะบัก ผ่อนขึ้นช้า ๆ' },
+  { id: 'db_curl', n: 'ดัมเบลเคิร์ล', g: 'arm', eq: 'db', u: 'r', k: 1, iso: 1, how: 'ยืนตรง ศอกชิดลำตัว ยกดัมเบลขึ้นหาไหล่ ลดลงช้า ๆ ไม่เหวี่ยง' },
+  { id: 'hammer', n: 'ค้อนเคิร์ล', g: 'arm', eq: 'db', u: 'r', k: 1, iso: 1, how: 'เหมือนเคิร์ลแต่หันฝ่ามือเข้าหากัน (ถือแบบค้อน)' },
+  { id: 'band_curl', n: 'ยางยืดเคิร์ล', g: 'arm', eq: 'band', u: 'r', k: 1, iso: 1, how: 'เหยียบยาง จับปลาย ยกมือขึ้นหาไหล่ ศอกนิ่ง ผ่อนลงช้า ๆ' },
+  { id: 'dip_chair', n: 'ดิปเก้าอี้', g: 'arm', eq: 'none', u: 'r', k: 1, how: 'มือจับขอบเก้าอี้ด้านหลัง เท้าบนพื้น งอศอกลดตัวลงเล็กน้อย ดันขึ้น (ไม่ลงลึกจนเจ็บไหล่)' },
+  { id: 'db_tri', n: 'ดัมเบลเหยียดแขนหลังหัว', g: 'arm', eq: 'db', u: 'r', k: 1, iso: 1, how: 'ถือดัมเบลสองมือเหนือหัว งอศอกลดดัมเบลไปหลังหัว แล้วเหยียดขึ้น' },
+  { id: 'glute_bridge', n: 'สะพานสะโพก', g: 'leg', eq: 'none', u: 'r', k: 1, how: 'นอนหงาย ชันเข่า ดันสะโพกขึ้นบีบก้น ค้าง 1 วิ แล้วลง' },
+  { id: 'hip_thrust', n: 'ฮิปทรัสต์พิงม้านั่ง', g: 'leg', eq: 'bench', u: 'r', k: 1, how: 'หลังพิงขอบม้านั่ง ดันสะโพกขึ้นจนลำตัวขนานพื้น บีบก้น (วางดัมเบลบนสะโพกเพิ่มได้)' },
+  { id: 'box_squat', n: 'นั่ง-ลุกเก้าอี้', g: 'leg', eq: 'none', u: 'r', k: 1, next: 'squat', how: 'ยืนหน้าเก้าอี้ ดันสะโพกไปหลังนั่งแตะเบา ๆ แล้วลุกขึ้น เข่าไม่เลยปลายเท้ามาก' },
+  { id: 'squat', n: 'สควอทตัวเปล่า', g: 'leg', eq: 'none', u: 'r', next: 'db_goblet', how: 'เท้ากว้างเท่าไหล่ นั่งลงเหมือนนั่งเก้าอี้ หลังตรง ลุกขึ้นดันส้นเท้า' },
+  { id: 'db_goblet', n: 'ก็อบเบล็ตสควอท', g: 'leg', eq: 'db', u: 'r', how: 'ถือดัมเบลแนบอก นั่งลงถึงระดับที่เข่าไม่เจ็บ แล้วลุกขึ้น' },
+  { id: 'db_rdl', n: 'ดัมเบลโรมาเนียนเดดลิฟต์', g: 'leg', eq: 'db', u: 'r', k: 1, how: 'ยืนเข่างอนิด ดันสะโพกไปหลัง ดัมเบลไถลตามขา หลังตรง รู้สึกตึงหลังขา แล้วยืดขึ้น' },
+  { id: 'side_leg', n: 'นอนตะแคงยกขา', g: 'leg', eq: 'none', u: 'r', k: 1, iso: 1, how: 'นอนตะแคง ขาบนเหยียดตรง ยกขึ้นช้า ๆ แล้วลง ทำครบแล้วสลับข้าง' },
+  { id: 'calf', n: 'เขย่งปลายเท้า', g: 'leg', eq: 'none', u: 'r', k: 1, iso: 1, how: 'ยืนจับผนัง เขย่งขึ้นสุด ค้าง 1 วิ ลดลงช้า ๆ' },
+  { id: 'wall_sit', n: 'นั่งพิงผนัง', g: 'leg', eq: 'none', u: 's', how: 'หลังพิงผนัง ย่อเข่าเท่าที่ไม่เจ็บ (ไม่ต้องถึง 90°) ค้างไว้' },
+  { id: 'band_walk', n: 'ยางยืดเดินข้าง', g: 'leg', eq: 'band', u: 'r', k: 1, iso: 1, how: 'คล้องยางเหนือเข่า ย่อเล็กน้อย ก้าวเดินข้างทีละก้าว นับ 1 ก้าว = 1 ครั้ง' },
+  { id: 'step_up', n: 'ก้าวขึ้นม้านั่งต่ำ', g: 'leg', eq: 'bench', u: 'r', how: 'ก้าวขึ้นม้านั่ง/ขั้นบันไดต่ำ ดันส้นเท้าขึ้น ลงช้า ๆ สลับขา' },
+  { id: 'gym_legpress', n: 'แมชชีนเลกเพรส', g: 'leg', eq: 'gym', u: 'r', k: 1, how: 'เท้ากว้างเท่าไหล่บนแผ่น ลดลงเท่าที่เข่าสบาย ดันออกไม่ล็อกเข่า' },
+  { id: 'plank', n: 'แพลงก์', g: 'core', eq: 'none', u: 's', k: 1, how: 'ศอกและปลายเท้าแตะพื้น ตัวตรง เกร็งท้อง ไม่ให้สะโพกตก' },
+  { id: 'side_plank', n: 'แพลงก์ตะแคง', g: 'core', eq: 'none', u: 's', k: 1, how: 'ตะแคง ศอกเดียวยันพื้น สะโพกยกขึ้นตัวตรง ค้าง แล้วสลับข้าง' },
+  { id: 'dead_bug', n: 'เดดบั๊ก', g: 'core', eq: 'none', u: 'r', k: 1, how: 'นอนหงาย แขนชี้ฟ้า เข่างอ 90° เหยียดแขน-ขาตรงข้ามลงช้า ๆ หลังแนบพื้น สลับข้าง' },
+  { id: 'bird_dog', n: 'เบิร์ดด็อก', g: 'core', eq: 'none', u: 'r', k: 1, how: 'คลานสี่ขา เหยียดแขนกับขาตรงข้ามให้ตรง ค้าง 2 วิ สลับข้าง' },
+  { id: 'crunch', n: 'ครันช์', g: 'core', eq: 'none', u: 'r', k: 1, iso: 1, how: 'นอนชันเข่า มือแตะขมับ ม้วนไหล่ขึ้นเล็กน้อยใช้ท้อง ไม่ดึงคอ' },
+  { id: 'leg_raise', n: 'นอนยกขา', g: 'core', eq: 'none', u: 'r', k: 1, how: 'นอนหงาย มือใต้ก้น ยกขาตรงขึ้นช้า ๆ ลดลงไม่แตะพื้น' },
+  { id: 'hang_knee', n: 'ห้อยบาร์ยกเข่า', g: 'core', eq: 'bar', u: 'r', k: 1, how: 'ห้อยบาร์ ยกเข่าขึ้นหาอก ลดลงช้า ๆ ไม่แกว่ง' }
+];
+const libAll = () => LIB.concat((S().my_ex || []).map(x => Object.assign({ custom: 1, u: 'r', how: '' }, x)));
+const exOf = id => libAll().find(x => x.id === id);
+const myEq = () => ['none'].concat(S().equip || []);
+const canDo = x => myEq().indexOf(x.eq) >= 0 || (myEq().indexOf('gym') >= 0 && x.eq !== 'none');
+const plan = () => (S().plan && S().plan.days && S().plan.days.length ? S().plan : null);
+const unitTxt = x => (x && x.u === 's') ? 'วิ' : 'ครั้ง';
+
+let tSeg = 'today', W = null, libG = '', libAllOn = false, libPick = -1, planOpen = '', setOpen = '', exOpen = '', eqEdit = false;
+try { W = JSON.parse(lsGet('lp_work') || 'null'); } catch (e) {}
+function saveW() { lsSet('lp_work', JSON.stringify(W)); }
+
+// ---------- ประวัติท่า / โปรเกรส ----------
+function exSessions(item) {
+  const by = {};
+  (D.sets || []).filter(x => (item.id && x.ex_id === item.id) || (!x.ex_id && x.ex_name === item.name))
+    .forEach(x => { (by[x.session_id] = by[x.session_id] || { date: x.date, sets: [], feel: '' }).sets.push(x); if (x.feel) by[x.session_id].feel = x.feel; });
+  return Object.values(by).sort((a, b) => a.date < b.date ? 1 : -1);
+}
+function lastTxt(item) {
+  const s = exSessions(item)[0];
+  if (!s) return 'ยังไม่เคยทำ';
+  const ex = exOf(item.id);
+  return `ครั้งก่อน ${thDate(s.date)}: ${s.sets.sort((a, b) => a.set_no - b.set_no).map(x => num(x.reps) + (num(x.kg) ? '@' + num(x.kg) : '')).join(' · ')} ${unitTxt(ex)}${s.feel ? ' · ' + FEEL[s.feel] : ''}`;
+}
+const FEEL = { easy: '😌 ง่าย', ok: '🙂 พอดี', hard: '😮‍💨 ยาก' };
+function nextKg(kg, up) {
+  const list = (S().db_kg || []).map(Number).filter(Boolean).sort((a, b) => a - b);
+  if (list.length) { const c = up ? list.find(k => k > kg) : list.slice().reverse().find(k => k < kg); return c || null; }
+  return up ? kg + 2 : Math.max(0, kg - 2);
+}
+function prog(item) {
+  const ss = exSessions(item).slice(0, 2), ex = exOf(item.id) || {};
+  if (!ss.length) return null;
+  const top = s => s.sets.length >= item.sets && s.sets.every(x => num(x.reps) >= item.hi);
+  const low = s => s.sets.some(x => num(x.reps) < item.lo) || s.feel === 'hard';
+  if (ss.length === 2 && top(ss[0]) && top(ss[1]) && ss[0].feel !== 'hard') {
+    if (ex.u === 's') return { dir: 'up', text: `ค้างได้ครบ 2 ครั้งติด → เพิ่มเป็น ${item.lo + 10}–${item.hi + 10} วิ`, ch: { lo: item.lo + 10, hi: item.hi + 10 } };
+    if (num(item.kg) > 0) { const k = nextKg(num(item.kg), true); if (k) return { dir: 'up', text: `ครบเพดานทุกเซ็ต 2 ครั้งติด → เพิ่มเป็น ${k} กก.`, ch: { kg: k } }; }
+    if (ex.next && exOf(ex.next)) return { dir: 'up', text: `ครบเพดาน 2 ครั้งติด → ลองท่ายากขึ้น: ${exOf(ex.next).n}`, ch: { id: ex.next, name: exOf(ex.next).n } };
+    return { dir: 'up', text: `ครบเพดาน 2 ครั้งติด → เพิ่มเป็น ${item.lo + 2}–${item.hi + 2} ครั้ง`, ch: { lo: item.lo + 2, hi: item.hi + 2 } };
+  }
+  if (low(ss[0]) && (ss[0].feel === 'hard' || (ss[1] && low(ss[1])))) {
+    const prev = libAll().find(x => x.next === item.id);
+    if (num(item.kg) > 0) { const k = nextKg(num(item.kg), false); if (k !== null && k < num(item.kg)) return { dir: 'down', text: `${ss[0].feel === 'hard' ? 'ครั้งก่อนยาก' : 'ไม่ถึงขั้นต่ำ 2 ครั้ง'} → ลดเป็น ${k} กก. ทำท่าให้สวยก่อน`, ch: { kg: k } }; }
+    if (prev) return { dir: 'down', text: `ยังหนักไป → กลับไปท่า ${prev.n} ก่อน`, ch: { id: prev.id, name: prev.n } };
+    if (item.lo > 4) return { dir: 'down', text: `ยังหนักไป → ลดเป็น ${Math.max(3, item.lo - 2)}–${Math.max(5, item.hi - 2)} ${unitTxt(ex)}`, ch: { lo: Math.max(3, item.lo - 2), hi: Math.max(5, item.hi - 2) } };
+  }
+  return null;
+}
+function applyProg(di, ii) {
+  const p = JSON.parse(JSON.stringify(plan())), it = p.days[di].items[ii], pr = prog(it);
+  if (!pr) return;
+  Object.assign(it, pr.ch); savePlan(p, true);
+  toast(pr.dir === 'up' ? '⬆️ ปรับแผนแล้ว' : '⬇️ ปรับแผนแล้ว');
+}
+
+// ---------- แผน ----------
+function savePlan(p, now) {
+  D.settings.plan = p;
+  clearTimeout(savePlan.t);
+  const go2 = () => sync('saveSettings', [{ plan: D.settings.plan }]);
+  if (now) { go2(); } else { savePlan.t = setTimeout(go2, 1200); }
+  keepScroll();
+}
+function itemOf(id, g) {
+  const x = exOf(id), mid = (S().db_kg || []).map(Number).filter(Boolean).sort((a, b) => a - b);
+  const kg = (x.eq === 'db') ? (mid.length ? (x.iso ? mid[0] : mid[Math.floor((mid.length - 1) / 2)]) : 5) : 0;
+  return x.u === 's' ? { id, name: x.n, sets: 3, lo: 20, hi: 40, kg: 0 } : { id, name: x.n, sets: 3, lo: x.iso ? 10 : 8, hi: x.iso ? 15 : 12, kg };
+}
+// แผนแนะนำจากอุปกรณ์ (ไม่ใช้ AI)
+function templatePlan() {
+  const n = Math.max(2, Math.min(5, (S().train_days || [1, 3, 5]).length));
+  const pick = (c, used) => c.find(id => { const x = exOf(id); return x && canDo(x) && used.indexOf(id) < 0; });
+  const SL = {
+    push1: ['gym_chest', 'db_press', 'band_press', 'pu_knee'], push2: ['band_press', 'pu_knee', 'db_fly', 'pike'],
+    pull1: ['gym_lat', 'neg_pull', 'db_row', 'band_row', 'table_row'], pull2: ['db_row', 'band_row', 'table_row', 'superman'],
+    squat: ['gym_legpress', 'db_goblet', 'box_squat'], squat2: ['box_squat', 'step_up', 'band_walk', 'side_leg'],
+    hinge: ['db_rdl', 'hip_thrust', 'glute_bridge'], shoulder: ['db_ohp', 'band_pull', 'pike'], shoulder2: ['db_lat', 'band_pull'],
+    arms: ['db_curl', 'band_curl', 'hammer'], tri: ['db_tri', 'dip_chair'], calf: ['calf'],
+    core1: ['dead_bug'], core2: ['plank'], core3: ['bird_dog', 'side_plank'], core4: ['hang_knee', 'leg_raise']
+  };
+  const mk = (name, slots) => { const used = []; slots.forEach(sl => { const id = pick(SL[sl], used); if (id) used.push(id); }); return { name, items: used.map(id => itemOf(id)) }; };
+  const A = ['push1', 'pull1', 'squat', 'shoulder', 'core1'], B = ['push2', 'pull2', 'hinge', 'arms', 'core2'], C = ['push1', 'pull2', 'squat2', 'tri', 'core3'];
+  const UA = ['push1', 'pull1', 'shoulder', 'arms', 'core1'], LA = ['squat', 'hinge', 'calf', 'core2'], UB = ['push2', 'pull2', 'shoulder2', 'tri', 'core3'], LB = ['squat2', 'hinge', 'core4'];
+  let days;
+  if (n <= 3) days = [mk('A · ทั้งตัว', A), mk('B · ทั้งตัว', B), mk('C · ทั้งตัว', C)].slice(0, n);
+  else days = [mk('บน A', UA), mk('ล่าง A', LA), mk('บน B', UB), mk('ล่าง B', LB)].concat(n === 5 ? [mk('ทั้งตัว', A)] : []);
+  return { days };
+}
+function useTemplate() {
+  if (plan() && !confirm('แทนที่แผนเดิมด้วยแผนแนะนำ?')) return;
+  savePlan(templatePlan(), true); tSeg = 'plan'; keepScroll(); toast('📋 จัดแผนแนะนำแล้ว แก้ได้');
+}
+function aiMakePlan() {
+  if (!D.gemini) return alert('ยังไม่ได้ใส่รหัส Gemini');
+  if (plan() && !confirm('ให้ AI จัดแผนใหม่แทนแผนเดิม?')) return;
+  const lib = libAll().filter(canDo).map(x => ({ id: x.id, n: x.n + (x.u === 's' ? ' (วินาที)' : ''), g: (GROUPS.find(g => g[0] === x.g) || [])[1] }));
+  busy('AI กำลังจัดแผน…');
+  api('aiPlan', [lib, (S().train_days || [1, 3, 5]).length, '']).then(p => {
+    busy(false);
+    p.days.forEach(d => d.items = d.items.map(it => Object.assign(itemOf(it.id), { sets: it.sets, lo: it.lo, hi: it.hi })));
+    if (!p.days.length) return alert('AI จัดไม่สำเร็จ ลองใหม่');
+    savePlan(p, true); tSeg = 'plan'; keepScroll(); toast('✨ AI จัดแผนแล้ว');
+  }).catch(e => { busy(false); handleErr(e); });
+}
+function nextDayIdx() {
+  const p = plan(); if (!p) return 0;
+  const last = (D.sets || []).filter(x => x.day_idx !== '' && x.day_idx != null).sort((a, b) => String(a.created_at) < String(b.created_at) ? 1 : -1)[0];
+  return last ? (Number(last.day_idx) + 1) % p.days.length : 0;
+}
+const isTrainDay = d => (S().train_days || [1, 3, 5]).indexOf(new Date(d + 'T12:00:00').getDay()) >= 0;
+let pickDay = -1;
+
+// ---------- หน้า ฝึก ----------
+function trainHtml() {
+  const td = todayIso(), week = [];
+  for (let i = 6; i >= 0; i--) { const d = addDays(td, -i); week.push({ d, ...totals(dayLogs(d)) }); }
+  const mx = Math.max(30, ...week.map(w => w.exMin)), L = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+  const body = W ? workoutHtml() : tSeg === 'plan' ? planHtml() : tSeg === 'lib' ? libHtml() : trainToday();
+  return `<div class="hd tall"><div class="hd-in"><div class="hd-top"><div class="hd-title">🏋️ ฝึก</div>${W ? '' : `<button class="hd-btn" onclick="openForm('exercise')" aria-label="เพิ่ม">＋</button>`}</div>
+      ${W ? '' : `<div class="seg-dk">${[['today', 'วันนี้'], ['plan', 'แผน'], ['lib', 'ท่าทั้งหมด']].map(([k, n]) => `<button class="${tSeg === k ? 'on' : ''}" onclick="tSeg='${k}';libPick=-1;render()">${n}</button>`).join('')}</div>`}</div></div>
+    <div class="wrap">
+      ${W ? '' : `<div class="float"><div class="stat3c"><div class="sc ex"><small>⏱️ 7 วัน</small><b>${fmt(week.reduce((s, w) => s + w.exMin, 0))} <small style="display:inline;font-size:12px">นาที</small></b></div>
+          <div class="sc orange"><small>🔥 เผาไป</small><b>${fmt(week.reduce((s, w) => s + w.ex, 0))}</b></div><div class="sc left"><small>📅 วันที่ขยับ</small><b>${week.filter(w => w.exMin).length}/7</b></div></div>
+        ${tSeg === 'today' ? `<div class="actbars">${week.map(w => `<div><i class="${w.exMin ? '' : 'zero'}" style="height:${w.exMin / mx * 70}px"></i>${L[new Date(w.d + 'T12:00:00').getDay()]}</div>`).join('')}</div><div style="height:12px"></div>` : ''}</div>`}
+      ${body}
+    </div>`;
+}
+function eqSetupHtml(first) {
+  const eq = S().equip || [], days = S().train_days || [1, 3, 5];
+  return `<div class="tcard">${first ? '<div class="tch">🏠 เริ่มจากบอกว่ามีอุปกรณ์อะไร</div>' : ''}
+    <div class="flbl" style="margin-top:4px">อุปกรณ์ที่มี (เลือกได้หลายอย่าง)</div>
+    <div class="sugg">${EQ.slice(1).map(([k, n, ic]) => `<button class="chip ${eq.indexOf(k) >= 0 ? 'on' : ''}" onclick="toggleEq('${k}')">${ic} ${n}</button>`).join('')}</div>
+    ${eq.indexOf('db') >= 0 ? `<div class="flbl">ดัมเบลที่มี (กก. คั่นด้วยจุลภาค)</div><label class="srch" style="margin:0"><input id="dbkg" inputmode="decimal" placeholder="เช่น 4, 6, 8" value="${esc((S().db_kg || []).join(', '))}" onchange="setDbKg(this.value)"><span class="t2">กก.</span></label>` : ''}
+    <div class="flbl">วันที่สะดวกฝึก (${days.length} วัน/สัปดาห์)</div>
+    <div class="daypick">${['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map((n, i) => `<button class="${days.indexOf(i) >= 0 ? 'on' : ''}" onclick="toggleDay(${i})">${n}</button>`).join('')}</div>
+    <p class="note" style="margin:8px 0 0">ตัวเปล่าทำได้เสมอ · ม้านั่งใช้เก้าอี้แข็งแรงแทนได้</p>
+    ${first ? `<button class="btn pri full" style="margin-top:12px" onclick="eqDone()">ถัดไป ›</button>` : ''}</div>`;
+}
+function toggleEq(k) { let e = (S().equip || []).slice(); e = e.indexOf(k) >= 0 ? e.filter(x => x !== k) : e.concat([k]); sync('saveSettings', [{ equip: e }], () => { D.settings.equip = e; }); keepScroll(); }
+function setDbKg(v) { const l = String(v).split(/[ ,/]+/).map(Number).filter(x => x > 0).sort((a, b) => a - b); sync('saveSettings', [{ db_kg: l }], () => { D.settings.db_kg = l; }); }
+function toggleDay(i) { let d = (S().train_days || [1, 3, 5]).slice(); d = d.indexOf(i) >= 0 ? d.filter(x => x !== i) : d.concat([i]).sort(); if (d.length < 1) return; sync('saveSettings', [{ train_days: d }], () => { D.settings.train_days = d; }); keepScroll(); }
+function eqDone() { if (!(S().equip)) sync('saveSettings', [{ equip: [] }], () => { D.settings.equip = []; }); tSeg = 'today'; keepScroll(); }
+
+function trainToday() {
+  const s = S();
+  const quick = [['เดินเร็ว', '🚶'], ['ปั่นจักรยาน', '🚴'], ['งานไร่/งานสวน', '🌾']];
+  const quickHtml = `<div class="sec"><h3>⚡ คาร์ดิโอ / จดเร็ว</h3></div>
+    <div class="exq">${quick.map(([n, ic]) => `<button onclick="openForm('exercise');F.name='${n}';render()"><span>${ic}</span>${n}</button>`).join('')}</div>`;
+  if (!s.equip) return eqSetupHtml(true) + quickHtml;
+  const p = plan();
+  if (!p) return `<div class="tcard"><div class="tch">📋 ยังไม่มีแผนฝึก</div><p class="note" style="margin:4px 0 12px">เลือกวิธีจัดแผนจากอุปกรณ์ที่มี (${myEq().map(k => (EQ.find(e => e[0] === k) || [])[1]).join(', ')}) · ${(s.train_days || [1, 3, 5]).length} วัน/สัปดาห์</p>
+      <div class="bigbtn2"><button onclick="aiMakePlan()"><span>✨</span><b>ให้ AI จัด</b><small>ดูอุปกรณ์ + เข่า + เป้าลดพุง</small></button>
+        <button onclick="useTemplate()"><span>📋</span><b>แผนแนะนำ</b><small>ทั้งตัว ${(s.train_days || [1, 3, 5]).length} วัน จัดทันที</small></button></div>
+      <button class="btn full" style="margin-top:8px" onclick="tSeg='plan';savePlan({days:[{name:'วัน A',items:[]}]},true)">✏️ จัดเองจากคลังท่า</button></div>` + quickHtml;
+  const di = pickDay >= 0 && pickDay < p.days.length ? pickDay : nextDayIdx(), day = p.days[di], td = todayIso();
+  const doneToday = (D.sets || []).some(x => x.date === td && x.day_idx !== '');
+  const train = isTrainDay(td);
+  return `<div class="tcard today-w ${train && !doneToday ? 'go' : ''}">
+      <div class="tch">${doneToday ? '✅ วันนี้ฝึกแล้ว เก่งมาก' : train ? '💪 วันนี้วันฝึก' : '😴 วันนี้วันพัก — เดิน 20–30 นาทีพอ'}</div>
+      <div class="hscroll" style="margin:8px -14px 10px">${p.days.map((d, i) => `<button class="chip ${i === di ? 'on' : ''}" onclick="pickDay=${i};keepScroll()">${esc(d.name)}${i === nextDayIdx() ? ' · ถัดไป' : ''}</button>`).join('')}</div>
+      ${day.items.map((it, ii) => { const x = exOf(it.id) || {}, pr = prog(it);
+        return `<div class="trow"><div class="grow"><div class="t1">${esc(it.name)}${x.k ? ' <span class="kn">เข่าปลอดภัย</span>' : ''}</div>
+          <div class="t2">${it.sets} × ${it.lo}–${it.hi} ${unitTxt(x)}${num(it.kg) ? ' · ' + num(it.kg) + ' กก.' : ''}</div><div class="t2">${lastTxt(it)}</div>
+          ${pr ? `<button class="hint ${pr.dir}" onclick="applyProg(${di},${ii})">${pr.dir === 'up' ? '⬆️' : '⬇️'} ${pr.text} · <u>ปรับแผน</u></button>` : ''}</div></div>`; }).join('') || '<div class="empty">วันนี้ยังไม่มีท่า — ไปที่แท็บ แผน</div>'}
+      ${day.items.length ? `<button class="btn pri full startbtn" onclick="startWorkout(${di})">▶ เริ่มฝึก ${esc(day.name)}</button>` : ''}
+    </div>
+    <div class="sec"><h3>🏠 อุปกรณ์และวันฝึก</h3><a class="lnk" onclick="eqEdit=!eqEdit;keepScroll()">${eqEdit ? 'ปิด' : 'แก้'}</a></div>
+    ${eqEdit ? eqSetupHtml(false) : `<div class="card pad t2" style="white-space:normal">${myEq().map(k => (EQ.find(e => e[0] === k) || [])[2] + ' ' + (EQ.find(e => e[0] === k) || [])[1]).join(' · ')}${(s.db_kg || []).length ? ' (' + s.db_kg.join('/') + ' กก.)' : ''}<br>ฝึกวัน ${(s.train_days || [1, 3, 5]).map(i => ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'][i]).join(' ')}</div>`}
+    ${quickHtml}
+    <div class="sec"><h3>🕒 ล่าสุด</h3></div>
+    <div class="meal m-ex" style="margin-top:0">${(() => { const ex = logs().filter(l => l.kind === 'exercise').sort((a, b) => (a.date + a.time) < (b.date + b.time) ? 1 : -1).slice(0, 10); return ex.length ? ex.map(l => logRow(l)).join('') : '<div class="empty">ยังไม่มีการออกกำลัง</div>'; })()}</div>`;
+}
+
+// ---------- กำลังฝึก ----------
+function startWorkout(di) {
+  const day = plan().days[di];
+  W = { day_idx: di, name: day.name, start: Date.now(), date: todayIso(), items: day.items.map(it => {
+    const last = exSessions(it)[0];
+    return { ex_id: it.id, ex_name: it.name, lo: it.lo, hi: it.hi, kg: num(it.kg), feel: '',
+      sets: Array.from({ length: it.sets }, (_, i) => { const l = last && last.sets.find(x => Number(x.set_no) === i + 1); return { reps: it.hi, kg: num(it.kg), done: false, prev: l ? num(l.reps) : null }; }) };
+  }) };
+  saveW(); go('train');
+}
+function workoutHtml() {
+  const done = W.items.reduce((s, it) => s + it.sets.filter(x => x.done).length, 0), all = W.items.reduce((s, it) => s + it.sets.length, 0);
+  const min = Math.round((Date.now() - W.start) / 60000);
+  return `<div class="float wfloat"><div class="wtop"><div class="grow"><div class="t1" style="font-size:17px">🏋️ ${esc(W.name)}</div><div class="t2">${min} นาที · เสร็จ ${done}/${all} เซ็ต</div></div>
+      <button class="btn sm" onclick="cancelWorkout()">ยกเลิก</button></div>
+      <div class="kbar" style="margin-top:2px"><i style="width:${all ? done / all * 100 : 0}%;background:linear-gradient(90deg,#A78BFA,#6B4FD0)"></i></div></div>
+    ${W.items.map((it, ii) => { const x = exOf(it.ex_id) || {}, allDone = it.sets.every(s => s.done), u = unitTxt(x);
+      return `<div class="wex ${allDone ? 'fin' : ''}"><div class="wexh"><div class="grow"><div class="t1">${ii + 1}. ${esc(it.ex_name)}</div>
+          <div class="t2">เป้า ${it.lo}–${it.hi} ${u}${it.kg ? ' · ' + it.kg + ' กก.' : ''} · ${lastTxt({ id: it.ex_id, name: it.ex_name })}</div></div>
+          <button class="lnk" onclick="exOpen=exOpen==='${ii}'?'':'${ii}';keepScroll()">${exOpen === String(ii) ? 'ปิด' : 'วิธีทำ'}</button></div>
+        ${exOpen === String(ii) ? `<div class="how">${esc(x.how || '-')}</div>` : ''}
+        <div class="circles">${it.sets.map((s, si) => `<button class="cir ${s.done ? 'on' : ''} ${setOpen === ii + '-' + si ? 'sel' : ''}" onclick="tapSet(${ii},${si})"><b>${s.reps}</b><small>${s.done ? (s.kg ? s.kg + 'กก.' : u) : 'เซ็ต ' + (si + 1)}</small></button>`).join('')}
+          <button class="cir add" onclick="addSet(${ii})">＋</button></div>
+        ${setOpen.split('-')[0] === String(ii) ? setEditor(ii, Number(setOpen.split('-')[1])) : ''}
+        ${allDone ? `<div class="feel">${Object.keys(FEEL).map(k => `<button class="${it.feel === k ? 'on' : ''}" onclick="W.items[${ii}].feel='${k}';saveW();keepScroll()">${FEEL[k]}</button>`).join('')}</div>` : ''}
+      </div>`; }).join('')}
+    <p class="note" style="margin:10px 2px">แตะวงกลม = เซ็ตเสร็จ (เริ่มจับเวลาพัก) · แตะวงกลมที่เสร็จแล้ว = แก้จำนวนจริง/น้ำหนัก · จบท่าเลือก ง่าย/พอดี/ยาก</p>
+    <button class="btn pri full" style="height:52px;font-size:17px;background:linear-gradient(135deg,#6B4FD0,#9C6ADE);border:0" onclick="finishWorkout()">✅ จบการฝึก</button>`;
+}
+function setEditor(ii, si) {
+  const s = W.items[ii].sets[si], x = exOf(W.items[ii].ex_id) || {};
+  const st = (lbl, key, step, unit) => `<div class="stp"><span>${lbl}</span><button onclick="adjSet(${ii},${si},'${key}',-${step})">−</button><b>${s[key]}</b><button onclick="adjSet(${ii},${si},'${key}',${step})">＋</button><span class="t2">${unit}</span></div>`;
+  return `<div class="seted">${st('ทำได้', 'reps', 1, unitTxt(x))}${(s.kg || x.eq === 'db' || x.eq === 'gym') ? st('น้ำหนัก', 'kg', x.eq === 'gym' ? 2.5 : 1, 'กก.') : ''}
+    <div style="display:flex;gap:8px;margin-top:6px">${s.done ? `<button class="btn sm" onclick="W.items[${ii}].sets[${si}].done=false;setOpen='';saveW();keepScroll()">ยังไม่เสร็จ</button>` : ''}
+      ${W.items[ii].sets.length > 1 ? `<button class="btn sm red" onclick="W.items[${ii}].sets.splice(${si},1);setOpen='';saveW();keepScroll()">ลบเซ็ตนี้</button>` : ''}
+      <button class="btn sm pri" style="margin-left:auto" onclick="setOpen='';keepScroll()">ตกลง</button></div></div>`;
+}
+function tapSet(ii, si) {
+  const s = W.items[ii].sets[si];
+  if (!s.done) { s.done = true; setOpen = ''; saveW(); keepScroll(); startRest(W.items[ii].kg ? 90 : (num(S().rest) || 60)); }
+  else { setOpen = setOpen === ii + '-' + si ? '' : ii + '-' + si; keepScroll(); }
+}
+function adjSet(ii, si, k, d) { const s = W.items[ii].sets[si]; s[k] = Math.max(0, r1(num(s[k]) + d)); saveW(); keepScroll(); }
+function addSet(ii) { const it = W.items[ii], l = it.sets[it.sets.length - 1] || { reps: it.hi, kg: it.kg }; it.sets.push({ reps: l.reps, kg: l.kg, done: false }); saveW(); keepScroll(); }
+function cancelWorkout() { if (!confirm('ยกเลิกการฝึกนี้? (ไม่บันทึก)')) return; W = null; saveW(); stopRest(); render(); }
+function finishWorkout() {
+  const n = W.items.reduce((s, it) => s + it.sets.filter(x => x.done).length, 0);
+  if (!n) return alert('ยังไม่ได้ทำเซ็ตไหนเลย');
+  const payload = { date: W.date, day_idx: W.day_idx, name: W.name, time: nowHM(), minutes: Math.max(5, Math.round((Date.now() - W.start) / 60000)),
+    items: W.items.map(it => ({ ex_id: it.ex_id, ex_name: it.ex_name, feel: it.feel, sets: it.sets.filter(x => x.done).map(x => ({ reps: x.reps, kg: x.kg })) })).filter(it => it.sets.length) };
+  // โชว์ผลทันที
+  const sid = 'tmp' + Date.now();
+  payload.items.forEach(it => it.sets.forEach((x, i) => (D.sets = D.sets || []).push({ set_id: sid + i, date: payload.date, session_id: sid, day_idx: payload.day_idx, ex_id: it.ex_id, ex_name: it.ex_name, set_no: i + 1, reps: x.reps, kg: x.kg, feel: i === it.sets.length - 1 ? it.feel : '', created_at: nowStr() })));
+  W = null; saveW(); stopRest(); pickDay = -1;
+  sync('saveWorkout', [payload]);
+  toast(`🎉 จบการฝึก ${n} เซ็ต ${payload.minutes} นาที`);
+}
+function nowStr() { return todayIso() + ' ' + nowHM() + ':00'; }
+
+// ---------- จับเวลาพัก ----------
+let restEnd = 0, restT = 0;
+function startRest(sec) { restEnd = Date.now() + sec * 1000; clearInterval(restT); restT = setInterval(tickRest, 250); tickRest(); }
+function stopRest() { clearInterval(restT); restEnd = 0; const b = document.getElementById('restbar'); if (b) b.style.display = 'none'; }
+function tickRest() {
+  const b = document.getElementById('restbar'), left = Math.ceil((restEnd - Date.now()) / 1000);
+  if (left <= 0) { stopRest(); toast('⏰ หมดเวลาพัก ไปเซ็ตต่อไป'); try { navigator.vibrate && navigator.vibrate(300); } catch (e) {} return; }
+  b.style.display = 'flex';
+  document.getElementById('restT').textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+}
+
+// ---------- แท็บ แผน ----------
+function planHtml() {
+  const p = plan(), s = S();
+  const head = `<div class="tcard"><div class="tch">📋 แผนฝึก ${(s.train_days || [1, 3, 5]).length} วัน/สัปดาห์</div>
+      <div class="bigbtn2" style="margin-top:10px"><button onclick="aiMakePlan()"><span>✨</span><b>${p ? 'AI จัดใหม่' : 'ให้ AI จัด'}</b></button><button onclick="useTemplate()"><span>📋</span><b>แผนแนะนำ</b></button></div>
+      <div class="flbl">พักระหว่างเซ็ต (ท่าตัวเปล่า · ท่าถือน้ำหนักพัก 90 วิ)</div>
+      <div class="chips">${[45, 60, 90].map(v => `<button class="chip ${(num(s.rest) || 60) === v ? 'on' : ''}" onclick="sync('saveSettings',[{rest:${v}}],()=>{D.settings.rest=${v}});">${v} วิ</button>`).join('')}</div></div>`;
+  if (!p) return head + `<div class="empty">ยังไม่มีแผน — เลือก AI จัด หรือ แผนแนะนำ ด้านบน<br><button class="btn" style="margin-top:10px" onclick="savePlan({days:[{name:'วัน A',items:[]}]},true)">✏️ เริ่มจัดเอง</button></div>`;
+  return head + p.days.map((d, di) => `<div class="pday"><div class="pdh"><input value="${esc(d.name)}" onchange="renameDay(${di},this.value)"><button class="xbtn2" onclick="delDay(${di})" aria-label="ลบวัน">🗑️</button></div>
+      ${d.items.map((it, ii) => { const x = exOf(it.id) || {}, key = di + '-' + ii, on = planOpen === key;
+        return `<button class="row" onclick="planOpen=planOpen==='${key}'?'':'${key}';keepScroll()"><div class="ico">${(GROUPS.find(g => g[0] === x.g) || ['', '', '🏋️'])[2]}</div>
+            <div class="grow"><div class="t1">${esc(it.name)}</div><div class="t2">${it.sets} × ${it.lo}–${it.hi} ${unitTxt(x)}${num(it.kg) ? ' · ' + num(it.kg) + ' กก.' : ''}</div></div><span class="t2">${on ? '▴' : '▾'}</span></button>
+          ${on ? `<div class="seted" style="margin:0 12px 10px">${['sets', 'lo', 'hi'].map(k => `<div class="stp"><span>${{ sets: 'เซ็ต', lo: 'ขั้นต่ำ', hi: 'เพดาน' }[k]}</span><button onclick="adjPlan(${di},${ii},'${k}',-${k === 'sets' ? 1 : x.u === 's' ? 5 : 1})">−</button><b>${it[k]}</b><button onclick="adjPlan(${di},${ii},'${k}',${k === 'sets' ? 1 : x.u === 's' ? 5 : 1})">＋</button><span class="t2">${k === 'sets' ? '' : unitTxt(x)}</span></div>`).join('')}
+            ${x.eq === 'db' || x.eq === 'gym' || num(it.kg) ? `<div class="stp"><span>น้ำหนัก</span><button onclick="adjPlan(${di},${ii},'kg',-${x.eq === 'gym' ? 2.5 : 1})">−</button><b>${num(it.kg)}</b><button onclick="adjPlan(${di},${ii},'kg',${x.eq === 'gym' ? 2.5 : 1})">＋</button><span class="t2">กก.</span></div>` : ''}
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn sm" onclick="moveItem(${di},${ii},-1)">↑</button><button class="btn sm" onclick="moveItem(${di},${ii},1)">↓</button>
+              <button class="btn sm" onclick="libPick=${di};libG='${x.g || ''}';swapIdx=${ii};tSeg='lib';render()">เปลี่ยนท่า</button><button class="btn sm red" onclick="delItem(${di},${ii})">ลบ</button></div></div>` : ''}`; }).join('')}
+      <button class="addr" style="color:#6B4FD0" onclick="libPick=${di};swapIdx=-1;tSeg='lib';render()">＋ เพิ่มท่า</button></div>`).join('')
+    + `<button class="btn full" style="margin-top:12px" onclick="addDay()">＋ เพิ่มวัน</button>`;
+}
+let swapIdx = -1;
+const clonePlan = () => JSON.parse(JSON.stringify(plan() || { days: [] }));
+function adjPlan(di, ii, k, d) { const p = clonePlan(), it = p.days[di].items[ii]; it[k] = Math.max(k === 'kg' ? 0 : 1, r1(num(it[k]) + d)); if (it.lo > it.hi) { if (k === 'lo') it.hi = it.lo; else it.lo = it.hi; } savePlan(p); }
+function moveItem(di, ii, d) { const p = clonePlan(), a = p.days[di].items, j = ii + d; if (j < 0 || j >= a.length) return; [a[ii], a[j]] = [a[j], a[ii]]; planOpen = di + '-' + j; savePlan(p); }
+function delItem(di, ii) { const p = clonePlan(); p.days[di].items.splice(ii, 1); planOpen = ''; savePlan(p, true); }
+function renameDay(di, v) { const p = clonePlan(); p.days[di].name = v.trim() || p.days[di].name; savePlan(p, true); }
+function delDay(di) { if (!confirm('ลบวันนี้ออกจากแผน?')) return; const p = clonePlan(); p.days.splice(di, 1); savePlan(p, true); }
+function addDay() { const p = clonePlan(); p.days.push({ name: 'วัน ' + String.fromCharCode(65 + p.days.length), items: [] }); savePlan(p, true); }
+
+// ---------- แท็บ ท่าทั้งหมด ----------
+function libHtml() {
+  const list = libAll().filter(x => (libAllOn || canDo(x)) && (!libG || x.g === libG));
+  const p = plan();
+  return `${libPick >= 0 && p ? `<div class="alert info" style="display:flex;align-items:center;gap:8px"><span class="grow">${swapIdx >= 0 ? 'เลือกท่าใหม่แทน' : 'เลือกท่าใส่'} "${esc(p.days[libPick].name)}"</span><button class="btn sm" onclick="libPick=-1;tSeg='plan';render()">เสร็จ</button></div>` : ''}
+    <div class="hscroll" style="margin-top:12px"><button class="chip ${!libG ? 'on' : ''}" onclick="libG='';keepScroll()">ทั้งหมด</button>${GROUPS.map(([k, n, ic]) => `<button class="chip ${libG === k ? 'on' : ''}" onclick="libG='${k}';keepScroll()">${ic} ${n}</button>`).join('')}</div>
+    <label class="tgl2"><input type="checkbox" ${libAllOn ? 'checked' : ''} onchange="libAllOn=this.checked;keepScroll()"> โชว์ท่าที่ต้องใช้อุปกรณ์ที่ไม่มีด้วย</label>
+    <div class="card">${list.map(x => { const on = exOpen === 'L' + x.id, eqn = EQ.find(e => e[0] === x.eq) || EQ[0];
+      return `<button class="row" onclick="exOpen=exOpen==='L${x.id}'?'':'L${x.id}';keepScroll()"><div class="ico">${(GROUPS.find(g => g[0] === x.g) || ['', '', '🏋️'])[2]}</div>
+          <div class="grow"><div class="t1">${esc(x.n)}</div><div class="t2">${eqn[2]} ${eqn[1]}${x.u === 's' ? ' · จับเวลา' : ''}${x.k ? ' · 🦵 เข่าปลอดภัย' : ''}${canDo(x) ? '' : ' · ไม่มีอุปกรณ์'}</div></div>
+          ${libPick >= 0 && p ? `<span class="plusb" onclick="event.stopPropagation();addToPlan('${x.id}')">＋</span>` : `<span class="t2">${on ? '▴' : '▾'}</span>`}</button>
+        ${on ? `<div class="how">${esc(x.how || 'ท่าที่เพิ่มเอง')}${x.next && exOf(x.next) ? `<br><b>ท่าถัดไป:</b> ${esc(exOf(x.next).n)}` : ''}</div>` : ''}`; }).join('') || '<div class="empty">ไม่มีท่าในกลุ่มนี้</div>'}</div>
+    <div class="sec"><h3>➕ เพิ่มท่าเอง</h3></div>
+    <div class="card fcard"><label class="frow"><span>ชื่อท่า</span><input id="myn" placeholder="เช่น ยกขวดน้ำ"></label>
+      <div class="frow"><span>กลุ่ม</span><select id="myg" style="flex:1;border:0;background:none;text-align:right;font-size:16px">${GROUPS.map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</select></div>
+      <div class="frow"><span>นับเป็น</span><select id="myu" style="flex:1;border:0;background:none;text-align:right;font-size:16px"><option value="r">ครั้ง</option><option value="s">วินาที</option></select></div></div>
+    <button class="btn full" style="margin-top:8px" onclick="addMyEx()">บันทึกท่า</button>`;
+}
+function addToPlan(id) {
+  const p = clonePlan(), d = p.days[libPick];
+  if (swapIdx >= 0) { const old = d.items[swapIdx], it = itemOf(id); d.items[swapIdx] = Object.assign(it, { sets: old.sets }); swapIdx = -1; toast('เปลี่ยนท่าแล้ว'); savePlan(p, true); libPick = -1; tSeg = 'plan'; render(); return; }
+  d.items.push(itemOf(id)); savePlan(p, true); toast('เพิ่ม ' + exOf(id).n);
+}
+function addMyEx() {
+  const n = document.getElementById('myn').value.trim(); if (!n) return alert('ใส่ชื่อท่า');
+  const x = { id: 'my_' + Date.now().toString(36), n, g: document.getElementById('myg').value, eq: 'none', u: document.getElementById('myu').value, how: '' };
+  const l = (S().my_ex || []).concat([x]);
+  sync('saveSettings', [{ my_ex: l }], () => { D.settings.my_ex = l; });
+  toast('เพิ่มท่าแล้ว');
+}
+
+// การ์ดฝึกบนหน้าวันนี้
+function trainCardToday() {
+  const p = plan(), td = todayIso();
+  if (W) return `<button class="row trow-go" onclick="go('train')"><div class="ico">🏋️</div><div class="grow"><div class="t1">กำลังฝึก: ${esc(W.name)}</div><div class="t2">แตะเพื่อกลับไปนับเซ็ต</div></div><span>›</span></button>`;
+  if (!S().equip) return `<button class="row" onclick="tSeg='today';go('train')"><div class="ico">🏠</div><div class="grow"><div class="t1">ตั้งอุปกรณ์ + จัดแผนฝึก</div><div class="t2">ใช้เวลา 1 นาที</div></div><span>›</span></button>`;
+  if (!p) return `<button class="row" onclick="tSeg='today';go('train')"><div class="ico">📋</div><div class="grow"><div class="t1">จัดแผนฝึก</div><div class="t2">ให้ AI จัด หรือใช้แผนแนะนำ</div></div><span>›</span></button>`;
+  const done = (D.sets || []).some(x => x.date === td && x.day_idx !== '');
+  if (done) return `<div class="row"><div class="ico">✅</div><div class="grow"><div class="t1">วันนี้ฝึกแล้ว</div></div></div>`;
+  if (!isTrainDay(td)) return `<div class="row"><div class="ico">😴</div><div class="grow"><div class="t1">วันพักกล้าม</div><div class="t2">เดินเบา ๆ 20–30 นาทีพอ</div></div></div>`;
+  const d = p.days[nextDayIdx()];
+  return `<button class="row trow-go" onclick="tSeg='today';go('train')"><div class="ico">💪</div><div class="grow"><div class="t1">วันนี้ฝึก ${esc(d.name)}</div><div class="t2">${d.items.length} ท่า · ${d.items.slice(0, 3).map(i => i.name).join(', ')}${d.items.length > 3 ? '…' : ''}</div></div><span class="gobtn">เริ่ม ›</span></button>`;
+}
+
 const CH = {};
 function lineChart(id, pts, key, color, dotColor, goal) {
   if (!pts.length) return '<div class="empty">ยังไม่มีข้อมูล</div>';

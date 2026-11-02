@@ -91,7 +91,16 @@ function coachContext_(s, log, today) {
   }
   const ws = log.filter(l => l.kind === 'weight').sort((a, b) => a.date < b.date ? -1 : 1).slice(-12);
   lines.push('น้ำหนักล่าสุด: ' + (ws.map(w => `${w.date} ${w.weight}${w.fat_pct ? '/' + w.fat_pct + '%' : ''}`).join(', ') || '-'));
-  return { text: lines.join('\n'), target: tg, left: left };
+  // การฝึก
+  const eq = { none: 'ตัวเปล่า', db: 'ดัมเบล', band: 'ยางยืด', bar: 'บาร์โหนประตู', bench: 'ม้านั่ง/เก้าอี้', gym: 'ยิม' };
+  const plan = s.plan && s.plan.days ? s.plan : null;
+  lines.push('อุปกรณ์: ' + ((s.equip || []).map(k => eq[k] || k).join(', ') || 'ยังไม่ได้ตั้ง') + (s.db_kg && s.db_kg.length ? ' · ดัมเบล ' + s.db_kg.join('/') + ' กก.' : ''));
+  if (plan) plan.days.forEach((d, i) => lines.push(`แผนวัน ${i + 1} "${d.name}": ` + (d.items || []).map(x => `${x.name} ${x.sets}×${x.lo}-${x.hi}${x.kg ? ' @' + x.kg + 'กก.' : ''}`).join(', ')));
+  const sets = rows_(SH_.SETS).filter(x => String(x.date) >= addDays_(today, -14));
+  const ses = {};
+  sets.forEach(x => { (ses[x.session_id] = ses[x.session_id] || { date: x.date, ex: {} }).ex[x.ex_name] = (ses[x.session_id].ex[x.ex_name] || []).concat([x.reps + (num_(x.kg) ? '@' + x.kg : '')]); });
+  Object.keys(ses).forEach(k => lines.push(`ฝึก ${ses[k].date}: ` + Object.keys(ses[k].ex).map(n => n + ' ' + ses[k].ex[n].join('/')).join(', ')));
+  return { text: lines.join('\n'), target: tg, left: left, planNames: plan ? [].concat.apply([], plan.days.map(d => (d.items || []).map(x => x.name))) : [] };
 }
 
 // ส่งข้อความ (+รูป) ให้โค้ช → AI แยกสิ่งที่ต้องจด → จดทันที → คืนคำตอบ
@@ -144,7 +153,8 @@ ${text || '(ส่งรูปอย่างเดียว)'}${pages.length ? 
  {"kind":"food","date":"yyyy-mm-dd","time":"HH:MM","meal":"breakfast|lunch|dinner|snack","name":"ชื่ออาหาร","qty":"ปริมาณ เช่น 1 จาน","kcal":0,"protein":0,"carb":0,"fat":0},
  {"kind":"weight","date":"yyyy-mm-dd","weight":0,"fat_pct":null},
  {"kind":"water","date":"yyyy-mm-dd","ml":0},
- {"kind":"exercise","date":"yyyy-mm-dd","time":"HH:MM","name":"ชื่อ","minutes":0,"kcal":0}
+ {"kind":"exercise","date":"yyyy-mm-dd","time":"HH:MM","name":"ชื่อ","minutes":0,"kcal":0},
+ {"kind":"workout","date":"yyyy-mm-dd","name":"ชื่อท่า","sets":[{"reps":10,"kg":0}]}
 ]}
 กติกาการจด:
 - จดเฉพาะสิ่งที่ผู้ใช้กิน/ดื่ม/ชั่ง/ออกกำลังแล้ว (หรือบอกว่ากำลังกิน) · ถ้าแค่ถาม/ปรึกษา/วางแผน entries = []
@@ -155,6 +165,8 @@ ${text || '(ส่งรูปอย่างเดียว)'}${pages.length ? 
 - น้ำ: 1 แก้ว = 250 มล. · ขวดเล็ก 600 · ขวดใหญ่ 1500 · กาแฟ/ชา/นม ให้จดเป็นอาหาร ไม่ใช่น้ำ
 - ออกกำลัง: kcal = MET × น้ำหนัก ${ctx.target.weight} กก. × ชั่วโมง (เดินเร็ว 4.3, เดินชิล 3, ปั่นจักรยาน 6, ว่ายน้ำ 6, เวท 5, วิ่ง 8, งานไร่หนัก 5)
 - น้ำหนัก: fat_pct ใส่ถ้าบอก ไม่งั้น null
+- ท่าเวท/บอดี้เวทที่บอกเซ็ต/ครั้ง (เช่น "วิดพื้นครบ 4 เซ็ต", "สควอท 3x12 ดัมเบล 8") → kind "workout" 1 entry ต่อท่า, sets ตามจำนวนเซ็ต (ไม่บอกครั้ง ใช้ช่วงในแผน) · ชื่อท่าใช้ชื่อในแผนถ้าตรง: ${(ctx.planNames || []).join(', ') || '-'}
+- คำถามเรื่องฝึก: ตอบจากอุปกรณ์/แผน/ประวัติฝึกด้านบน · เน้นท่าไม่กระแทกเข่า · เจ็บ/ปวดผิดปกติ → หยุดท่านั้น หาหมอ
 - ถ้าผู้ใช้แก้รายการที่เพิ่งจด (เช่น "ไม่ใช่ 2 จาน 1 จาน", "ผิด ลบ") → replace_last = true แล้วใส่ entries ชุดใหม่ที่ถูกต้องทั้งหมดของข้อความนั้น (ลบทิ้งอย่างเดียว entries = [])
 reply:
 - ถ้าจด: ยืนยันสั้น ๆ (ชื่อ + แคลรวม) แล้วบอกเหลือกินได้อีกกี่แคลวันนี้ (คิดจากเหลือ ${ctx.left} ลบสิ่งที่เพิ่งจดวันนี้) + คำแนะนำ 1 ประโยคถ้ามีประโยชน์ (เช่น โปรตีนยังขาด)
@@ -178,7 +190,21 @@ reply:
       replaced = deleteWhere_(SH_.LOG, l => l.msg_id === lastUser.msg_id);
     }
     const entries = [];
-    (data.entries || []).forEach(e => {
+    if (data.replace_last && lastUser) deleteWhere_(SH_.SETS, x => x.msg_id === lastUser.msg_id);
+    const plan = (settings_().plan || {}).days || [];
+    const planEx = [].concat.apply([], plan.map(d => d.items || []));
+    const wSets = [];
+    (data.entries || []).filter(e => e.kind === 'workout').forEach(e => {
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(e.date || '') ? e.date : today;
+      const pe = planEx.find(x => x.name === e.name);
+      (e.sets || []).forEach((st, i) => wSets.push({ set_id: newId_('S'), date: date, session_id: msgId, day_idx: '', ex_id: pe ? pe.id : '',
+        ex_name: String(e.name || '').slice(0, 80), set_no: i + 1, reps: num_(st.reps), kg: num_(st.kg), feel: '', msg_id: msgId, created_at: nowStr_() }));
+      const min = Math.max(3, (e.sets || []).length * 3);
+      entries.push(cleanLog_({ kind: 'exercise', date: date, time: date === today ? now : '18:00', name: 'เวท: ' + e.name, minutes: min,
+        kcal: Math.round(5 * ctx.target.weight * min / 60), source: 'chat', msg_id: msgId, note: (e.sets || []).length + ' เซ็ต' }));
+    });
+    appendMany_(SH_.SETS, wSets.filter(x => x.reps > 0));
+    (data.entries || []).filter(e => e.kind !== 'workout').forEach(e => {
       try {
         const o = Object.assign({}, e, { source: 'chat', msg_id: msgId, photo_id: e.kind === 'food' ? photoIds : '' });
         if (!o.time) o.time = (o.date && o.date !== today) ? '' : now;
@@ -204,6 +230,7 @@ function coachUndo(msgId) {
   return withLock_(() => {
     msgId = String(msgId || '').replace(/R$/, '');
     const n = deleteWhere_(SH_.LOG, l => l.msg_id === msgId);
+    deleteWhere_(SH_.SETS, x => x.msg_id === msgId);
     const sh = sheet_(SH_.CHAT);
     const r = findRow_(sh, msgId + 'R');
     if (r > 0) {
@@ -231,7 +258,8 @@ function getTip(force) {
   if (have && !force) return have.text;
   const s = settings_();
   const ctx = coachContext_(s, rows_(SH_.LOG), today);
-  const prompt = `คุณคือ "โค้ชลดพุง" เขียนการ์ดโค้ชประจำวันนี้ (${today}) ให้ผู้ชายไทยที่กำลังลดน้ำหนัก ภาษาไทย ตอบ JSON อย่างเดียว:
+  const sunday = new Date(today + 'T12:00:00+07:00').getDay() === 0;
+  const prompt = `คุณคือ "โค้ชลดพุง" เขียนการ์ดโค้ชประจำวันนี้ (${today})${sunday ? ' — วันนี้วันอาทิตย์: ทำเป็น "สรุปสัปดาห์" head = ผลสัปดาห์นี้ (น้ำหนักเฉลี่ยเปลี่ยนเท่าไร/วันที่คุมได้/ฝึกกี่ครั้ง) body = 1–2 เป้าสัปดาห์หน้า' : ''} ให้ผู้ชายไทยที่กำลังลดน้ำหนัก ภาษาไทย ตอบ JSON อย่างเดียว:
 {"head":"หัวข้อ 1 ประโยค ไม่เกิน 55 ตัวอักษร","body":"คำแนะนำ 1–2 ประโยค ไม่เกิน 170 ตัวอักษร"}
 head = เรื่องที่สำคัญหรือน่าดีใจที่สุดจากข้อมูลจริง (เช่น น้ำหนักลงกี่ กก., จดครบกี่วัน, โปรตีนถึงเป้า) ให้มีกำลังใจ ใส่อีโมจิได้ 1 ตัวท้าย
 body = 1 อย่างที่ทำได้วันนี้ เจาะจง (เมนูไทย/เซเว่นที่เหมาะ, เดินหลังมื้อ, เติมโปรตีนกี่กรัม) ถ้าเมื่อวานเกินเป้าบอกตรง ๆ แบบไม่ดุ
@@ -315,4 +343,24 @@ function bodyPhotos_() {
     if (l.length) { keep[l[0].photo_id] = 1; keep[l[l.length - 1].photo_id] = 1; }
   });
   return all.map(p => ({ photo_id: p.photo_id, date: p.date, pose: p.pose, file_id: p.file_id, thumb: keep[p.photo_id] ? p.thumb : '' }));
+}
+
+// ให้ AI จัดแผนฝึก: lib = [{id, n, g, eq}] (ท่าที่อุปกรณ์รองรับ) · คืน {days:[{name, items:[{id, sets, lo, hi}]}]}
+function aiPlan(lib, daysPerWeek, note) {
+  const s = settings_();
+  const tg = calcTarget_(s, rows_(SH_.LOG));
+  const n = Math.max(2, Math.min(5, Math.round(num_(daysPerWeek)) || 3));
+  const prompt = `จัดแผนฝึกกล้ามเนื้อสำหรับผู้ชายไทย น้ำหนัก ${tg.weight} กก.${tg.fat_pct ? ' ไขมัน ' + tg.fat_pct + '%' : ''} เป้าหมายลดไขมันหน้าท้อง เก็บกล้าม มือใหม่-กลาง
+ฝึก ${n} วัน/สัปดาห์ วันละ 35–50 นาที · ต้องไม่กระแทกเข่า (ไม่กระโดด) · ${s.focus || ''} ${note || ''}
+เลือกท่าจากรายการนี้เท่านั้น (ใช้ id ตรงตัว):
+${(lib || []).map(x => `${x.id} | ${x.n} | ${x.g}`).join('\n')}
+ตอบ JSON อย่างเดียว: {"days":[{"name":"ชื่อวันสั้น ๆ เช่น A · ทั้งตัว","items":[{"id":"...","sets":3,"lo":8,"hi":12}]}]}
+- ${n} วัน แต่ละวัน 5–7 ท่า ครอบคลุม ดัน/ดึง/ขา(สะโพก)/หน้าท้อง · ท่าจับเวลา (แพลงก์ ห้อยบาร์ นั่งพิงผนัง) lo/hi เป็นวินาที`;
+  const d = JSON.parse(geminiCall_([{ text: prompt }], true).replace(/^```json\s*|```\s*$/g, ''));
+  const ids = (lib || []).map(x => x.id);
+  return { days: (d.days || []).slice(0, 5).map((day, i) => ({
+    name: String(day.name || ('วัน ' + (i + 1))).slice(0, 40),
+    items: (day.items || []).filter(x => ids.indexOf(x.id) >= 0).slice(0, 8).map(x => ({ id: x.id, sets: Math.max(1, Math.min(6, Math.round(num_(x.sets)) || 3)),
+      lo: Math.max(1, Math.round(num_(x.lo)) || 8), hi: Math.max(1, Math.round(num_(x.hi)) || 12) }))
+  })) };
 }
