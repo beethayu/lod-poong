@@ -640,6 +640,8 @@ function setData(d) {
 const S = () => D.settings || {};
 const logs = () => D.log || [];
 const dayLogs = iso => logs().filter(l => l.date === iso).sort((a, b) => String(a.time) < String(b.time) ? -1 : 1);
+// วันที่จดอาหารไม่ครบ (มื้อเดียว หรือต่ำกว่าครึ่งเป้า) — ไม่นับว่ากินน้อย
+function partialDay(d, tg) { const f = dayLogs(d).filter(l => l.kind === 'food'), m = {}; f.forEach(l => m[l.meal || l.time] = 1); return f.length > 0 && (Object.keys(m).length < 2 || totals(f).kcal < tg.kcal * 0.5); }
 function totals(list) {
   const t = { kcal: 0, protein: 0, carb: 0, fat: 0, ex: 0, exMin: 0, water: 0, n: 0 };
   list.forEach(l => {
@@ -757,7 +759,7 @@ function streak() {
 }
 function proteinDays(tg) {
   let hit = 0, seen = 0;
-  for (let i = 1; i <= 7; i++) { const t = totals(dayLogs(addDays(todayIso(), -i))); if (t.n) { seen++; if (t.protein >= tg.protein * 0.9) hit++; } }
+  for (let i = 1; i <= 7; i++) { const d = addDays(todayIso(), -i), t = totals(dayLogs(d)); if (t.n && !partialDay(d, tg)) { seen++; if (t.protein >= tg.protein * 0.9) hit++; } }
   return { hit, seen };
 }
 function coachCard(tg) {
@@ -770,7 +772,7 @@ function coachCard(tg) {
   else body = '<span class="spin sm"></span> โค้ชกำลังดูข้อมูลวันนี้…';
   const st = streak(), pd = proteinDays(tg);
   const badges = [];
-  if (st) badges.push(`<span class="badge fire">🔥 จดครบ ${st} วันติด</span>`);
+  if (st) badges.push(`<span class="badge fire">🔥 จดติดกัน ${st} วัน</span>`);
   if (pd.seen) badges.push(`<span class="badge pro">🎯 โปรตีนถึงเป้า ${pd.hit}/${pd.seen} วัน</span>`);
   let goal = '';
   if (lw && dw.length) {
@@ -930,7 +932,7 @@ function alertsHtml(tg) {
   }
   // กินต่ำกว่าเป้ามากหลายวัน
   let low = 0, seen = 0;
-  for (let i = 1; i <= 4; i++) { const t = totals(dayLogs(addDays(td, -i))); if (t.n) { seen++; if (t.kcal < tg.kcal - 500) low++; } }
+  for (let i = 1; i <= 4; i++) { const t = totals(dayLogs(addDays(td, -i))); if (t.n && !partialDay(addDays(td, -i), tg)) { seen++; if (t.kcal < tg.kcal - 500) low++; } }
   if (seen >= 3 && low >= 3) out.push(`<div class="alert red">🍽️ ${low} วันล่าสุดกินต่ำกว่าเป้าเกิน 500 แคล — กินให้พอเป้า ไม่งั้นกล้ามหายและเผาผลาญลดลง</div>`);
   if (tg.low) out.push(`<div class="alert warn">ความเร็วที่ตั้งไว้ทำให้เป้าต่ำกว่า BMR → ใช้ ${fmt(tg.kcal)} แคลแทน (ตั้งค่า ⚙️)</div>`);
   return out.join('');
