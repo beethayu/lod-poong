@@ -297,6 +297,17 @@
   .ifhist { margin-top: 8px; font-size: 12.5px; color: var(--muted); display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   .ifhist span { min-width: 24px; text-align: center; border-radius: 6px; background: #EEF0EC; padding: 1px 4px; font-weight: 700; color: #5B6466; }
   .ifhist span.ok { background: #E2F4EA; color: #17694D; }
+  .ifcard.due { border: 2px solid #6B4FD0; background: #FBFAFF; }
+  .ifmenu { display: flex; gap: 6px; margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+  .ifmenu button { flex: 1; font-size: 13.5px; color: var(--muted); padding: 4px; }
+  .ifpick { padding: 2px 0; }
+  .iftime { display: block; margin: 10px auto; font-size: 34px; font-weight: 700; text-align: center; border: 0; background: #F4F2FB; border-radius: 14px; padding: 8px 18px; color: inherit; -webkit-appearance: none; appearance: none; min-width: 0; width: 210px; }
+  .ift2 { font: inherit; font-weight: 700; border: 0; background: #F4F2FB; border-radius: 8px; padding: 6px 10px; color: inherit; -webkit-appearance: none; appearance: none; min-width: 0; width: 112px; text-align: center; }
+  .ifsel { font: inherit; border: 0; background: #F4F2FB; border-radius: 8px; padding: 6px 8px; color: inherit; flex: 1; min-width: 0; -webkit-appearance: none; appearance: none; }
+  .ifedrow { display: flex; gap: 8px; align-items: center; margin-top: 6px; } .ifedrow > span { width: 34px; font-weight: 600; }
+  .ifstat { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+  .ifstat b { display: block; font-size: 18px; } .ifstat span { font-size: 12.5px; color: var(--muted); }
+  button.ifhist { width: 100%; text-align: left; }
   .aiwork { margin-top: 10px; border-radius: 14px; padding: 12px 14px; background: linear-gradient(135deg,#F1ECFD,#fff); border: 1px solid #E0D8F7; color: #5B3FB0; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
   .aiwork small { font-size: 12.5px; color: var(--muted); }
   .aiwork i { display: block; height: 4px; border-radius: 99px; margin-top: 8px; background: linear-gradient(90deg,#E0D8F7 0%,#6B4FD0 40%,#E0D8F7 80%); background-size: 250% 100%; animation: aiw 1.6s ease-in-out infinite; }
@@ -704,7 +715,7 @@ function calcTarget(s, lw) {
 }
 
 // ===== หน้าจอ =====
-const PARENT = { add: 'diary', set: 'today', pick: 'diary', body: 'today' };
+const PARENT = { add: 'diary', set: 'today', pick: 'diary', body: 'today', ifh: 'today' };
 function go(t) { tab = t; openRow = ''; lsSet(UI_STORE, JSON.stringify({ tab: PARENT[t] || t, at: Date.now() })); render(); document.getElementById('app').scrollTop = 0; if (t === 'coach') scrollChat(); }
 function render() {
   const app = document.getElementById('app');
@@ -714,7 +725,7 @@ function render() {
   if (!D) { app.innerHTML = '<div class="hd"><div class="hd-in"><div class="hd-top"><div class="hd-title">ลดพุง</div></div></div></div><div class="empty">กำลังโหลด…</div>'; return; }
   if (D.needsSetup) { app.innerHTML = '<div class="hd"><div class="hd-in"><div class="hd-top"><div class="hd-title">ลดพุง</div></div></div></div><div class="wrap"><div class="empty">ตั้งค่าครั้งแรกก่อนใช้</div><button class="btn pri full" onclick="showSetup()">เริ่มตั้งค่า</button></div>'; return; }
   const net = netErr ? `<div class="netbar"><span>⚠️ ${esc(netErr)} (ข้อมูลล่าสุดที่จำไว้)</span><button class="lnk" onclick="load(true)">ลองใหม่</button></div>` : '';
-  const f = { body: bodyHtml, pick: pickHtml, today: todayHtml, diary: diaryHtml, coach: coachHtml, train: trainHtml, sum: sumHtml, add: addHtml, set: setHtml }[tab] || todayHtml;
+  const f = { ifh: ifhHtml, body: bodyHtml, pick: pickHtml, today: todayHtml, diary: diaryHtml, coach: coachHtml, train: trainHtml, sum: sumHtml, add: addHtml, set: setHtml }[tab] || todayHtml;
   app.innerHTML = net + f();
   if (tab === 'today') maybeTip();
   if (D && D.settings && D.settings.if_on && !syncQ.length) setTimeout(ifAutoEnd, 0);
@@ -751,7 +762,7 @@ function todayHtml() {
       ${alertsHtml(tg)}
       <div class="sec"><h3>🥗 แมโครวันนี้</h3><a class="lnk" onclick="go('diary')">ไดอารี่ ›</a></div>
       ${macroBars(t, tg)}
-      <div class="sec"><h3>⏱️ IF อดอาหาร</h3>${S().if_goal ? `<span class="sm">${S().if_goal}:${24 - S().if_goal}</span>` : ''}</div>
+      <div class="sec"><h3>⏱️ IF อดอาหาร</h3><a class="lnk" onclick="go('ifh')">ประวัติ ›</a></div>
       ${ifCard()}
       <div class="sec"><h3>💧 น้ำดื่ม</h3><span class="sm">เป้า ${fmt(num(s.water_goal) || 2500)} มล.</span></div>
       ${waterCard(td, t)}
@@ -933,77 +944,147 @@ function loadFull(p) {
 function delPhoto(id) { if (confirm('ลบรูปนี้?')) run('deletePhoto', [id], 'กำลังลบ…', () => { bLeft = ''; toast('ลบแล้ว'); }); }
 
 // ===== IF อดอาหาร =====
-// Settings.if_goal = ชั่วโมงอด (14/16/18/20) · Settings.if_on = เวลาเริ่ม 'YYYY-MM-DDTHH:MM' หรือ '' · จบแล้วเก็บ Log kind 'fast' (date/time = เริ่ม, minutes)
-let ifOpen = false, ifTimer = 0;
+// Settings: if_goal (ชม.), if_at (เวลาเริ่มตามแผน 'HH:MM'), if_on (กำลังอด: 'YYYY-MM-DDTHH:MM' หรือ '')
+// จบแล้ว → Log kind 'fast' (date/time = เริ่ม, minutes) · ยืนยันเวลาในการ์ด (ไม่เด้ง) ด้วย input time = วงล้อของ iPhone
+let ifMode = '', ifSel = null, ifEditId = '';   // ifMode: '' | 'start' | 'end' | 'set' | 'edit'
 const ifStartMs = v => new Date(String(v) + ':00').getTime();
 const isoMin = d => isoOf(d) + 'T' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 const hm = m => Math.floor(m / 60) + ':' + String(Math.floor(m % 60)).padStart(2, '0');
+const hmTxt = m => { const h = Math.floor(m / 60), n = Math.round(m % 60); return h + ' ชม.' + (n ? ' ' + n + ' น.' : ''); };
+const ifGoal = () => num(S().if_goal) || 16;
+const ifAt = () => S().if_at || '16:00';
+const addHM = (t, h) => { const [a, b] = t.split(':').map(Number), m = ((a * 60 + b + h * 60) % 1440 + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
 function lastFoodAt() {
   const f = logs().filter(l => l.kind === 'food').map(l => l.date + 'T' + String(l.time || '12:00').padStart(5, '0')).sort().pop();
   return f && (Date.now() - ifStartMs(f)) < 20 * 3600e3 && Date.now() > ifStartMs(f) ? f : '';
 }
+const fastsAll = () => logs().filter(l => l.kind === 'fast').sort((a, b) => (a.date + a.time) < (b.date + b.time) ? 1 : -1);
+const fastEnd = l => isoMin(new Date(ifStartMs(l.date + 'T' + l.time) + num(l.minutes) * 60000));
+// ถึงเวลาเริ่มตามแผนแล้วหรือยัง (ช่วง 6 ชม. หลังเวลาเริ่ม และยังไม่ได้อดวันนี้)
+function ifDue() {
+  const now = new Date(), at = new Date(isoOf(now) + 'T' + ifAt() + ':00').getTime(), t = now.getTime();
+  return !S().if_on && t >= at && t < at + 6 * 3600e3 && !fastsAll().some(l => ifStartMs(l.date + 'T' + l.time) > at - 3 * 3600e3);
+}
 const IF_PH = [[0, 'ย่อยมื้อล่าสุด'], [4, 'น้ำตาลในเลือดเริ่มลด ใช้พลังงานสะสม'], [12, 'ร่างกายดึงไขมันมาใช้มากขึ้น'], [16, 'ครบช่วงหลักแล้ว ทำได้ดี']];
+// ตัวเลือกเวลา: วัน (เมื่อวาน/วันนี้) + input time + ชิปลัด
+function ifPicker(title, sel, chips, okTxt, ok) {
+  return `<div class="ifpick"><div class="t1" style="text-align:center;margin-bottom:8px">${title}</div>
+    <div class="seg2" style="max-width:240px;margin:0 auto">${[['y', 'เมื่อวาน'], ['t', 'วันนี้']].map(([k, n]) => `<button class="${sel.day === k ? 'on' : ''}" onclick="ifSel.day='${k}';ifRe()">${n}</button>`).join('')}</div>
+    <input type="time" class="iftime" value="${sel.time}" onchange="ifSel.time=this.value">
+    <div class="sugg" style="justify-content:center">${chips.map(([n, d, t]) => `<button class="chip" onclick="ifSel={day:'${d}',time:'${t}'};ifRe()">${n}</button>`).join('')}</div>
+    <div class="ifbtns"><button class="btn" onclick="ifMode='';ifRe()">ยกเลิก</button><button class="btn pri" style="flex:2" onclick="${ok}">${okTxt}</button></div></div>`;
+}
+const selIso = sel => (sel.day === 'y' ? addDays(todayIso(), -1) : todayIso()) + 'T' + (sel.time || nowHM());
+const selOf = iso => ({ day: iso.slice(0, 10) === todayIso() ? 't' : 'y', time: iso.slice(11, 16) });
 function ifCard() {
-  const s = S(), goal = num(s.if_goal) || 16;
-  const done = logs().filter(l => l.kind === 'fast').sort((a, b) => (a.date + a.time) < (b.date + b.time) ? 1 : -1);
+  const s = S(), goal = ifGoal(), at = ifAt(), done = fastsAll();
+  if (ifMode === 'end' && !s.if_on) ifMode = '';
   const week = done.filter(l => l.date >= addDays(todayIso(), -6));
-  const hist = week.length ? `<div class="ifhist">7 วัน: ${week.slice().reverse().map(l => `<span class="${num(l.minutes) >= goal * 60 ? 'ok' : ''}">${(num(l.minutes) / 60).toFixed(0)}</span>`).join('')} ชม.</div>` : '';
-  if (!s.if_on) {
-    const lf = lastFoodAt();
-    const pick = `<div class="sugg" style="margin-top:6px">${[14, 16, 18, 20].map(h => `<button class="chip ${goal === h ? 'on' : ''}" onclick="setIfGoal(${h})">${h}:${24 - h}</button>`).join('')}</div>`;
-    return `<div class="card ifcard" id="ifcard"><div class="ifidle"><div class="grow"><div class="t1">${done.length ? 'พร้อมเริ่มรอบใหม่' : 'อดอาหารเป็นช่วง (IF)'}</div>
-        <div class="t2">อด ${goal} ชม. กินได้ ${24 - goal} ชม.${done[0] ? ' · ครั้งก่อน ' + (num(done[0].minutes) / 60).toFixed(1) + ' ชม.' : ''}</div></div>
-        <button class="ifgo" onclick="ifStart('${lf}')">▶ เริ่มอด</button></div>
-      ${lf ? `<button class="lnk" style="margin-top:8px;display:block" onclick="ifStart('${lf}')">เริ่มนับจากมื้อล่าสุด ${thDate(lf.slice(0, 10)).replace(/ \d+$/, '')} ${lf.slice(11)}</button>` : ''}
-      ${ifOpen || !done.length ? pick + `<p class="note" style="margin:6px 0 0">ระหว่างอดดื่มน้ำ กาแฟดำ ชาไม่หวานได้ · ช่วงกินยังต้องคุมแคลและโปรตีนตามเป้า · ถ้ามีเบาหวานหรือกินยาประจำ ปรึกษาหมอก่อน</p>` : `<button class="lnk" style="margin-top:6px" onclick="ifOpen=true;keepScroll()">เปลี่ยนสูตร</button>`}
-      ${hist}</div>`;
-  }
-  const st = ifStartMs(s.if_on), min = Math.max(0, (Date.now() - st) / 60000), pct = Math.min(1, min / (goal * 60));
-  const end = new Date(st + goal * 3600e3), reached = min >= goal * 60;
-  const ph = IF_PH.filter(p => min / 60 >= p[0]).pop()[1];
-  const R = 34, C = 2 * Math.PI * R;
-  return `<div class="card ifcard on ${reached ? 'done' : ''}" id="ifcard"><div class="ifrun">
-      <div class="ifring"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="${R}" fill="none" stroke="#EDE7FB" stroke-width="8"/><circle cx="40" cy="40" r="${R}" fill="none" stroke="${reached ? '#1E7B4D' : '#6B4FD0'}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${(C * pct).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 40 40)"/></svg>
+  const hist = week.length ? `<button class="ifhist" onclick="go('ifh')">7 วัน: ${week.slice().reverse().map(l => `<span class="${num(l.minutes) >= goal * 60 ? 'ok' : ''}">${(num(l.minutes) / 60).toFixed(0)}</span>`).join('')} ชม. <u>ประวัติ ›</u></button>` : '';
+  const menu = `<div class="ifmenu"><button onclick="go('ifh')">📋 ประวัติ</button><button onclick="ifMode=ifMode==='set'?'':'set';ifRe()">⚙️ ตั้งค่า</button></div>`;
+  let body = '';
+  if (ifMode === 'set') {
+    body = `<div class="setrows" style="margin-top:4px"><div class="setrow col"><span>แผน IF</span><div class="sugg">${[14, 16, 18, 20].map(h => `<button class="chip ${goal === h ? 'on' : ''}" onclick="setIf({if_goal:${h}})">${h}:${24 - h}</button>`).join('')}</div></div>
+      <label class="setrow"><span>เวลาเริ่มอด</span><input type="time" class="ift2" value="${at}" onchange="setIf({if_at:this.value})"></label>
+      <div class="setrow"><span>เวลากินได้</span><b>${addHM(at, goal)}</b></div></div>
+      <p class="note" style="margin:6px 0 0">ระหว่างอดดื่มน้ำ กาแฟดำ ชาไม่หวานได้ · ช่วงกินยังคุมแคลและโปรตีนตามเป้า · ถ้ามีเบาหวานหรือกินยาประจำ ปรึกษาหมอก่อน</p>
+      <button class="btn full" style="margin-top:8px" onclick="ifMode='';ifRe()">เสร็จ</button>`;
+  } else if (ifMode === 'start') {
+    const lf = lastFoodAt(), ch = [['ตอนนี้', 't', nowHM()]];
+    if (lf) ch.push(['มื้อล่าสุด ' + lf.slice(11), selOf(lf).day, lf.slice(11)]);
+    ch.push(['ตามแผน ' + at, 't', at]);
+    body = ifPicker('ยืนยันเวลาเริ่มอด', ifSel, ch, '▶ เริ่ม IF', 'ifStartSel()');
+  } else if (ifMode === 'end' && s.if_on) {
+    body = ifPicker('ยืนยันเวลาจบ (กินมื้อแรก)', ifSel, [['ตอนนี้', 't', nowHM()]], '✅ จบ IF', 'ifEndSel()');
+  } else if (s.if_on) {
+    const st = ifStartMs(s.if_on), min = Math.max(0, (Date.now() - st) / 60000), pct = Math.min(1, min / (goal * 60));
+    const end = new Date(st + goal * 3600e3), reached = min >= goal * 60, ph = IF_PH.filter(p => min / 60 >= p[0]).pop()[1], R = 34, C = 2 * Math.PI * R;
+    body = `<div class="ifrun"><div class="ifring"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="${R}" fill="none" stroke="#EDE7FB" stroke-width="8"/><circle cx="40" cy="40" r="${R}" fill="none" stroke="${reached ? '#1E7B4D' : '#6B4FD0'}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${(C * pct).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 40 40)"/></svg>
         <div class="c"><b>${hm(min)}</b><small>/ ${goal} ชม.</small></div></div>
       <div class="grow"><div class="t1">${reached ? '🎉 ครบ ' + goal + ' ชม. แล้ว กินได้' : 'กำลังอดอาหาร'}</div>
-        <div class="t2">เริ่ม ${String(s.if_on).slice(11)} · ${reached ? 'เลยมา ' + hm(min - goal * 60) + ' ชม.' : 'กินได้ตอน ' + String(end.getHours()).padStart(2, '0') + ':' + String(end.getMinutes()).padStart(2, '0') + (isoOf(end) !== todayIso() ? ' (พรุ่งนี้)' : '')}</div>
+        <div class="t2">เริ่ม ${s.if_on.slice(0, 10) !== todayIso() ? 'เมื่อวาน ' : ''}${s.if_on.slice(11)} · ${reached ? 'เลยมา ' + hm(min - goal * 60) + ' ชม.' : 'กินได้ ' + String(end.getHours()).padStart(2, '0') + ':' + String(end.getMinutes()).padStart(2, '0') + (isoOf(end) !== todayIso() ? ' พรุ่งนี้' : '')}</div>
         <div class="ifph">${ph}</div></div></div>
-      <div class="ifbtns"><button class="btn sm" onclick="ifEditStart()">แก้เวลาเริ่ม</button><button class="btn sm red" onclick="ifCancel()">ยกเลิก</button><button class="btn sm pri" onclick="ifEnd()">${reached ? '✅ จบ กินได้' : 'จบก่อนเวลา'}</button></div>
-      <p class="note" style="margin:6px 0 0">จดอาหารเมื่อไร จะจบการอดให้อัตโนมัติ</p>${hist}</div>`;
+      <div class="ifbtns"><button class="btn sm" onclick="ifSel=selOf(S().if_on);ifMode='start';ifRe()">แก้เวลาเริ่ม</button><button class="btn sm" onclick="ifCancel()">ยกเลิก</button><button class="btn sm pri" style="flex:1.4" onclick="ifSel={day:'t',time:nowHM()};ifMode='end';ifRe()">${reached ? '✅ จบ IF' : 'จบ IF'}</button></div>
+      <p class="note" style="margin:6px 0 0">จดอาหารเมื่อไร จะจบ IF ให้อัตโนมัติ</p>`;
+  } else {
+    const due = ifDue();
+    body = `<div class="ifidle"><div class="grow"><div class="t1">${due ? '🔔 ถึงเวลาเริ่ม IF แล้ว' : 'การอดอาหาร (IF) ' + goal + ':' + (24 - goal)}</div>
+        <div class="t2">${at} – ${addHM(at, goal)}${done[0] ? ' · ครั้งก่อน ' + hmTxt(num(done[0].minutes)) : ''}</div></div>
+      <button class="ifgo" onclick="ifSel={day:'t',time:nowHM()};ifMode='start';ifRe()">▶ เริ่ม IF</button></div>`;
+  }
+  return `<div class="card ifcard ${s.if_on && !ifMode ? 'on' : ''} ${ifDue() && !ifMode ? 'due' : ''}" id="ifcard">${body}${ifMode ? '' : hist}${ifMode ? '' : menu}</div>`;
 }
-function setIfGoal(h) { sync('saveSettings', [{ if_goal: h }], () => { D.settings.if_goal = h; }); keepScroll(); }
-function ifStart(at) {
-  const v = at || isoMin(new Date()), g = num(S().if_goal) || 16;
-  ifOpen = false;
-  sync('saveSettings', [{ if_on: v, if_goal: g }], () => { D.settings.if_on = v; D.settings.if_goal = g; }); keepScroll(); toast('⏱️ เริ่มนับแล้ว');
+function ifRe() { const el = document.getElementById('ifcard'); if (el) el.outerHTML = ifCard(); else keepScroll(); }
+function setIf(o) { sync('saveSettings', [o], () => Object.assign(D.settings, o)); ifRe(); }
+function ifStartSel() {
+  const v = selIso(ifSel); if (ifStartMs(v) > Date.now() + 60000) return alert('เวลาเริ่มอยู่ในอนาคต');
+  ifMode = ''; const o = { if_on: v, if_goal: ifGoal(), if_at: ifAt() };
+  sync('saveSettings', [o], () => Object.assign(D.settings, o)); toast('⏱️ เริ่ม IF ' + v.slice(11)); keepScroll();
 }
+function ifEndSel() { const v = selIso(ifSel); if (ifStartMs(v) <= ifStartMs(S().if_on)) return alert('เวลาจบต้องหลังเวลาเริ่ม'); ifMode = ''; ifEnd(ifStartMs(v)); }
 function ifEnd(atMs) {
   const s = S(); if (!s.if_on) return;
-  const endMs = atMs || Date.now(), min = Math.round((endMs - ifStartMs(s.if_on)) / 60000);
-  const o = { log_id: newLogId(), kind: 'fast', date: s.if_on.slice(0, 10), time: s.if_on.slice(11), name: 'อดอาหาร', minutes: Math.max(0, min), note: 'เป้า ' + (num(s.if_goal) || 16) + ' ชม.', source: 'tap' };
+  const min = Math.round(((atMs || Date.now()) - ifStartMs(s.if_on)) / 60000);
+  const o = { log_id: newLogId(), kind: 'fast', date: s.if_on.slice(0, 10), time: s.if_on.slice(11), name: 'อดอาหาร', minutes: Math.max(0, min), note: 'เป้า ' + ifGoal() + ' ชม.', source: 'tap' };
   if (min >= 30) sync('saveLog', [o], () => D.log.push(o));
   sync('saveSettings', [{ if_on: '' }], () => { D.settings.if_on = ''; });
-  keepScroll(); toast(`✅ อดไป ${hm(Math.max(0, min))} ชม.`);
+  keepScroll(); toast(`✅ อดไป ${hmTxt(Math.max(0, min))}`);
 }
 function ifCancel() { if (!confirm('ยกเลิกรอบนี้ (ไม่บันทึก)?')) return; sync('saveSettings', [{ if_on: '' }], () => { D.settings.if_on = ''; }); keepScroll(); }
-function ifEditStart() {
-  const s = S(), v = prompt('เวลาเริ่มอด (ชั่วโมง:นาที เช่น 20:30) — ถ้าเริ่มเมื่อวานพิมพ์ ม 20:30', s.if_on.slice(11));
-  if (!v) return;
-  const m = v.trim().match(/^(ม\s*)?(\d{1,2})[:.](\d{2})$/); if (!m) return alert('รูปแบบเวลาไม่ถูก เช่น 20:30');
-  let d = new Date(); if (m[1]) d = new Date(Date.now() - 864e5);
-  d.setHours(+m[2], +m[3], 0, 0); if (!m[1] && d.getTime() > Date.now()) d = new Date(d.getTime() - 864e5);
-  const iso = isoMin(d);
-  sync('saveSettings', [{ if_on: iso }], () => { D.settings.if_on = iso; }); keepScroll();
-}
-// จดอาหารหลังเวลาเริ่ม → จบการอดที่เวลามื้อนั้นอัตโนมัติ
+// จดอาหารหลังเวลาเริ่ม > 30 นาที → จบ IF ที่เวลามื้อนั้นอัตโนมัติ
 function ifAutoEnd() {
-  const s = S(); if (!s.if_on) return;
+  const s = S(); if (!s.if_on || ifMode) return;
   const st = ifStartMs(s.if_on);
   const f = logs().filter(l => l.kind === 'food').map(l => ifStartMs(l.date + 'T' + String(l.time || '12:00').padStart(5, '0'))).filter(t => t > st + 30 * 60000 && t <= Date.now() + 5 * 60000).sort()[0];
   if (f) ifEnd(f);
 }
-// อัปเดตตัวเลขทุก 30 วิ (แทนที่การ์ดอย่างเดียว ไม่ render ทั้งหน้า)
-setInterval(() => { if (tab === 'today' && D && S().if_on) { const el = document.getElementById('ifcard'); if (el) el.outerHTML = ifCard(); } }, 30000);
+setInterval(() => { if (tab === 'today' && D && !ifMode && (S().if_on || ifDue())) ifRe(); }, 30000);
+
+// ---------- หน้าประวัติ IF (แท็บจริง) ----------
+let ifhEdit = '', ifhS = null, ifhE = null;
+function ifhHtml() {
+  const list = fastsAll(), goal = ifGoal();
+  const longest = list.reduce((m, l) => Math.max(m, num(l.minutes)), 0), total = list.reduce((m, l) => m + num(l.minutes), 0);
+  const row = l => {
+    const e = fastEnd(l), on = ifhEdit === l.log_id;
+    return `<button class="row" onclick="ifhOpen('${l.log_id}')"><div class="grow"><div class="t1">${thDate(l.date)}</div><div class="t2">${l.time} – ${e.slice(11)}${e.slice(0, 10) !== l.date ? ' (+1)' : ''}</div></div>
+        <b style="color:${num(l.minutes) >= goal * 60 ? '#1E7B4D' : 'inherit'}">${hmTxt(num(l.minutes))}</b><span class="t2">${on ? '▴' : '›'}</span></button>${on ? ifhEditor(l) : ''}`;
+  };
+  return `<div class="hd"><div class="hd-in"><div class="hd-top"><button class="hd-btn" onclick="go('today')">‹</button><div class="hd-title grow">ประวัติการอดอาหาร</div><button class="hd-btn" onclick="ifhOpen('new')" aria-label="เพิ่ม">＋</button></div></div></div>
+    <div class="wrap">
+      <div class="card pad" style="margin-top:12px"><div style="font-size:26px;font-weight:700">${hmTxt(longest)}</div><div class="t2">อดนานที่สุด</div>
+        <div class="ifstat"><div><b>${Math.round(total / 60)} ชม.</b><span>ชั่วโมงสะสม</span></div><div><b>${list.length}</b><span>จำนวนครั้ง</span></div><div><b>${list.filter(l => num(l.minutes) >= goal * 60).length}</b><span>ถึงเป้า ${goal} ชม.</span></div></div></div>
+      ${ifhEdit === 'new' ? `<div class="sec"><h3>➕ บันทึกย้อนหลัง</h3></div><div class="card">${ifhEditor(null)}</div>` : ''}
+      <div class="sec"><h3>ประวัติ</h3></div>
+      <div class="card">${list.map(row).join('') || '<div class="empty">ยังไม่มี — กด ＋ เพื่อบันทึกย้อนหลัง</div>'}</div>
+    </div>`;
+}
+function ifhOpen(id) {
+  if (ifhEdit === id) { ifhEdit = ''; return keepScroll(); }
+  ifhEdit = id;
+  const l = fastsAll().find(x => x.log_id === id);
+  if (l) { ifhS = { d: l.date, t: l.time }; const e = fastEnd(l); ifhE = { d: e.slice(0, 10), t: e.slice(11) }; }
+  else { const y = addDays(todayIso(), -1); ifhS = { d: y, t: ifAt() }; ifhE = { d: todayIso(), t: addHM(ifAt(), ifGoal()) }; }
+  keepScroll();
+}
+function ifhEditor(l) {
+  const dsel = (o, k) => `<select class="ifsel" onchange="${k}.d=this.value">${[0, 1, 2, 3, 4, 5, 6].map(i => addDays(todayIso(), -i)).map(d => `<option value="${d}" ${o.d === d ? 'selected' : ''}>${i18d(d)}</option>`).join('')}${o.d < addDays(todayIso(), -6) ? `<option value="${o.d}" selected>${thDate(o.d)}</option>` : ''}</select>`;
+  return `<div class="seted" style="margin:0 12px 12px">
+    <div class="ifedrow"><span>เริ่ม</span>${dsel(ifhS, 'ifhS')}<input type="time" class="ift2" value="${ifhS.t}" onchange="ifhS.t=this.value"></div>
+    <div class="ifedrow"><span>จบ</span>${dsel(ifhE, 'ifhE')}<input type="time" class="ift2" value="${ifhE.t}" onchange="ifhE.t=this.value"></div>
+    <div style="display:flex;gap:6px;margin-top:8px">${l ? `<button class="btn sm red" onclick="ifhDel('${l.log_id}')">ลบ</button>` : `<button class="btn sm" onclick="ifhEdit='';keepScroll()">ยกเลิก</button>`}<button class="btn sm pri" style="flex:1" onclick="ifhSave('${l ? l.log_id : ''}')">บันทึก</button></div></div>`;
+}
+const i18d = d => d === todayIso() ? 'วันนี้' : d === addDays(todayIso(), -1) ? 'เมื่อวาน' : thDate(d).replace(/ \d+$/, '');
+function ifhSave(id) {
+  const a = ifStartMs(ifhS.d + 'T' + ifhS.t), b = ifStartMs(ifhE.d + 'T' + ifhE.t), min = Math.round((b - a) / 60000);
+  if (!(min > 0)) return alert('เวลาจบต้องหลังเวลาเริ่ม');
+  if (min > 72 * 60) return alert('นานเกิน 72 ชม. ตรวจวันที่อีกครั้ง');
+  const old = id && fastsAll().find(x => x.log_id === id);
+  const o = Object.assign({}, old || { log_id: newLogId(), kind: 'fast', name: 'อดอาหาร', source: 'manual', note: 'เป้า ' + ifGoal() + ' ชม.' }, { date: ifhS.d, time: ifhS.t, minutes: min });
+  sync('saveLog', [o], () => { const i = D.log.findIndex(x => x.log_id === o.log_id); if (i >= 0) D.log[i] = o; else D.log.push(o); });
+  ifhEdit = ''; toast('บันทึกแล้ว ' + hmTxt(min)); keepScroll();
+}
+function ifhDel(id) { if (!confirm('ลบรายการนี้?')) return; sync('deleteLog', [id], () => { D.log = D.log.filter(x => x.log_id !== id); }); ifhEdit = ''; keepScroll(); }
 
 let tipState = '';
 function maybeTip(force) {
@@ -2449,6 +2530,9 @@ function checkUpdate() {
 (function init() {
   try { const ui = JSON.parse(lsGet(UI_STORE) || '{}'); if (ui.tab && Date.now() - ui.at < 30 * 60e3) tab = ui.tab; } catch (e) {}
   try { const c = JSON.parse(lsGet(DATA_STORE) || 'null'); if (c && c.log) { D = c; dDate = c.today; } } catch (e) {}
+  // ลิงก์จากการแจ้งเตือน: ?if=start / ?if=end → เปิดการ์ด IF พร้อมตัวเลือกเวลา
+  const ifq = (location.search.match(/[?&]if=(start|end)/) || [])[1];
+  if (ifq) { tab = 'today'; ifMode = ifq; ifSel = { day: 't', time: nowHM() }; history.replaceState(null, '', location.pathname); setTimeout(() => { const el = document.getElementById('ifcard'); if (el) el.scrollIntoView({ block: 'center' }); }, 400); }
   render();
   load();
   checkUpdate();
