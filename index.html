@@ -301,9 +301,13 @@
   .ifmenu { display: flex; gap: 6px; margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
   .ifmenu button { flex: 1; font-size: 13.5px; color: var(--muted); padding: 4px; }
   .ifpick { padding: 2px 0; }
-  .iftime { display: block; margin: 10px auto; font-size: 34px; font-weight: 700; text-align: center; border: 0; background: #F4F2FB; border-radius: 14px; padding: 8px 18px; color: inherit; -webkit-appearance: none; appearance: none; min-width: 0; width: 210px; }
-  .ift2 { font: inherit; font-weight: 700; border: 0; background: #F4F2FB; border-radius: 8px; padding: 6px 10px; color: inherit; -webkit-appearance: none; appearance: none; min-width: 0; width: 112px; text-align: center; }
-  .ifsel { font: inherit; border: 0; background: #F4F2FB; border-radius: 8px; padding: 6px 8px; color: inherit; flex: 1; min-width: 0; -webkit-appearance: none; appearance: none; }
+  .wheel { position: relative; display: flex; justify-content: center; gap: 4px; height: 200px; overflow: hidden; background: #FAF9FE; border-radius: 14px; }
+  .wband { position: absolute; left: 8px; right: 8px; top: 80px; height: 40px; background: #EDE7FB; border-radius: 10px; pointer-events: none; }
+  .wcol { position: relative; width: 74px; height: 200px; overflow-y: scroll; scroll-snap-type: y mandatory; padding: 80px 0; box-sizing: border-box; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  .wcol::-webkit-scrollbar { display: none; }
+  .wcol[data-c="d"] { width: 104px; }
+  .wit { height: 40px; line-height: 40px; text-align: center; scroll-snap-align: center; font-size: 21px; font-weight: 600; color: #3B3355; }
+  .wsep { align-self: center; font-size: 22px; font-weight: 700; z-index: 1; }
   .ifedrow { display: flex; gap: 8px; align-items: center; margin-top: 6px; } .ifedrow > span { width: 34px; font-weight: 600; }
   .ifstat { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
   .ifstat b { display: block; font-size: 18px; } .ifstat span { font-size: 12.5px; color: var(--muted); }
@@ -967,15 +971,46 @@ function ifDue() {
 }
 const IF_PH = [[0, 'ย่อยมื้อล่าสุด'], [4, 'น้ำตาลในเลือดเริ่มลด ใช้พลังงานสะสม'], [12, 'ร่างกายดึงไขมันมาใช้มากขึ้น'], [16, 'ครบช่วงหลักแล้ว ทำได้ดี']];
 // ตัวเลือกเวลา: วัน (เมื่อวาน/วันนี้) + input time + ชิปลัด
+// ---------- วงล้อเลือกวัน/ชั่วโมง/นาที (ทำเอง ใช้ scroll-snap — input time ของ iOS ที่แต่งไว้แตะไม่ติด) ----------
+// WH[key] = { o: อ็อบเจกต์ {d, t} ที่จะแก้, days: [YYYY-MM-DD ...] }
+const WH = {}, WROW = 40;
+const dayName = d => d === todayIso() ? 'วันนี้' : d === addDays(todayIso(), -1) ? 'เมื่อวาน' : thDate(d).replace(/ \d+$/, '');
+function wheelHtml(key, o, nDays) {
+  const days = []; for (let i = nDays - 1; i >= 0; i--) days.push(addDays(todayIso(), -i));
+  if (days.indexOf(o.d) < 0) days.unshift(o.d);
+  WH[key] = { o, days };
+  const col = (c, items) => `<div class="wcol" data-k="${key}" data-c="${c}" onscroll="wheelScroll(this)">${items.map((x, i) => `<div class="wit" onclick="wheelTap(this,${i})">${x}</div>`).join('')}</div>`;
+  const hh = [], mm = []; for (let i = 0; i < 24; i++) hh.push(String(i).padStart(2, '0')); for (let i = 0; i < 60; i++) mm.push(String(i).padStart(2, '0'));
+  setTimeout(() => wheelSet(key), 0);
+  return `<div class="wheel" id="wh_${key}"><div class="wband"></div>${col('d', days.map(dayName))}${col('h', hh)}<div class="wsep">:</div>${col('m', mm)}</div>`;
+}
+function wheelSet(key) {
+  const w = WH[key], box = document.getElementById('wh_' + key); if (!w || !box) return;
+  const [h, m] = w.o.t.split(':').map(Number), idx = { d: Math.max(0, w.days.indexOf(w.o.d)), h, m };
+  box.querySelectorAll('.wcol').forEach(el => { el._lock = 1; el.scrollTop = idx[el.dataset.c] * WROW; setTimeout(() => el._lock = 0, 80); });
+}
+function wheelScroll(el) {
+  if (el._lock) return;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => {
+    const w = WH[el.dataset.k]; if (!w) return;
+    const n = el.children.length, i = Math.max(0, Math.min(n - 1, Math.round(el.scrollTop / WROW)));
+    const [h, m] = w.o.t.split(':');
+    if (el.dataset.c === 'd') w.o.d = w.days[i];
+    if (el.dataset.c === 'h') w.o.t = String(i).padStart(2, '0') + ':' + m;
+    if (el.dataset.c === 'm') w.o.t = h + ':' + String(i).padStart(2, '0');
+  }, 90);
+}
+function wheelTap(it, i) { const el = it.parentNode; el.scrollTo({ top: i * WROW, behavior: 'smooth' }); }
 function ifPicker(title, sel, chips, okTxt, ok) {
-  return `<div class="ifpick"><div class="t1" style="text-align:center;margin-bottom:8px">${title}</div>
-    <div class="seg2" style="max-width:240px;margin:0 auto">${[['y', 'เมื่อวาน'], ['t', 'วันนี้']].map(([k, n]) => `<button class="${sel.day === k ? 'on' : ''}" onclick="ifSel.day='${k}';ifRe()">${n}</button>`).join('')}</div>
-    <input type="time" class="iftime" value="${sel.time}" onchange="ifSel.time=this.value">
-    <div class="sugg" style="justify-content:center">${chips.map(([n, d, t]) => `<button class="chip" onclick="ifSel={day:'${d}',time:'${t}'};ifRe()">${n}</button>`).join('')}</div>
+  return `<div class="ifpick"><div class="t1" style="text-align:center;margin-bottom:6px">${title}</div>
+    ${wheelHtml('if', sel, 2)}
+    <div class="sugg" style="justify-content:center;margin-top:8px">${chips.map(([n, d, t]) => `<button class="chip" onclick="ifSel.d='${d}';ifSel.t='${t}';wheelSet('if')">${n}</button>`).join('')}</div>
     <div class="ifbtns"><button class="btn" onclick="ifMode='';ifRe()">ยกเลิก</button><button class="btn pri" style="flex:2" onclick="${ok}">${okTxt}</button></div></div>`;
 }
-const selIso = sel => (sel.day === 'y' ? addDays(todayIso(), -1) : todayIso()) + 'T' + (sel.time || nowHM());
-const selOf = iso => ({ day: iso.slice(0, 10) === todayIso() ? 't' : 'y', time: iso.slice(11, 16) });
+const selIso = sel => sel.d + 'T' + sel.t;
+const selOf = iso => ({ d: iso.slice(0, 10), t: iso.slice(11, 16) });
+const selNow = () => ({ d: todayIso(), t: nowHM() });
 function ifCard() {
   const s = S(), goal = ifGoal(), at = ifAt(), done = fastsAll();
   if (ifMode === 'end' && !s.if_on) ifMode = '';
@@ -985,17 +1020,17 @@ function ifCard() {
   let body = '';
   if (ifMode === 'set') {
     body = `<div class="setrows" style="margin-top:4px"><div class="setrow col"><span>แผน IF</span><div class="sugg">${[14, 16, 18, 20].map(h => `<button class="chip ${goal === h ? 'on' : ''}" onclick="setIf({if_goal:${h}})">${h}:${24 - h}</button>`).join('')}</div></div>
-      <label class="setrow"><span>เวลาเริ่มอด</span><input type="time" class="ift2" value="${at}" onchange="setIf({if_at:this.value})"></label>
+      <div class="setrow col"><span>เวลาเริ่มอด</span><div class="sugg">${['14:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'].map(t => `<button class="chip ${at === t ? 'on' : ''}" onclick="setIf({if_at:'${t}'})">${t}</button>`).join('')}</div></div>
       <div class="setrow"><span>เวลากินได้</span><b>${addHM(at, goal)}</b></div></div>
       <p class="note" style="margin:6px 0 0">ระหว่างอดดื่มน้ำ กาแฟดำ ชาไม่หวานได้ · ช่วงกินยังคุมแคลและโปรตีนตามเป้า · ถ้ามีเบาหวานหรือกินยาประจำ ปรึกษาหมอก่อน</p>
       <button class="btn full" style="margin-top:8px" onclick="ifMode='';ifRe()">เสร็จ</button>`;
   } else if (ifMode === 'start') {
-    const lf = lastFoodAt(), ch = [['ตอนนี้', 't', nowHM()]];
-    if (lf) ch.push(['มื้อล่าสุด ' + lf.slice(11), selOf(lf).day, lf.slice(11)]);
-    ch.push(['ตามแผน ' + at, 't', at]);
+    const lf = lastFoodAt(), ch = [['ตอนนี้', todayIso(), nowHM()]];
+    if (lf) ch.push(['มื้อล่าสุด ' + lf.slice(11), lf.slice(0, 10), lf.slice(11)]);
+    ch.push(['ตามแผน ' + at, new Date().getHours() * 60 + new Date().getMinutes() >= +at.slice(0, 2) * 60 + +at.slice(3) ? todayIso() : addDays(todayIso(), -1), at]);
     body = ifPicker('ยืนยันเวลาเริ่มอด', ifSel, ch, '▶ เริ่ม IF', 'ifStartSel()');
   } else if (ifMode === 'end' && s.if_on) {
-    body = ifPicker('ยืนยันเวลาจบ (กินมื้อแรก)', ifSel, [['ตอนนี้', 't', nowHM()]], '✅ จบ IF', 'ifEndSel()');
+    body = ifPicker('ยืนยันเวลาจบ (กินมื้อแรก)', ifSel, [['ตอนนี้', todayIso(), nowHM()]], '✅ จบ IF', 'ifEndSel()');
   } else if (s.if_on) {
     const st = ifStartMs(s.if_on), min = Math.max(0, (Date.now() - st) / 60000), pct = Math.min(1, min / (goal * 60));
     const end = new Date(st + goal * 3600e3), reached = min >= goal * 60, ph = IF_PH.filter(p => min / 60 >= p[0]).pop()[1], R = 34, C = 2 * Math.PI * R;
@@ -1004,13 +1039,13 @@ function ifCard() {
       <div class="grow"><div class="t1">${reached ? '🎉 ครบ ' + goal + ' ชม. แล้ว กินได้' : 'กำลังอดอาหาร'}</div>
         <div class="t2">เริ่ม ${s.if_on.slice(0, 10) !== todayIso() ? 'เมื่อวาน ' : ''}${s.if_on.slice(11)} · ${reached ? 'เลยมา ' + hm(min - goal * 60) + ' ชม.' : 'กินได้ ' + String(end.getHours()).padStart(2, '0') + ':' + String(end.getMinutes()).padStart(2, '0') + (isoOf(end) !== todayIso() ? ' พรุ่งนี้' : '')}</div>
         <div class="ifph">${ph}</div></div></div>
-      <div class="ifbtns"><button class="btn sm" onclick="ifSel=selOf(S().if_on);ifMode='start';ifRe()">แก้เวลาเริ่ม</button><button class="btn sm" onclick="ifCancel()">ยกเลิก</button><button class="btn sm pri" style="flex:1.4" onclick="ifSel={day:'t',time:nowHM()};ifMode='end';ifRe()">${reached ? '✅ จบ IF' : 'จบ IF'}</button></div>
+      <div class="ifbtns"><button class="btn sm" onclick="ifSel=selOf(S().if_on);ifMode='start';ifRe()">แก้เวลาเริ่ม</button><button class="btn sm" onclick="ifCancel()">ยกเลิก</button><button class="btn sm pri" style="flex:1.4" onclick="ifSel=selNow();ifMode='end';ifRe()">${reached ? '✅ จบ IF' : 'จบ IF'}</button></div>
       <p class="note" style="margin:6px 0 0">จดอาหารเมื่อไร จะจบ IF ให้อัตโนมัติ</p>`;
   } else {
     const due = ifDue();
     body = `<div class="ifidle"><div class="grow"><div class="t1">${due ? '🔔 ถึงเวลาเริ่ม IF แล้ว' : 'การอดอาหาร (IF) ' + goal + ':' + (24 - goal)}</div>
         <div class="t2">${at} – ${addHM(at, goal)}${done[0] ? ' · ครั้งก่อน ' + hmTxt(num(done[0].minutes)) : ''}</div></div>
-      <button class="ifgo" onclick="ifSel={day:'t',time:nowHM()};ifMode='start';ifRe()">▶ เริ่ม IF</button></div>`;
+      <button class="ifgo" onclick="ifSel=selNow();ifMode='start';ifRe()">▶ เริ่ม IF</button></div>`;
   }
   return `<div class="card ifcard ${s.if_on && !ifMode ? 'on' : ''} ${ifDue() && !ifMode ? 'due' : ''}" id="ifcard">${body}${ifMode ? '' : hist}${ifMode ? '' : menu}</div>`;
 }
@@ -1068,11 +1103,10 @@ function ifhOpen(id) {
   keepScroll();
 }
 function ifhEditor(l) {
-  const dsel = (o, k) => `<select class="ifsel" onchange="${k}.d=this.value">${[0, 1, 2, 3, 4, 5, 6].map(i => addDays(todayIso(), -i)).map(d => `<option value="${d}" ${o.d === d ? 'selected' : ''}>${i18d(d)}</option>`).join('')}${o.d < addDays(todayIso(), -6) ? `<option value="${o.d}" selected>${thDate(o.d)}</option>` : ''}</select>`;
   return `<div class="seted" style="margin:0 12px 12px">
-    <div class="ifedrow"><span>เริ่ม</span>${dsel(ifhS, 'ifhS')}<input type="time" class="ift2" value="${ifhS.t}" onchange="ifhS.t=this.value"></div>
-    <div class="ifedrow"><span>จบ</span>${dsel(ifhE, 'ifhE')}<input type="time" class="ift2" value="${ifhE.t}" onchange="ifhE.t=this.value"></div>
-    <div style="display:flex;gap:6px;margin-top:8px">${l ? `<button class="btn sm red" onclick="ifhDel('${l.log_id}')">ลบ</button>` : `<button class="btn sm" onclick="ifhEdit='';keepScroll()">ยกเลิก</button>`}<button class="btn sm pri" style="flex:1" onclick="ifhSave('${l ? l.log_id : ''}')">บันทึก</button></div></div>`;
+    <div class="flbl" style="margin-top:0">เริ่มอด</div>${wheelHtml('hs', ifhS, 7)}
+    <div class="flbl">จบ (กินมื้อแรก)</div>${wheelHtml('he', ifhE, 7)}
+    <div style="display:flex;gap:6px;margin-top:10px">${l ? `<button class="btn sm red" onclick="ifhDel('${l.log_id}')">ลบ</button>` : `<button class="btn sm" onclick="ifhEdit='';keepScroll()">ยกเลิก</button>`}<button class="btn sm pri" style="flex:1" onclick="ifhSave('${l ? l.log_id : ''}')">บันทึก</button></div></div>`;
 }
 const i18d = d => d === todayIso() ? 'วันนี้' : d === addDays(todayIso(), -1) ? 'เมื่อวาน' : thDate(d).replace(/ \d+$/, '');
 function ifhSave(id) {
@@ -2532,7 +2566,7 @@ function checkUpdate() {
   try { const c = JSON.parse(lsGet(DATA_STORE) || 'null'); if (c && c.log) { D = c; dDate = c.today; } } catch (e) {}
   // ลิงก์จากการแจ้งเตือน: ?if=start / ?if=end → เปิดการ์ด IF พร้อมตัวเลือกเวลา
   const ifq = (location.search.match(/[?&]if=(start|end)/) || [])[1];
-  if (ifq) { tab = 'today'; ifMode = ifq; ifSel = { day: 't', time: nowHM() }; history.replaceState(null, '', location.pathname); setTimeout(() => { const el = document.getElementById('ifcard'); if (el) el.scrollIntoView({ block: 'center' }); }, 400); }
+  if (ifq) { tab = 'today'; ifMode = ifq; ifSel = selNow(); history.replaceState(null, '', location.pathname); setTimeout(() => { const el = document.getElementById('ifcard'); if (el) el.scrollIntoView({ block: 'center' }); }, 400); }
   render();
   load();
   checkUpdate();
