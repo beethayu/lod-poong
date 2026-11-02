@@ -94,7 +94,7 @@ function coachContext_(s, log, today) {
   // การฝึก
   const eq = { none: 'ตัวเปล่า', db: 'ดัมเบล', band: 'ยางยืด', bar: 'บาร์โหนประตู', bench: 'ม้านั่ง/เก้าอี้', gym: 'ยิม' };
   const plan = s.plan && s.plan.days ? s.plan : null;
-  lines.push('อุปกรณ์: ' + ((s.equip || []).map(k => eq[k] || k).join(', ') || 'ยังไม่ได้ตั้ง') + (s.db_kg && s.db_kg.length ? ' · ดัมเบล ' + s.db_kg.join('/') + ' กก.' : ''));
+  lines.push('อุปกรณ์: ' + ((s.equip || []).map(k => eq[k] || k).join(', ') || 'ยังไม่ได้ตั้ง') + (s.db_kg && s.db_kg.length ? ' · ดัมเบล' + (s.db_adj && s.db_adj.mode === 'adj' ? 'ปรับน้ำหนัก (เพิ่มทีละ ' + (s.db_adj.plate * 2) + ' กก.) ขั้น ' : ' ') + s.db_kg.join('/') + ' กก.' : ''));
   if (plan) plan.days.forEach((d, i) => lines.push(`แผนวัน ${i + 1} "${d.name}": ` + (d.items || []).map(x => `${x.name} ${x.sets}×${x.lo}-${x.hi}${x.kg ? ' @' + x.kg + 'กก.' : ''}`).join(', ')));
   const sets = rows_(SH_.SETS).filter(x => String(x.date) >= addDays_(today, -14));
   const ses = {};

@@ -262,6 +262,18 @@
   .bigbtn2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .bigbtn2 button { border-radius: 14px; padding: 12px 10px; background: linear-gradient(135deg,#F1ECFD,#fff); border: 1px solid #E0D8F7; display: flex; flex-direction: column; align-items: center; gap: 2px; color: #5B3FB0; }
   .bigbtn2 span { font-size: 24px; } .bigbtn2 small { font-size: 12px; color: var(--muted); text-align: center; }
+  .seg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #EEEAF9; border-radius: 12px; padding: 3px; }
+  .seg2 button { min-height: 38px; border: 0; border-radius: 10px; background: transparent; font-weight: 600; font-size: 13px; color: inherit; padding: 4px 6px; }
+  .seg2 button.on { background: #6B4FD0; color: #fff; }
+  .setrows { margin-top: 10px; border: 1px solid var(--line2); border-radius: 12px; background: #fff; overflow: hidden; }
+  .setrow { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line2); font-size: 14px; }
+  .setrow:first-child { border-top: 0; }
+  .setrow > span { flex: 1; }
+  .setrow input { width: 64px; min-width: 0; text-align: right; font: inherit; font-weight: 700; border: 0; background: #F4F2FB; border-radius: 8px; padding: 6px 8px; color: inherit; -webkit-appearance: none; appearance: none; }
+  .setrow i { font-style: normal; color: var(--muted); font-size: 13px; }
+  .setrow.col { flex-direction: column; align-items: stretch; }
+  .setrow.col .sugg { margin-top: 6px; }
+  .dbinfo { margin-top: 8px; background: #F1EDFC; color: #3E2C8A; border-radius: 10px; padding: 9px 12px; font-size: 13px; line-height: 1.5; }
   .daypick { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
   .daypick button { height: 40px; border-radius: 10px; border: 1px solid var(--line2); background: #fff; font-weight: 600; }
   .daypick button.on { background: #6B4FD0; color: #fff; border-color: #6B4FD0; }
@@ -1511,7 +1523,7 @@ function eqSetupHtml(first) {
   return `<div class="tcard">${first ? '<div class="tch">🏠 เริ่มจากบอกว่ามีอุปกรณ์อะไร</div>' : ''}
     <div class="flbl" style="margin-top:4px">อุปกรณ์ที่มี (เลือกได้หลายอย่าง)</div>
     <div class="sugg">${EQ.slice(1).map(([k, n, ic]) => `<button class="chip ${eq.indexOf(k) >= 0 ? 'on' : ''}" onclick="toggleEq('${k}')">${ic} ${n}</button>`).join('')}</div>
-    ${eq.indexOf('db') >= 0 ? `<div class="flbl">ดัมเบลที่มี (กก. คั่นด้วยจุลภาค)</div><label class="srch" style="margin:0"><input id="dbkg" inputmode="decimal" placeholder="เช่น 4, 6, 8" value="${esc((S().db_kg || []).join(', '))}" onchange="setDbKg(this.value)"><span class="t2">กก.</span></label>` : ''}
+    ${eq.indexOf('db') >= 0 ? dbSetupHtml() : ''}
     <div class="flbl">วันที่สะดวกฝึก (${days.length} วัน/สัปดาห์)</div>
     <div class="daypick">${['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map((n, i) => `<button class="${days.indexOf(i) >= 0 ? 'on' : ''}" onclick="toggleDay(${i})">${n}</button>`).join('')}</div>
     <p class="note" style="margin:8px 0 0">ตัวเปล่าทำได้เสมอ · ม้านั่งใช้เก้าอี้แข็งแรงแทนได้</p>
@@ -1520,14 +1532,49 @@ function eqSetupHtml(first) {
 function toggleEq(k) { let e = (S().equip || []).slice(); e = e.indexOf(k) >= 0 ? e.filter(x => x !== k) : e.concat([k]); sync('saveSettings', [{ equip: e }], () => { D.settings.equip = e; }); keepScroll(); }
 function setDbKg(v) { const l = String(v).split(/[ ,/]+/).map(Number).filter(x => x > 0).sort((a, b) => a - b); sync('saveSettings', [{ db_kg: l }], () => { D.settings.db_kg = l; }); }
 function toggleDay(i) { let d = (S().train_days || [1, 3, 5]).slice(); d = d.indexOf(i) >= 0 ? d.filter(x => x !== i) : d.concat([i]).sort(); if (d.length < 1) return; sync('saveSettings', [{ train_days: d }], () => { D.settings.train_days = d; }); keepScroll(); }
-function eqDone() { if (!(S().equip)) sync('saveSettings', [{ equip: [] }], () => { D.settings.equip = []; }); tSeg = 'today'; keepScroll(); }
+function eqDone() {
+  const e = S().equip || [], o = { equip: e, eq_ok: true };
+  if (e.indexOf('db') >= 0 && !(S().db_kg || []).length && DBA().mode === 'adj') { o.db_adj = DBA(); o.db_kg = dbLadder(o.db_adj); }
+  sync('saveSettings', [o], () => Object.assign(D.settings, o)); tSeg = 'today'; keepScroll();
+}
+const eqReady = () => !!(S().eq_ok || plan());
+
+// ---------- ดัมเบล ----------
+// db_adj = {mode:'adj'|'fix', handle, plate, max} · ปรับได้: ขั้น = ด้าม + แผ่นเล็กสุดทีละคู่ (ซ้าย+ขวา)
+const DBA = () => Object.assign({ mode: 'adj', handle: 2, plate: 1, max: 0 }, S().db_adj || {});
+function dbLadder(a) {
+  const st = a.plate * 2, top = a.max > a.handle ? a.max : a.handle + st * 10, l = [];
+  for (let k = a.handle; k <= top + 0.001 && l.length < 40; k += st) l.push(Math.round(k * 100) / 100);
+  return l;
+}
+function setDba(ch) {
+  const a = Object.assign(DBA(), ch);
+  ['handle', 'plate', 'max'].forEach(k => a[k] = Math.max(0, Number(a[k]) || 0));
+  if (!a.plate) a.plate = 1;
+  const kg = a.mode === 'adj' ? dbLadder(a) : (S().db_kg || []);
+  sync('saveSettings', [{ db_adj: a, db_kg: kg }], () => { D.settings.db_adj = a; D.settings.db_kg = kg; });
+  keepScroll();
+}
+function dbSetupHtml() {
+  const a = DBA(), kg = (S().db_kg || []);
+  const head = `<div class="flbl">ดัมเบลแบบไหน</div><div class="seg2">${[['adj', 'ปรับน้ำหนักได้ (ใส่แผ่น)'], ['fix', 'ขนาดตายตัวหลายคู่']].map(([k, n]) => `<button class="${a.mode === k ? 'on' : ''}" onclick="setDba({mode:'${k}'})">${n}</button>`).join('')}</div>`;
+  if (a.mode === 'fix') return head + `<div class="flbl">มีคู่ละกี่ กก. (คั่นด้วยจุลภาค)</div><label class="srch" style="margin:0"><input inputmode="decimal" placeholder="เช่น 4, 6, 8" value="${esc(kg.join(', '))}" onchange="setDbKg(this.value)"><span class="t2">กก.</span></label>`;
+  const lad = dbLadder(a);
+  return head + `<div class="setrows">
+      <label class="setrow"><span>ด้ามเปล่า (รวมตัวล็อก)</span><input inputmode="decimal" value="${num(a.handle)}" onchange="setDba({handle:this.value})"><i>กก.</i></label>
+      <div class="setrow col"><span>แผ่นที่เล็กที่สุด</span><div class="sugg">${[0.5, 1, 1.25, 2, 2.5].map(p => `<button class="chip ${a.plate === p ? 'on' : ''}" onclick="setDba({plate:${p}})">${p} กก.</button>`).join('')}</div></div>
+      <label class="setrow"><span>ใส่แผ่นหมดหนักสุด (ต่อข้าง)</span><input inputmode="decimal" placeholder="ไม่รู้" value="${a.max ? num(a.max) : ''}" onchange="setDba({max:this.value})"><i>กก.</i></label>
+    </div>
+    <div class="dbinfo">เพิ่มทีละแผ่นเล็กสุด 1 คู่ (ซ้าย+ขวา) = ดัมเบลหนักขึ้นข้างละ <b>${num(a.plate * 2)} กก.</b><br>ขั้นที่ใช้โปรเกรส: ${lad.slice(0, 12).map(num).join(' · ')}${lad.length > 12 ? ' …' : ''} กก.</div>
+    <p class="note" style="margin:6px 0 0">ไม่แน่ใจแผ่นละเท่าไร: ดูตัวเลขที่พิมพ์บนแผ่น หรือถือดัมเบลขึ้นเครื่องชั่ง แล้วลบน้ำหนักตัว · ตอนนี้ตั้ง ${num(a.plate)} กก. ไว้ก่อน แก้ทีหลังได้ · ระหว่างฝึกแตะเซ็ตซ้ำแก้ กก. จริงได้เสมอ</p>`;
+}
 
 function trainToday() {
   const s = S();
   const quick = [['เดินเร็ว', '🚶'], ['ปั่นจักรยาน', '🚴'], ['งานไร่/งานสวน', '🌾']];
   const quickHtml = `<div class="sec"><h3>⚡ คาร์ดิโอ / จดเร็ว</h3></div>
     <div class="exq">${quick.map(([n, ic]) => `<button onclick="openForm('exercise');F.name='${n}';render()"><span>${ic}</span>${n}</button>`).join('')}</div>`;
-  if (!s.equip) return eqSetupHtml(true) + quickHtml;
+  if (!eqReady()) return eqSetupHtml(true) + quickHtml;
   const p = plan();
   if (!p) return `<div class="tcard"><div class="tch">📋 ยังไม่มีแผนฝึก</div><p class="note" style="margin:4px 0 12px">เลือกวิธีจัดแผนจากอุปกรณ์ที่มี (${myEq().map(k => (EQ.find(e => e[0] === k) || [])[1]).join(', ')}) · ${(s.train_days || [1, 3, 5]).length} วัน/สัปดาห์</p>
       <div class="bigbtn2"><button onclick="aiMakePlan()"><span>✨</span><b>ให้ AI จัด</b><small>ดูอุปกรณ์ + เข่า + เป้าลดพุง</small></button>
@@ -1685,7 +1732,7 @@ function addMyEx() {
 function trainCardToday() {
   const p = plan(), td = todayIso();
   if (W) return `<button class="row trow-go" onclick="go('train')"><div class="ico">🏋️</div><div class="grow"><div class="t1">กำลังฝึก: ${esc(W.name)}</div><div class="t2">แตะเพื่อกลับไปนับเซ็ต</div></div><span>›</span></button>`;
-  if (!S().equip) return `<button class="row" onclick="tSeg='today';go('train')"><div class="ico">🏠</div><div class="grow"><div class="t1">ตั้งอุปกรณ์ + จัดแผนฝึก</div><div class="t2">ใช้เวลา 1 นาที</div></div><span>›</span></button>`;
+  if (!eqReady()) return `<button class="row" onclick="tSeg='today';go('train')"><div class="ico">🏠</div><div class="grow"><div class="t1">ตั้งอุปกรณ์ + จัดแผนฝึก</div><div class="t2">ใช้เวลา 1 นาที</div></div><span>›</span></button>`;
   if (!p) return `<button class="row" onclick="tSeg='today';go('train')"><div class="ico">📋</div><div class="grow"><div class="t1">จัดแผนฝึก</div><div class="t2">ให้ AI จัด หรือใช้แผนแนะนำ</div></div><span>›</span></button>`;
   const done = (D.sets || []).some(x => x.date === td && x.day_idx !== '');
   if (done) return `<div class="row"><div class="ico">✅</div><div class="grow"><div class="t1">วันนี้ฝึกแล้ว</div></div></div>`;
