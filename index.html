@@ -282,6 +282,21 @@
   .startbtn { margin-top: 12px; height: 52px; font-size: 17px; background: linear-gradient(135deg,#6B4FD0,#9C6ADE); border: 0; }
   .basecard { margin-top: 10px; }
   .basesum { display: block; width: 100%; text-align: left; margin-top: 8px; background: #F7F5FD; border-radius: 10px; padding: 8px 12px; font-size: 13.5px; color: #3E2C8A; }
+  .ifcard { padding: 12px 14px; }
+  .ifcard .t2 { white-space: normal; }
+  .ifidle { display: flex; align-items: center; gap: 10px; }
+  .ifgo { background: #6B4FD0; color: #fff !important; font-weight: 700; padding: 10px 16px; border-radius: 99px; font-size: 15px; flex: none; }
+  .ifrun { display: flex; align-items: center; gap: 14px; }
+  .ifring { position: relative; width: 92px; height: 92px; flex: none; }
+  .ifring svg { width: 100%; height: 100%; }
+  .ifring .c { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+  .ifring b { font-size: 20px; line-height: 1.1; } .ifring small { font-size: 11.5px; color: var(--muted); }
+  .ifph { margin-top: 4px; display: inline-block; font-size: 12.5px; background: #F1EDFC; color: #5B3FB0; border-radius: 99px; padding: 2px 10px; }
+  .ifcard.done .ifph { background: #E2F4EA; color: #17694D; }
+  .ifbtns { display: flex; gap: 6px; margin-top: 10px; } .ifbtns .btn { flex: 1; }
+  .ifhist { margin-top: 8px; font-size: 12.5px; color: var(--muted); display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .ifhist span { min-width: 24px; text-align: center; border-radius: 6px; background: #EEF0EC; padding: 1px 4px; font-weight: 700; color: #5B6466; }
+  .ifhist span.ok { background: #E2F4EA; color: #17694D; }
   .aiwork { margin-top: 10px; border-radius: 14px; padding: 12px 14px; background: linear-gradient(135deg,#F1ECFD,#fff); border: 1px solid #E0D8F7; color: #5B3FB0; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
   .aiwork small { font-size: 12.5px; color: var(--muted); }
   .aiwork i { display: block; height: 4px; border-radius: 99px; margin-top: 8px; background: linear-gradient(90deg,#E0D8F7 0%,#6B4FD0 40%,#E0D8F7 80%); background-size: 250% 100%; animation: aiw 1.6s ease-in-out infinite; }
@@ -602,7 +617,7 @@ let D = null, tab = 'today', dDate = '', openRow = '', sumRange = 90, netErr = '
 const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 const TH_D = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 const MEALS = [['breakfast', 'เช้า', '🌅'], ['lunch', 'กลางวัน', '☀️'], ['dinner', 'เย็น', '🌙'], ['snack', 'ของว่าง', '🍪']];
-const KIND = { food: ['อาหาร', '🍚'], exercise: ['ออกกำลัง', '🏃'], water: ['น้ำ', '💧'], weight: ['น้ำหนัก', '⚖️'] };
+const KIND = { food: ['อาหาร', '🍚'], exercise: ['ออกกำลัง', '🏃'], water: ['น้ำ', '💧'], weight: ['น้ำหนัก', '⚖️'], fast: ['อดอาหาร', '⏱️'] };
 const ACT = [[1.2, 'นั่งทำงาน', 'แทบไม่ได้เดิน'], [1.375, 'เดินบ้าง', 'งานยืน/เดินบางช่วง'], [1.55, 'เดินทั้งวัน', 'งานใช้แรงปานกลาง'], [1.725, 'ใช้แรงหนัก', 'งานไร่/ยกของทั้งวัน']];
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = x => { const n = Number(String(x == null ? '' : x).replace(/,/g, '')); return isFinite(n) ? n : 0; };
@@ -702,6 +717,7 @@ function render() {
   const f = { body: bodyHtml, pick: pickHtml, today: todayHtml, diary: diaryHtml, coach: coachHtml, train: trainHtml, sum: sumHtml, add: addHtml, set: setHtml }[tab] || todayHtml;
   app.innerHTML = net + f();
   if (tab === 'today') maybeTip();
+  if (D && D.settings && D.settings.if_on && !syncQ.length) setTimeout(ifAutoEnd, 0);
 }
 
 // ---------- วันนี้ ----------
@@ -735,9 +751,11 @@ function todayHtml() {
       ${alertsHtml(tg)}
       <div class="sec"><h3>🥗 แมโครวันนี้</h3><a class="lnk" onclick="go('diary')">ไดอารี่ ›</a></div>
       ${macroBars(t, tg)}
+      <div class="sec"><h3>⏱️ IF อดอาหาร</h3>${S().if_goal ? `<span class="sm">${S().if_goal}:${24 - S().if_goal}</span>` : ''}</div>
+      ${ifCard()}
       <div class="sec"><h3>💧 น้ำดื่ม</h3><span class="sm">เป้า ${fmt(num(s.water_goal) || 2500)} มล.</span></div>
       ${waterCard(td, t)}
-      <div class="sec"><h3>📸 รูปหุ่น</h3>${(D.photos || []).length ? `<a class="lnk" onclick="go('body')">เทียบ ›</a>` : ''}</div>
+      <div class="sec"><h3>📸 รูปหุ่น</h3>${(D.photos || []).length ? `<a class="lnk" onclick="go('body')">เทียบ / ลบ ›</a>` : ''}</div>
       ${bodyCard()}
       <div class="sec"><h3>🏃 ออกกำลัง / ฝึกวันนี้</h3><a class="lnk" onclick="openForm('exercise')">＋ เพิ่ม</a></div>
       <div class="card excard">${trainCardToday()}${ex.map(l => logRow(l, true)).join('')}</div>
@@ -891,7 +909,8 @@ function bodyHtml() {
   const left = list.find(p => p.photo_id === bLeft) || list[0];
   const wAt = d => { const w = dailyWeights().filter(x => x.date <= d).pop(); return w ? w.w + ' กก.' : ''; };
   const pic = (p, label) => p ? `<div class="cmp"><div class="cimg" id="ci_${p.photo_id}">${p.thumb ? `<img src="data:image/jpeg;base64,${p.thumb}">` : '<span class="spin sm"></span>'}</div>
-      <div class="t1" style="text-align:center">${label}</div><div class="t2" style="text-align:center">${thDate(p.date)} · ${wAt(p.date)}</div></div>` : '';
+      <div class="t1" style="text-align:center">${label}</div><div class="t2" style="text-align:center">${thDate(p.date)} · ${wAt(p.date)}</div>
+      <button class="btn sm red" style="display:block;margin:6px auto 0" onclick="delPhoto('${p.photo_id}')">🗑️ ลบรูปนี้</button></div>` : '';
   setTimeout(() => [left, last].forEach(p => p && p.file_id && loadFull(p)), 0);
   return `<div class="hd"><div class="hd-in"><div class="hd-top"><button class="hd-btn" onclick="go('today')">‹</button><div class="hd-title">รูปหุ่น</div></div>
       <div class="seg-dk">${POSES.map(([k, n]) => `<button class="${bPose === k ? 'on' : ''}" onclick="bPose='${k}';bLeft='';render()">${n} (${photosOf(k).length})</button>`).join('')}</div></div></div>
@@ -901,7 +920,7 @@ function bodyHtml() {
       ${list.length ? `<div class="sec"><h3>เทียบ${(POSES.find(x => x[0] === bPose) || [])[1]}</h3></div>
         <div class="card pad"><div class="cmpgrid">${pic(left, list.length > 1 ? 'ก่อน' : 'รูปเดียว')}${list.length > 1 ? pic(last, 'ล่าสุด') : ''}</div>
           ${list.length > 2 ? `<div class="flbl" style="margin-top:12px">เปลี่ยนรูปฝั่งซ้าย</div><div class="hscroll">${list.slice(0, -1).map(p => `<button class="chip ${p === left ? 'on' : ''}" onclick="bLeft='${p.photo_id}';render()">${thDate(p.date)}</button>`).join('')}</div>` : ''}
-          ${last ? `<div style="text-align:right;margin-top:10px"><button class="btn sm red" onclick="delPhoto('${last.photo_id}')">ลบรูปล่าสุด</button></div>` : ''}</div>`
+          </div>`
         : `<div class="empty">ยังไม่มีรูปท่านี้ — แตะช่องด้านบนเพื่อถ่าย</div>`}
     </div>`;
 }
@@ -912,6 +931,79 @@ function loadFull(p) {
   api('getPhoto', [p.file_id, 0]).then(r => { fullCache[p.file_id] = `data:${r.mime};base64,${r.b64}`; put(fullCache[p.file_id]); }).catch(() => {});
 }
 function delPhoto(id) { if (confirm('ลบรูปนี้?')) run('deletePhoto', [id], 'กำลังลบ…', () => { bLeft = ''; toast('ลบแล้ว'); }); }
+
+// ===== IF อดอาหาร =====
+// Settings.if_goal = ชั่วโมงอด (14/16/18/20) · Settings.if_on = เวลาเริ่ม 'YYYY-MM-DDTHH:MM' หรือ '' · จบแล้วเก็บ Log kind 'fast' (date/time = เริ่ม, minutes)
+let ifOpen = false, ifTimer = 0;
+const ifStartMs = v => new Date(String(v) + ':00').getTime();
+const isoMin = d => isoOf(d) + 'T' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+const hm = m => Math.floor(m / 60) + ':' + String(Math.floor(m % 60)).padStart(2, '0');
+function lastFoodAt() {
+  const f = logs().filter(l => l.kind === 'food').map(l => l.date + 'T' + String(l.time || '12:00').padStart(5, '0')).sort().pop();
+  return f && (Date.now() - ifStartMs(f)) < 20 * 3600e3 && Date.now() > ifStartMs(f) ? f : '';
+}
+const IF_PH = [[0, 'ย่อยมื้อล่าสุด'], [4, 'น้ำตาลในเลือดเริ่มลด ใช้พลังงานสะสม'], [12, 'ร่างกายดึงไขมันมาใช้มากขึ้น'], [16, 'ครบช่วงหลักแล้ว ทำได้ดี']];
+function ifCard() {
+  const s = S(), goal = num(s.if_goal) || 16;
+  const done = logs().filter(l => l.kind === 'fast').sort((a, b) => (a.date + a.time) < (b.date + b.time) ? 1 : -1);
+  const week = done.filter(l => l.date >= addDays(todayIso(), -6));
+  const hist = week.length ? `<div class="ifhist">7 วัน: ${week.slice().reverse().map(l => `<span class="${num(l.minutes) >= goal * 60 ? 'ok' : ''}">${(num(l.minutes) / 60).toFixed(0)}</span>`).join('')} ชม.</div>` : '';
+  if (!s.if_on) {
+    const lf = lastFoodAt();
+    const pick = `<div class="sugg" style="margin-top:6px">${[14, 16, 18, 20].map(h => `<button class="chip ${goal === h ? 'on' : ''}" onclick="setIfGoal(${h})">${h}:${24 - h}</button>`).join('')}</div>`;
+    return `<div class="card ifcard" id="ifcard"><div class="ifidle"><div class="grow"><div class="t1">${done.length ? 'พร้อมเริ่มรอบใหม่' : 'อดอาหารเป็นช่วง (IF)'}</div>
+        <div class="t2">อด ${goal} ชม. กินได้ ${24 - goal} ชม.${done[0] ? ' · ครั้งก่อน ' + (num(done[0].minutes) / 60).toFixed(1) + ' ชม.' : ''}</div></div>
+        <button class="ifgo" onclick="ifStart('${lf}')">▶ เริ่มอด</button></div>
+      ${lf ? `<button class="lnk" style="margin-top:8px;display:block" onclick="ifStart('${lf}')">เริ่มนับจากมื้อล่าสุด ${thDate(lf.slice(0, 10)).replace(/ \d+$/, '')} ${lf.slice(11)}</button>` : ''}
+      ${ifOpen || !done.length ? pick + `<p class="note" style="margin:6px 0 0">ระหว่างอดดื่มน้ำ กาแฟดำ ชาไม่หวานได้ · ช่วงกินยังต้องคุมแคลและโปรตีนตามเป้า · ถ้ามีเบาหวานหรือกินยาประจำ ปรึกษาหมอก่อน</p>` : `<button class="lnk" style="margin-top:6px" onclick="ifOpen=true;keepScroll()">เปลี่ยนสูตร</button>`}
+      ${hist}</div>`;
+  }
+  const st = ifStartMs(s.if_on), min = Math.max(0, (Date.now() - st) / 60000), pct = Math.min(1, min / (goal * 60));
+  const end = new Date(st + goal * 3600e3), reached = min >= goal * 60;
+  const ph = IF_PH.filter(p => min / 60 >= p[0]).pop()[1];
+  const R = 34, C = 2 * Math.PI * R;
+  return `<div class="card ifcard on ${reached ? 'done' : ''}" id="ifcard"><div class="ifrun">
+      <div class="ifring"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="${R}" fill="none" stroke="#EDE7FB" stroke-width="8"/><circle cx="40" cy="40" r="${R}" fill="none" stroke="${reached ? '#1E7B4D' : '#6B4FD0'}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${(C * pct).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 40 40)"/></svg>
+        <div class="c"><b>${hm(min)}</b><small>/ ${goal} ชม.</small></div></div>
+      <div class="grow"><div class="t1">${reached ? '🎉 ครบ ' + goal + ' ชม. แล้ว กินได้' : 'กำลังอดอาหาร'}</div>
+        <div class="t2">เริ่ม ${String(s.if_on).slice(11)} · ${reached ? 'เลยมา ' + hm(min - goal * 60) + ' ชม.' : 'กินได้ตอน ' + String(end.getHours()).padStart(2, '0') + ':' + String(end.getMinutes()).padStart(2, '0') + (isoOf(end) !== todayIso() ? ' (พรุ่งนี้)' : '')}</div>
+        <div class="ifph">${ph}</div></div></div>
+      <div class="ifbtns"><button class="btn sm" onclick="ifEditStart()">แก้เวลาเริ่ม</button><button class="btn sm red" onclick="ifCancel()">ยกเลิก</button><button class="btn sm pri" onclick="ifEnd()">${reached ? '✅ จบ กินได้' : 'จบก่อนเวลา'}</button></div>
+      <p class="note" style="margin:6px 0 0">จดอาหารเมื่อไร จะจบการอดให้อัตโนมัติ</p>${hist}</div>`;
+}
+function setIfGoal(h) { sync('saveSettings', [{ if_goal: h }], () => { D.settings.if_goal = h; }); keepScroll(); }
+function ifStart(at) {
+  const v = at || isoMin(new Date()), g = num(S().if_goal) || 16;
+  ifOpen = false;
+  sync('saveSettings', [{ if_on: v, if_goal: g }], () => { D.settings.if_on = v; D.settings.if_goal = g; }); keepScroll(); toast('⏱️ เริ่มนับแล้ว');
+}
+function ifEnd(atMs) {
+  const s = S(); if (!s.if_on) return;
+  const endMs = atMs || Date.now(), min = Math.round((endMs - ifStartMs(s.if_on)) / 60000);
+  const o = { log_id: newLogId(), kind: 'fast', date: s.if_on.slice(0, 10), time: s.if_on.slice(11), name: 'อดอาหาร', minutes: Math.max(0, min), note: 'เป้า ' + (num(s.if_goal) || 16) + ' ชม.', source: 'tap' };
+  if (min >= 30) sync('saveLog', [o], () => D.log.push(o));
+  sync('saveSettings', [{ if_on: '' }], () => { D.settings.if_on = ''; });
+  keepScroll(); toast(`✅ อดไป ${hm(Math.max(0, min))} ชม.`);
+}
+function ifCancel() { if (!confirm('ยกเลิกรอบนี้ (ไม่บันทึก)?')) return; sync('saveSettings', [{ if_on: '' }], () => { D.settings.if_on = ''; }); keepScroll(); }
+function ifEditStart() {
+  const s = S(), v = prompt('เวลาเริ่มอด (ชั่วโมง:นาที เช่น 20:30) — ถ้าเริ่มเมื่อวานพิมพ์ ม 20:30', s.if_on.slice(11));
+  if (!v) return;
+  const m = v.trim().match(/^(ม\s*)?(\d{1,2})[:.](\d{2})$/); if (!m) return alert('รูปแบบเวลาไม่ถูก เช่น 20:30');
+  let d = new Date(); if (m[1]) d = new Date(Date.now() - 864e5);
+  d.setHours(+m[2], +m[3], 0, 0); if (!m[1] && d.getTime() > Date.now()) d = new Date(d.getTime() - 864e5);
+  const iso = isoMin(d);
+  sync('saveSettings', [{ if_on: iso }], () => { D.settings.if_on = iso; }); keepScroll();
+}
+// จดอาหารหลังเวลาเริ่ม → จบการอดที่เวลามื้อนั้นอัตโนมัติ
+function ifAutoEnd() {
+  const s = S(); if (!s.if_on) return;
+  const st = ifStartMs(s.if_on);
+  const f = logs().filter(l => l.kind === 'food').map(l => ifStartMs(l.date + 'T' + String(l.time || '12:00').padStart(5, '0'))).filter(t => t > st + 30 * 60000 && t <= Date.now() + 5 * 60000).sort()[0];
+  if (f) ifEnd(f);
+}
+// อัปเดตตัวเลขทุก 30 วิ (แทนที่การ์ดอย่างเดียว ไม่ render ทั้งหน้า)
+setInterval(() => { if (tab === 'today' && D && S().if_on) { const el = document.getElementById('ifcard'); if (el) el.outerHTML = ifCard(); } }, 30000);
 
 let tipState = '';
 function maybeTip(force) {

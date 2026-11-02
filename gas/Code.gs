@@ -11,7 +11,7 @@ const SH_ = {
   SETS: { name: 'Sets', head: ['set_id', 'date', 'session_id', 'day_idx', 'ex_id', 'ex_name', 'set_no', 'reps', 'kg', 'feel', 'msg_id', 'created_at'] }
 };
 const TXT_COLS_ = ['date', 'time', 'at', 'key', 'value', 'qty'];
-const KINDS_ = ['food', 'exercise', 'water', 'weight'];
+const KINDS_ = ['food', 'exercise', 'water', 'weight', 'fast'];
 const MEALS_ = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 // ค่าเริ่มต้น (จากเครื่องชั่ง Xiaomi 18 ต.ค. 2569)
@@ -225,6 +225,8 @@ function cleanLog_(o) {
     if (!out.name) throw new Error('ใส่ชื่อการออกกำลัง');
     out.minutes = Math.max(0, Math.round(num_(o.minutes)));
     out.kcal = Math.max(0, Math.round(num_(o.kcal)));
+  } else if (kind === 'fast') {
+    out.minutes = Math.max(0, Math.round(num_(o.minutes)));
   } else if (kind === 'water') {
     out.ml = Math.round(num_(o.ml));
     if (!out.ml) throw new Error('ใส่ปริมาณน้ำ');

@@ -92,6 +92,13 @@ function coachContext_(s, log, today) {
     if (t.kcal || t.ex) lines.push(`- ${d}: ${Math.round(t.kcal)}/${Math.round(t.protein)}ก./${Math.round(t.ex)}` + (partial(d) ? ' ⚠️ จดไม่ครบ (จดแค่บางมื้อ) — ตัวเลขนี้ไม่ใช่ที่กินจริง' : ''));
   }
   lines.push('หมายเหตุ: วันที่ระบุ "จดไม่ครบ" ห้ามสรุปว่ากินน้อยหรือกินเกิน ให้ชวนจดทุกมื้อแทน · วันนี้ยังไม่จบวัน ตัวเลขวันนี้ยังไม่ครบ');
+  // IF อดอาหาร
+  const fasts = log.filter(l => l.kind === 'fast' && String(l.date) >= addDays_(today, -10)).sort((a, b) => a.date < b.date ? -1 : 1);
+  if (s.if_goal || s.if_on || fasts.length) {
+    let cur = '';
+    if (s.if_on) { const h = (new Date() - new Date(s.if_on + ':00+07:00')) / 3600000; cur = ` · ตอนนี้กำลังอดอยู่ ${h.toFixed(1)} ชม. (เริ่ม ${String(s.if_on).replace('T', ' ')}) เป้า ${s.if_goal || 16} ชม.`; }
+    lines.push(`IF อดอาหาร: เป้า ${s.if_goal || 16}:${24 - (s.if_goal || 16)}${cur}` + (fasts.length ? ' · ที่ผ่านมา: ' + fasts.map(f => `${f.date} ${(num_(f.minutes) / 60).toFixed(1)}ชม.`).join(', ') : ''));
+  }
   const ws = log.filter(l => l.kind === 'weight').sort((a, b) => a.date < b.date ? -1 : 1).slice(-12);
   lines.push('น้ำหนักล่าสุด: ' + (ws.map(w => `${w.date} ${w.weight}${w.fat_pct ? '/' + w.fat_pct + '%' : ''}`).join(', ') || '-'));
   // การฝึก
