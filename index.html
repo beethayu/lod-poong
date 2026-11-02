@@ -271,6 +271,8 @@
   .hint { display: block; text-align: left; margin-top: 6px; font-size: 13px; padding: 6px 10px; border-radius: 10px; font-weight: 600; width: 100%; }
   .hint.up { background: #E3F5EC; color: #17694D; } .hint.down { background: #FFF1E6; color: #9A4A12; }
   .startbtn { margin-top: 12px; height: 52px; font-size: 17px; background: linear-gradient(135deg,#6B4FD0,#9C6ADE); border: 0; }
+  .basecard { margin-top: 10px; }
+  .basesum { display: block; width: 100%; text-align: left; margin-top: 8px; background: #F7F5FD; border-radius: 10px; padding: 8px 12px; font-size: 13.5px; color: #3E2C8A; }
   .aiwork { margin-top: 10px; border-radius: 14px; padding: 12px 14px; background: linear-gradient(135deg,#F1ECFD,#fff); border: 1px solid #E0D8F7; color: #5B3FB0; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
   .aiwork small { font-size: 12.5px; color: var(--muted); }
   .aiwork i { display: block; height: 4px; border-radius: 99px; margin-top: 8px; background: linear-gradient(90deg,#E0D8F7 0%,#6B4FD0 40%,#E0D8F7 80%); background-size: 250% 100%; animation: aiw 1.6s ease-in-out infinite; }
@@ -1587,7 +1589,6 @@ function eqSetupHtml(first) {
     ${eq.indexOf('db') >= 0 ? dbSetupHtml() : ''}
     ${eq.indexOf('sand') >= 0 ? `<div class="flbl">แซนด์แบ็ก</div><div class="setrows" style="margin-top:0"><label class="setrow"><span>หนัก (ไม่รู้ เว้นไว้)</span><input inputmode="decimal" placeholder="?" value="${num(S().sand_kg) || ''}" onchange="setSandKg(this.value)"><i>กก.</i></label></div>
       <p class="note" style="margin:6px 0 0">ชั่งเอง: ยืนบนเครื่องชั่งถือถุง แล้วลบน้ำหนักตัว</p>` : ''}
-    ${baseHtml()}
     <div class="flbl">วันที่สะดวกฝึก (${days.length} วัน/สัปดาห์)</div>
     <div class="daypick">${['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map((n, i) => `<button class="${days.indexOf(i) >= 0 ? 'on' : ''}" onclick="toggleDay(${i})">${n}</button>`).join('')}</div>
     <p class="note" style="margin:8px 0 0">ตัวเปล่าทำได้เสมอ · ม้านั่งใช้เก้าอี้แข็งแรงแทนได้</p>
@@ -1611,12 +1612,26 @@ const BASEQ = [
   ['knee', 'เข่าตอนนี้', ['ปกติ', 'เจ็บบ้าง']]
 ];
 const BASE = () => S().base || {};
-function setBase(k, v) { const b = Object.assign({}, BASE(), { [k]: v }); sync('saveSettings', [{ base: b }], () => { D.settings.base = b; }); keepScroll(); }
+function setBase(k, v) {
+  const b = Object.assign({}, BASE(), { [k]: v });
+  sync('saveSettings', [{ base: b }], () => { D.settings.base = b; });
+  // ปรับแผนเดิมให้ตรงระดับทันที
+  const p = plan();
+  if (p) { const q = JSON.parse(JSON.stringify(p)), before = JSON.stringify(q); q.days.forEach(d => d.items = d.items.map(it => levelFix(it))); if (JSON.stringify(q) !== before) { savePlan(q, true); toast('ปรับท่าในแผนตามระดับแล้ว'); } }
+  keepScroll();
+}
 function baseHtml() {
   const b = BASE(), eq = myEq();
-  return `<div class="flbl">📏 ทดสอบพื้นฐาน (ใช้เลือกระดับท่าในแผน)</div><div class="setrows" style="margin-top:0">${BASEQ.filter(q => !q[3] || eq.indexOf(q[3]) >= 0 || eq.indexOf('gym') >= 0).map(([k, t, opts]) =>
+  return `<div class="flbl" style="margin-top:4px">📏 ทดสอบพื้นฐาน — ตอบก่อนจัดแผน แผนจะได้ตรงระดับ</div><div class="setrows" style="margin-top:0">${BASEQ.filter(q => !q[3] || eq.indexOf(q[3]) >= 0 || eq.indexOf('gym') >= 0).map(([k, t, opts]) =>
     `<div class="setrow col"><span>${t}</span><div class="sugg">${opts.map((o, i) => `<button class="chip ${b[k] === i ? 'on' : ''}" onclick="setBase('${k}',${i})">${o}</button>`).join('')}</div></div>`).join('')}</div>
     <p class="note" style="margin:6px 0 0">ไม่แน่ใจ ลองทำตอนนี้เลยก็ได้ · ตอบแล้วกดจัดแผนใหม่ แผนจะปรับตาม</p>`;
+}
+let baseOpen = false;
+const baseDone = () => { const b = BASE(); return b.pu != null && b.plank != null && b.knee != null; };
+function baseCard() {
+  if (!baseDone() || baseOpen) return `<div class="basecard">${baseHtml()}${baseDone() ? `<button class="btn sm" style="margin-top:8px" onclick="baseOpen=false;keepScroll()">เสร็จ</button>` : ''}</div>`;
+  const b = BASE();
+  return `<button class="basesum" onclick="baseOpen=true;keepScroll()">📏 ${BASEQ.filter(q => b[q[0]] != null).map(q => ({ pu: 'วิดพื้น ', pull: 'ดึงข้อ ', plank: 'แพลงก์ ', knee: 'เข่า' }[q[0]]) + q[2][b[q[0]]]).join(' · ')} <u>แก้</u></button>`;
 }
 // ท่าวิดพื้นตามระดับ
 const puPick = () => { const v = BASE().pu; return v == null ? 'pu_knee' : ['pu_wall', 'pu_knee', 'pu', 'pu', 'pu_decline'][v]; };
@@ -1684,6 +1699,7 @@ function trainToday() {
   if (!eqReady()) return eqSetupHtml(true) + quickHtml;
   const p = plan();
   if (!p) return `<div class="tcard"><div class="tch">📋 ยังไม่มีแผนฝึก</div><p class="note" style="margin:4px 0 12px">เลือกวิธีจัดแผนจากอุปกรณ์ที่มี (${myEq().map(k => (EQ.find(e => e[0] === k) || [])[1]).join(', ')}) · ${(s.train_days || [1, 3, 5]).length} วัน/สัปดาห์</p>
+      ${baseCard()}
       ${aiBusy ? aiWork() : ''}<div class="bigbtn2" ${aiBusy ? 'style="display:none"' : ''}><button onclick="aiMakePlan()"><span>✨</span><b>ให้ AI จัด</b><small>ดูอุปกรณ์ + เข่า + เป้าลดพุง</small></button>
         <button onclick="useTemplate()"><span>📋</span><b>แผนแนะนำ</b><small>ทั้งตัว ${(s.train_days || [1, 3, 5]).length} วัน จัดทันที</small></button></div>
       <button class="btn full" style="margin-top:8px" onclick="tSeg='plan';savePlan({days:[{name:'วัน A',items:[]}]},true)">✏️ จัดเองจากคลังท่า</button></div>` + quickHtml;
@@ -1781,6 +1797,7 @@ function tickRest() {
 function planHtml() {
   const p = plan(), s = S();
   const head = `<div class="tcard"><div class="tch">📋 แผนฝึก ${(s.train_days || [1, 3, 5]).length} วัน/สัปดาห์</div>
+      ${baseCard()}
       ${aiBusy ? aiWork() : ''}<div class="bigbtn2" style="margin-top:10px${aiBusy ? ';display:none' : ''}"><button onclick="aiMakePlan()"><span>✨</span><b>${p ? 'AI จัดใหม่' : 'ให้ AI จัด'}</b></button><button onclick="useTemplate()"><span>📋</span><b>แผนแนะนำ</b></button></div>
       <div class="flbl">พักระหว่างเซ็ต (ท่าตัวเปล่า · ท่าถือน้ำหนักพัก 90 วิ)</div>
       <div class="chips">${[45, 60, 90].map(v => `<button class="chip ${(num(s.rest) || 60) === v ? 'on' : ''}" onclick="sync('saveSettings',[{rest:${v}}],()=>{D.settings.rest=${v}});">${v} วิ</button>`).join('')}</div></div>`;
