@@ -35,11 +35,21 @@ function sheetInit_(def) {
   const ss = ss_();
   let sh = ss.getSheetByName(def.name);
   if (!sh) {
-    sh = ss.insertSheet(def.name);
-    sh.getRange(1, 1, 1, def.head.length).setValues([def.head]).setFontWeight('bold');
-    sh.setFrozenRows(1);
-    def.head.forEach((h, i) => { if (TXT_COLS_.indexOf(h) >= 0) sh.getRange(1, i + 1, sh.getMaxRows(), 1).setNumberFormat('@'); });
-    return sh;
+    // สร้างชีตใหม่ — กันสองคำขอสร้างชื่อเดียวกันพร้อมกัน
+    const lock = inLock_ ? null : LockService.getScriptLock();
+    if (lock) lock.waitLock(20000);
+    try {
+      SpreadsheetApp.flush();
+      sh = ss.getSheetByName(def.name);
+      if (sh) return sh;
+      try { sh = ss.insertSheet(def.name); }
+      catch (e) { SpreadsheetApp.flush(); sh = ss.getSheetByName(def.name); if (sh) return sh; throw e; }
+      sh.getRange(1, 1, 1, def.head.length).setValues([def.head]).setFontWeight('bold');
+      sh.setFrozenRows(1);
+      def.head.forEach((h, i) => { if (TXT_COLS_.indexOf(h) >= 0) sh.getRange(1, i + 1, sh.getMaxRows(), 1).setNumberFormat('@'); });
+      SpreadsheetApp.flush();
+      return sh;
+    } finally { if (lock) lock.releaseLock(); }
   }
   const cur = sh.getRange(1, 1, 1, Math.max(1, sh.getLastColumn())).getValues()[0];
   def.head.forEach(h => {
