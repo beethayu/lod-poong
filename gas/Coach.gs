@@ -255,3 +255,17 @@ function getPhoto(id, page) {
   const b = f.getBlob();
   return { mime: b.getContentType(), b64: Utilities.base64Encode(b.getBytes()) };
 }
+
+// ปุ่ม "ให้ AI ประมาณ" ในฟอร์มเพิ่มอาหาร → คืนแคล + สารอาหาร (ไม่บันทึก)
+function estimateFood(name, qty) {
+  name = String(name || '').trim().slice(0, 200); qty = String(qty || '').trim().slice(0, 60);
+  if (!name) throw new Error('ใส่ชื่ออาหารก่อน');
+  const prompt = `ประมาณพลังงานและสารอาหารของอาหารนี้ ตามขนาดที่คนไทยกินทั่วไป (ร้านอาหารไทย/ร้านตามสั่ง/7-Eleven ใช้ค่าตามฉลากที่รู้)
+อาหาร: ${name}
+ปริมาณ: ${qty || '1 ที่ (ขนาดปกติ)'}
+ตอบ JSON อย่างเดียว: {"qty":"ปริมาณที่ใช้คิด เช่น 1 จาน","kcal":0,"protein":0,"carb":0,"fat":0,"note":"หมายเหตุสั้น ๆ ไม่เกิน 60 ตัวอักษร เช่น ส่วนที่แคลสูง"}
+protein/carb/fat เป็นกรัม ตัวเลขเต็ม`;
+  const d = JSON.parse(geminiCall_([{ text: prompt }], true).replace(/^```json\s*|```\s*$/g, ''));
+  return { qty: String(d.qty || qty || ''), kcal: Math.round(num_(d.kcal)), protein: Math.round(num_(d.protein)),
+    carb: Math.round(num_(d.carb)), fat: Math.round(num_(d.fat)), note: String(d.note || '').slice(0, 80) };
+}

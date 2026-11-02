@@ -154,7 +154,13 @@
     .fcard textarea { width: 100%; border: 0; outline: 0; background: transparent; resize: none; height: 70px; padding: 0; }
     /* iOS: ช่องวันที่มีความกว้างขั้นต่ำของมันเอง → บังคับให้พอดีช่อง */
     input[type=date], input[type=time] { -webkit-appearance: none; appearance: none; min-width: 0; max-width: 100%; display: block; background: transparent; }
-    input[type=date]::-webkit-date-and-time-value, input[type=time]::-webkit-date-and-time-value { text-align: right; }
+    input[type=date]::-webkit-date-and-time-value, input[type=time]::-webkit-date-and-time-value { text-align: right; margin: 0; }
+    .fcard .frow input[type=date], .fcard .frow input[type=time] { height: auto; min-height: 0; line-height: 1.4; padding: 13px 0; }
+    .sugg { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sugg .chip { height: auto; min-height: 36px; padding: 5px 12px; white-space: normal; text-align: left; }
+    .sugg .chip small { color: var(--muted); margin-left: 4px; }
+    .aibox { margin-top: 10px; }
+    .aibox .note { margin: 6px 2px 0; }
     .amtbox { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.12); border-radius: 14px; height: 72px; padding: 0 16px; margin-top: 12px; }
     .amtbox input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 38px; font-weight: 700; text-align: right; height: 100%; padding: 0; color: #fff; }
     .amtbox input::placeholder { color: rgba(255,255,255,.45); }
@@ -587,9 +593,10 @@ function addHtml() {
   let rows = '';
   if (k === 'food') {
     rows = `<div class="flbl">มื้อ</div><div class="hscroll">${MEALS.map(([m, n, ic]) => `<button class="chip ${F.meal === m ? 'on' : ''}" onclick="readForm();F.meal='${m}';render()">${ic} ${n}</button>`).join('')}</div>
-      <div class="flbl">รายละเอียด</div><div class="card fcard">${row('ชื่ออาหาร', 'name', 'text', '', 'placeholder="เช่น ข้าวกะเพราไก่ไข่ดาว"')}${row('ปริมาณ', 'qty', 'text', '', 'placeholder="1 จาน"')}
+      <div class="flbl">รายละเอียด</div><div class="card fcard">${row('ชื่ออาหาร', 'name', 'text', '', 'placeholder="เช่น ข้าวกะเพราไก่ไข่ดาว" oninput="suggest()" autocomplete="off"')}${row('ปริมาณ', 'qty', 'text', '', 'placeholder="1 จาน"')}
         ${row('โปรตีน', 'protein', 'num', 'ก.')}${row('คาร์บ', 'carb', 'num', 'ก.')}${row('ไขมัน', 'fat', 'num', 'ก.')}</div>
-      <p class="note" style="margin:8px 2px">ไม่รู้แคล? ไปแท็บโค้ช พิมพ์ชื่ออาหารหรือถ่ายรูป ให้ AI ประมาณให้</p>`;
+      <div class="aibox"><button class="btn full" id="aiBtn" onclick="aiEstimate()">✨ ไม่รู้แคล? ให้ AI ประมาณจากชื่อ + ปริมาณ</button><div class="note" id="aiNote"></div></div>
+      <div class="flbl">เคยกิน (แตะเพื่อใช้ค่าเดิม)</div><div class="sugg" id="sugg">${suggHtml(F.name)}</div>`;
   } else if (k === 'exercise') {
     rows = `<div class="flbl">รายละเอียด</div><div class="card fcard">${row('ชื่อ', 'name', 'text', '', 'placeholder="เช่น เดินเร็ว"')}${row('แคลอรี่', 'kcal', 'num', 'แคล', 'placeholder="ว่าง = ประมาณให้"')}</div>
       <div class="flbl">ประมาณจากชนิด (ว่างช่องแคลอรี่)</div><div class="hscroll">${EX_MET.map(([n, m]) => `<button class="chip ${F.name === n ? 'on' : ''}" onclick="readForm();F.name='${n}';render()">${n}</button>`).join('')}</div>`;
@@ -607,6 +614,50 @@ function addHtml() {
     <div class="wrap">${rows}
       <div style="display:flex;gap:8px;margin-top:16px"><button class="btn" style="flex:1" onclick="cancelForm()">ยกเลิก</button><button class="btn pri" style="flex:2" onclick="saveForm()">บันทึก</button></div>
     </div>`;
+}
+// อาหารที่เคยกิน: ชื่อเดียวกันใช้ค่าล่าสุด เรียงตามที่กินบ่อย
+function pastFoods() {
+  const m = {};
+  logs().filter(l => l.kind === 'food' && l.name).forEach(l => {
+    const k = String(l.name).trim().toLowerCase();
+    const o = m[k] || (m[k] = { n: 0, last: '' });
+    o.n++; if ((l.date + l.time) >= o.last) { o.last = l.date + l.time; o.l = l; }
+  });
+  return Object.values(m).sort((a, b) => b.n - a.n || (a.last < b.last ? 1 : -1));
+}
+function suggHtml(q) {
+  q = String(q || '').trim().toLowerCase();
+  let list = pastFoods();
+  if (q) list = list.filter(o => String(o.l.name).toLowerCase().indexOf(q) >= 0);
+  list = list.slice(0, 8);
+  if (!list.length) return `<div class="note">${q ? 'ยังไม่เคยจดอาหารชื่อนี้ — กดปุ่ม AI ด้านบน' : 'ยังไม่มี จดไปเรื่อย ๆ แล้วจะขึ้นตรงนี้'}</div>`;
+  return list.map(o => `<button class="chip" onclick="useFood('${o.l.log_id}')">${esc(o.l.name)}<small>${esc(o.l.qty || '')} · ${fmt(num(o.l.kcal))} แคล</small></button>`).join('');
+}
+function suggest() { const el = document.getElementById('f_name'), box = document.getElementById('sugg'); if (el && box) box.innerHTML = suggHtml(el.value); }
+function setField(n, v) { const el = document.getElementById('f_' + n); if (el) el.value = v; F[n] = v; }
+function useFood(id) {
+  const l = logs().find(x => x.log_id === id); if (!l) return;
+  ['name', 'qty', 'kcal', 'protein', 'carb', 'fat'].forEach(n => setField(n, l[n] === '' || l[n] == null ? '' : l[n]));
+  suggest(); toast('ใช้ค่าเดิมแล้ว แก้ปริมาณ/ตัวเลขได้');
+}
+function aiEstimate() {
+  readForm();
+  if (!F.name) return alert('ใส่ชื่ออาหารก่อน');
+  if (!D.gemini) return alert('ยังไม่ได้ใส่รหัส Gemini — วันนี้ → ⚙️ ตั้งค่า');
+  const btn = document.getElementById('aiBtn'), note = document.getElementById('aiNote');
+  btn.disabled = true; btn.innerHTML = '<span class="spin sm"></span> AI กำลังประมาณ…'; note.textContent = '';
+  document.querySelectorAll('#app input').forEach(el => el.blur());
+  api('estimateFood', [F.name, F.qty]).then(r => {
+    if (tab !== 'add') return;
+    ['qty', 'kcal', 'protein', 'carb', 'fat'].forEach(n => setField(n, r[n]));
+    btn.disabled = false; btn.textContent = '✨ ประมาณใหม่';
+    note.textContent = '≈ ค่าประมาณ' + (r.note ? ' · ' + r.note : '') + ' — แก้ตัวเลขได้ก่อนบันทึก';
+  }).catch(e => {
+    if (tab !== 'add') return;
+    btn.disabled = false; btn.textContent = '✨ ไม่รู้แคล? ให้ AI ประมาณจากชื่อ + ปริมาณ';
+    if (e.auth || e.setup) return handleErr(e);
+    alert(e.message);
+  });
 }
 const EX_MET = [['เดินเร็ว', 4.3], ['เดินชิล', 3], ['ปั่นจักรยาน', 6], ['ว่ายน้ำ', 6], ['เวทเทรนนิ่ง', 5], ['วิ่ง', 8], ['งานไร่', 5], ['ยืดเหยียด', 2.5]];
 function readForm() {
