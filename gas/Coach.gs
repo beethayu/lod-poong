@@ -92,9 +92,9 @@ function coachContext_(s, log, today) {
   const ws = log.filter(l => l.kind === 'weight').sort((a, b) => a.date < b.date ? -1 : 1).slice(-12);
   lines.push('น้ำหนักล่าสุด: ' + (ws.map(w => `${w.date} ${w.weight}${w.fat_pct ? '/' + w.fat_pct + '%' : ''}`).join(', ') || '-'));
   // การฝึก
-  const eq = { none: 'ตัวเปล่า', db: 'ดัมเบล', band: 'ยางยืด', bar: 'บาร์โหนประตู', bench: 'ม้านั่ง/เก้าอี้', gym: 'ยิม' };
+  const eq = { none: 'ตัวเปล่า', db: 'ดัมเบล', band: 'ยางยืด', bar: 'บาร์โหนประตู', bench: 'ม้านั่ง/เก้าอี้', ez: 'EZ bar', sand: 'กระสอบทราย (ชอบแบกเดิน)', gym: 'ยิม' };
   const plan = s.plan && s.plan.days ? s.plan : null;
-  lines.push('อุปกรณ์: ' + ((s.equip || []).map(k => eq[k] || k).join(', ') || 'ยังไม่ได้ตั้ง') + (s.db_kg && s.db_kg.length ? ' · ดัมเบล' + (s.db_adj && s.db_adj.mode === 'adj' ? 'ปรับน้ำหนัก (เพิ่มทีละ ' + (s.db_adj.plate * 2) + ' กก.) ขั้น ' : ' ') + s.db_kg.join('/') + ' กก.' : ''));
+  lines.push('อุปกรณ์: ' + ((s.equip || []).map(k => eq[k] || k).join(', ') || 'ยังไม่ได้ตั้ง') + (s.db_kg && s.db_kg.length ? ' · ดัมเบล' + (s.db_adj && s.db_adj.mode === 'adj' ? 'ปรับน้ำหนัก ' + s.db_adj.min + '–' + s.db_adj.max + ' กก. ปรับทีละ ' + s.db_adj.step + ' กก. · ' : ' ') + s.db_kg.join('/') + ' กก.' : ''));
   if (plan) plan.days.forEach((d, i) => lines.push(`แผนวัน ${i + 1} "${d.name}": ` + (d.items || []).map(x => `${x.name} ${x.sets}×${x.lo}-${x.hi}${x.kg ? ' @' + x.kg + 'กก.' : ''}`).join(', ')));
   const sets = rows_(SH_.SETS).filter(x => String(x.date) >= addDays_(today, -14));
   const ses = {};
@@ -355,7 +355,7 @@ function aiPlan(lib, daysPerWeek, note) {
 เลือกท่าจากรายการนี้เท่านั้น (ใช้ id ตรงตัว):
 ${(lib || []).map(x => `${x.id} | ${x.n} | ${x.g}`).join('\n')}
 ตอบ JSON อย่างเดียว: {"days":[{"name":"ชื่อวันสั้น ๆ เช่น A · ทั้งตัว","items":[{"id":"...","sets":3,"lo":8,"hi":12}]}]}
-- ${n} วัน แต่ละวัน 5–7 ท่า ครอบคลุม ดัน/ดึง/ขา(สะโพก)/หน้าท้อง · ท่าจับเวลา (แพลงก์ ห้อยบาร์ นั่งพิงผนัง) lo/hi เป็นวินาที`;
+- ${n} วัน แต่ละวัน 5–7 ท่า ครอบคลุม ดัน/ดึง/ขา(สะโพก)/หน้าท้อง · ท่าจับเวลา (แพลงก์ ห้อยบาร์ นั่งพิงผนัง แบก/ถือเดิน) lo/hi เป็นวินาที · ถ้ามีกระสอบทราย ผู้ใช้ชอบแบกเดิน ใส่ท่าแบกเดินในแผนด้วย`;
   const d = JSON.parse(geminiCall_([{ text: prompt }], true).replace(/^```json\s*|```\s*$/g, ''));
   const ids = (lib || []).map(x => x.id);
   return { days: (d.days || []).slice(0, 5).map((day, i) => ({

@@ -208,6 +208,14 @@
   .qchips::-webkit-scrollbar { display: none; }
   .qchip { flex: none; height: 36px; padding: 0 13px; border-radius: 99px; font-size: 14px; font-weight: 600; white-space: nowrap; }
   .q1 { background: #FFF1E6; color: #9A4A12; } .q2 { background: #E3F5EC; color: #17694D; } .q3 { background: #F1ECFD; color: #5B3FB0; } .q4 { background: #EAF3FB; color: #1f5f91; }
+  .cstick { position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 14px rgba(20,54,48,.18); }
+  .cstick .hd { padding-bottom: 10px; }
+  .cstats { display: flex; gap: 8px; margin-top: 8px; }
+  .cstats > div { flex: 1; background: rgba(255,255,255,.13); border-radius: 12px; padding: 6px 11px; font-size: 13px; }
+  .cstats > div.over { background: rgba(255,110,90,.32); }
+  .cstats small { display: block; font-size: 12px; opacity: .85; }
+  .cstats b { font-size: 19px; margin-right: 2px; }
+  .cstick .qchips { margin: 10px -14px 0; padding: 0 14px; }
   .msgs2 { padding: 14px 0 8px; display: flex; flex-direction: column; gap: 10px; }
   .mrow { display: flex; gap: 8px; align-items: flex-end; }
   .mrow .mav { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg,#7fd8b2,#2f9e78); display: grid; place-items: center; font-size: 16px; flex: none; }
@@ -1272,14 +1280,14 @@ function coachHtml() {
     return out.join('');
   }).join('');
   const wait = pending ? `<div class="mrow u"><div class="bub">${pending.n ? `<span class="ph">📷 รูป ${pending.n} รูป</span>` : ''}${esc(pending.text)}</div></div><div class="mrow m"><div class="mav">🧑‍🏫</div><div class="bub" style="color:var(--muted)"><span class="spin sm"></span> โค้ชกำลังคิด…</div></div>` : '';
-  return `<div class="hd tall"><div class="hd-in">
+  return `<div class="cstick"><div class="hd"><div class="hd-in">
       <div class="hd-top"><div class="coachhd grow"><div class="av">🧑‍🏫</div><div><div class="hd-title" style="font-size:18px">โค้ชลดพุง</div><div class="st">พร้อมจด · ถามได้ทุกเรื่อง</div></div></div>
         ${chat.length ? `<button class="hd-btn" onclick="clearChat()" aria-label="ล้างแชต">🧹</button>` : ''}</div>
-    </div></div>
+      <div class="cstats"><div class="${left < 0 ? 'over' : ''}"><small>${left < 0 ? '⚠️ เกินวันนี้' : '✅ เหลือกินได้'}</small><b>${fmt(Math.abs(left))}</b> แคล</div>
+        <div><small>💪 โปรตีน${pl > 0 ? 'ขาดอีก' : ''}</small>${pl > 0 ? `<b>${fmt(pl)}</b> ก.` : '<b>ครบ 🎉</b>'}</div></div>
+      <div class="qchips">${quick.map((q, i) => `<button class="qchip q${i + 1}" onclick="sendChat('${q}')">${q}</button>`).join('')}</div>
+    </div></div></div>
     <div class="wrap">
-      <div class="float"><div class="stat3c" style="grid-template-columns:1fr 1fr"><div class="sc ${left < 0 ? 'over' : 'left'}"><small>${left < 0 ? '⚠️ เกินวันนี้' : '✅ เหลือกินได้'}</small><b>${fmt(Math.abs(left))} <small style="display:inline;font-size:13px">แคล</small></b></div>
-          <div class="sc blue"><small>💪 โปรตีน${pl > 0 ? 'ขาดอีก' : ''}</small><b>${pl > 0 ? fmt(pl) + ' <small style="display:inline;font-size:13px">ก.</small>' : 'ครบ 🎉'}</b></div></div>
-        <div class="qchips">${quick.map((q, i) => `<button class="qchip q${i + 1}" onclick="sendChat('${q}')">${q}</button>`).join('')}</div></div>
       <div class="msgs2" id="msgs">
         ${!chat.length && !pending ? `<div class="mrow m"><div class="mav">🧑‍🏫</div><div class="bub">สวัสดีครับ พิมพ์หรือถ่ายรูปได้เลย ผมจดให้ทันที เช่น
 • เช้ากินข้าวมันไก่ 1 จาน กาแฟเย็น
@@ -1341,7 +1349,7 @@ function sumHtml() {
 
 // ===================== ระบบฝึก =====================
 // อุปกรณ์: none ตัวเปล่า (มีเสมอ) · db ดัมเบล · band ยางยืด · bar บาร์โหนประตู · bench ม้านั่ง · gym ยิม
-const EQ = [['none', 'ตัวเปล่า', '🙌'], ['db', 'ดัมเบล', '🏋️'], ['band', 'ยางยืด', '🎗️'], ['bar', 'บาร์โหนประตู', '🚪'], ['bench', 'ม้านั่ง', '🪑'], ['gym', 'ยิม', '🏢']];
+const EQ = [['none', 'ตัวเปล่า', '🙌'], ['db', 'ดัมเบล', '🏋️'], ['band', 'ยางยืด', '🎗️'], ['bar', 'บาร์โหนประตู', '🚪'], ['bench', 'ม้านั่ง', '🪑'], ['ez', 'EZ bar', '〰️'], ['sand', 'กระสอบทราย', '🎒'], ['gym', 'ยิม', '🏢']];
 const GROUPS = [['chest', 'อก', '🫁'], ['shoulder', 'ไหล่', '🤷'], ['back', 'หลัง', '🧗'], ['arm', 'แขน', '💪'], ['leg', 'ขา/สะโพก', '🦵'], ['core', 'หน้าท้อง', '🎯']];
 // u: r = นับครั้ง, s = วินาที · k = ไม่กระแทกเข่า · iso = ท่าเล็ก · next = ท่ายากขึ้น
 const LIB = [
@@ -1388,7 +1396,19 @@ const LIB = [
   { id: 'bird_dog', n: 'เบิร์ดด็อก', g: 'core', eq: 'none', u: 'r', k: 1, how: 'คลานสี่ขา เหยียดแขนกับขาตรงข้ามให้ตรง ค้าง 2 วิ สลับข้าง' },
   { id: 'crunch', n: 'ครันช์', g: 'core', eq: 'none', u: 'r', k: 1, iso: 1, how: 'นอนชันเข่า มือแตะขมับ ม้วนไหล่ขึ้นเล็กน้อยใช้ท้อง ไม่ดึงคอ' },
   { id: 'leg_raise', n: 'นอนยกขา', g: 'core', eq: 'none', u: 'r', k: 1, how: 'นอนหงาย มือใต้ก้น ยกขาตรงขึ้นช้า ๆ ลดลงไม่แตะพื้น' },
-  { id: 'hang_knee', n: 'ห้อยบาร์ยกเข่า', g: 'core', eq: 'bar', u: 'r', k: 1, how: 'ห้อยบาร์ ยกเข่าขึ้นหาอก ลดลงช้า ๆ ไม่แกว่ง' }
+  { id: 'hang_knee', n: 'ห้อยบาร์ยกเข่า', g: 'core', eq: 'bar', u: 'r', k: 1, how: 'ห้อยบาร์ ยกเข่าขึ้นหาอก ลดลงช้า ๆ ไม่แกว่ง' },
+  { id: 'farmer', n: 'ถือดัมเบลเดิน (ฟาร์มเมอร์)', g: 'core', eq: 'db', u: 's', k: 1, how: 'ถือดัมเบลหนัก ๆ ข้างตัวทั้งสองมือ ยืดอก ไหล่ไม่ห่อ เดินช้า ๆ ก้าวสั้น' },
+  { id: 'ez_curl', n: 'EZ bar เคิร์ล', g: 'arm', eq: 'ez', u: 'r', k: 1, iso: 1, how: 'จับช่วงหยัก ศอกชิดลำตัว ยกบาร์ขึ้นหาอก ลดลงช้า ๆ ไม่เหวี่ยงหลัง' },
+  { id: 'ez_rev', n: 'EZ bar เคิร์ลคว่ำมือ', g: 'arm', eq: 'ez', u: 'r', k: 1, iso: 1, how: 'เหมือนเคิร์ลแต่คว่ำมือ เน้นปลายแขน ใช้น้ำหนักเบากว่า' },
+  { id: 'ez_skull', n: 'EZ bar สกัลครัชเชอร์ (นอนพื้น)', g: 'arm', eq: 'ez', u: 'r', k: 1, iso: 1, how: 'นอนหงายบนพื้นหรือม้านั่ง แขนตั้งตรง งอศอกลดบาร์ลงข้างหน้าผาก ศอกไม่กาง แล้วเหยียดขึ้น' },
+  { id: 'ez_row', n: 'EZ bar โรว์ก้มตัว', g: 'back', eq: 'ez', u: 'r', k: 1, how: 'งอเข่าเล็กน้อย ก้มตัว 45° หลังตรง ดึงบาร์เข้าหาท้อง บีบสะบัก ลดลงช้า ๆ' },
+  { id: 'ez_rdl', n: 'EZ bar โรมาเนียนเดดลิฟต์', g: 'leg', eq: 'ez', u: 'r', k: 1, how: 'ยืนถือบาร์ เข่างอนิด ดันก้นไปข้างหลัง บาร์ไถลลงตามขา หลังตรง รู้สึกตึงหลังขาแล้วยืนขึ้น' },
+  { id: 'ez_press', n: 'EZ bar ดันไหล่ (ยืน)', g: 'shoulder', eq: 'ez', u: 'r', k: 1, how: 'ถือบาร์ระดับอก เกร็งท้อง ดันขึ้นเหนือหัว ไม่แอ่นหลัง ลดลงช้า ๆ' },
+  { id: 'sand_carry', n: 'กอดกระสอบทรายเดิน', g: 'core', eq: 'sand', u: 's', k: 1, how: 'ยกกระสอบกอดแนบอก หลังตรง เกร็งท้อง เดินช้า ๆ หายใจปกติ' },
+  { id: 'sand_shoulder', n: 'แบกกระสอบบ่าเดิน', g: 'core', eq: 'sand', u: 's', k: 1, how: 'พาดกระสอบบนบ่าข้างเดียว ลำตัวตั้งตรงไม่เอียง เดินครบเวลาแล้วสลับบ่า' },
+  { id: 'sand_squat', n: 'กอดกระสอบสควอท', g: 'leg', eq: 'sand', u: 'r', how: 'กอดกระสอบแนบอก นั่งลงถึงระดับที่เข่าไม่เจ็บ แล้วลุกขึ้น' },
+  { id: 'sand_row', n: 'กระสอบทรายโรว์', g: 'back', eq: 'sand', u: 'r', k: 1, how: 'ก้มตัว 45° หลังตรง จับหูกระสอบ ดึงเข้าหาท้อง ลดลงช้า ๆ' },
+  { id: 'sand_drag', n: 'ยกกระสอบขึ้นอกจากพื้น', g: 'leg', eq: 'sand', u: 'r', k: 1, how: 'ย่อสะโพก หลังตรง กอดกระสอบที่พื้นยกขึ้นแนบอก ยืนตรง แล้ววางลงช้า ๆ' }
 ];
 const libAll = () => LIB.concat((S().my_ex || []).map(x => Object.assign({ custom: 1, u: 'r', how: '' }, x)));
 const exOf = id => libAll().find(x => x.id === id);
@@ -1455,9 +1475,11 @@ function savePlan(p, now) {
   keepScroll();
 }
 function itemOf(id, g) {
-  const x = exOf(id), mid = (S().db_kg || []).map(Number).filter(Boolean).sort((a, b) => a - b);
-  const kg = (x.eq === 'db') ? (mid.length ? (x.iso ? mid[0] : mid[Math.floor((mid.length - 1) / 2)]) : 5) : 0;
-  return x.u === 's' ? { id, name: x.n, sets: 3, lo: 20, hi: 40, kg: 0 } : { id, name: x.n, sets: 3, lo: x.iso ? 10 : 8, hi: x.iso ? 15 : 12, kg };
+  const x = exOf(id), l = (S().db_kg || []).map(Number).filter(Boolean).sort((a, b) => a - b);
+  // น้ำหนักเริ่มแบบมือใหม่: ท่าเล็ก ~5 ท่าใหญ่ ~8 ถือเดิน ~16 กก. แล้วปัดเข้าขั้นที่มีจริง
+  const want = id === 'farmer' ? 16 : x.iso ? 5 : 8;
+  const kg = x.eq === 'db' ? (l.length ? l.reduce((b, k) => Math.abs(k - want) < Math.abs(b - want) ? k : b, l[0]) : want) : 0;
+  return x.u === 's' ? { id, name: x.n, sets: 3, lo: id === 'farmer' || x.eq === 'sand' ? 30 : 20, hi: id === 'farmer' || x.eq === 'sand' ? 45 : 40, kg } : { id, name: x.n, sets: 3, lo: x.iso ? 10 : 8, hi: x.iso ? 15 : 12, kg };
 }
 // แผนแนะนำจากอุปกรณ์ (ไม่ใช้ AI)
 function templatePlan() {
@@ -1465,11 +1487,11 @@ function templatePlan() {
   const pick = (c, used) => c.find(id => { const x = exOf(id); return x && canDo(x) && used.indexOf(id) < 0; });
   const SL = {
     push1: ['gym_chest', 'db_press', 'band_press', 'pu_knee'], push2: ['band_press', 'pu_knee', 'db_fly', 'pike'],
-    pull1: ['gym_lat', 'neg_pull', 'db_row', 'band_row', 'table_row'], pull2: ['db_row', 'band_row', 'table_row', 'superman'],
-    squat: ['gym_legpress', 'db_goblet', 'box_squat'], squat2: ['box_squat', 'step_up', 'band_walk', 'side_leg'],
-    hinge: ['db_rdl', 'hip_thrust', 'glute_bridge'], shoulder: ['db_ohp', 'band_pull', 'pike'], shoulder2: ['db_lat', 'band_pull'],
-    arms: ['db_curl', 'band_curl', 'hammer'], tri: ['db_tri', 'dip_chair'], calf: ['calf'],
-    core1: ['dead_bug'], core2: ['plank'], core3: ['bird_dog', 'side_plank'], core4: ['hang_knee', 'leg_raise']
+    pull1: ['gym_lat', 'neg_pull', 'db_row', 'ez_row', 'band_row', 'table_row'], pull2: ['ez_row', 'sand_row', 'db_row', 'band_row', 'table_row', 'superman'],
+    squat: ['gym_legpress', 'db_goblet', 'sand_squat', 'box_squat'], squat2: ['box_squat', 'step_up', 'band_walk', 'side_leg'],
+    hinge: ['db_rdl', 'ez_rdl', 'hip_thrust', 'glute_bridge'], shoulder: ['db_ohp', 'band_pull', 'pike'], shoulder2: ['db_lat', 'band_pull'],
+    arms: ['ez_curl', 'db_curl', 'band_curl', 'hammer'], tri: ['ez_skull', 'db_tri', 'dip_chair'], calf: ['calf'],
+    core1: ['dead_bug'], core2: ['plank'], core3: ['sand_carry', 'farmer', 'bird_dog', 'side_plank'], core4: ['sand_shoulder', 'farmer', 'hang_knee', 'leg_raise']
   };
   const mk = (name, slots) => { const used = []; slots.forEach(sl => { const id = pick(SL[sl], used); if (id) used.push(id); }); return { name, items: used.map(id => itemOf(id)) }; };
   const A = ['push1', 'pull1', 'squat', 'shoulder', 'core1'], B = ['push2', 'pull2', 'hinge', 'arms', 'core2'], C = ['push1', 'pull2', 'squat2', 'tri', 'core3'];
@@ -1534,23 +1556,27 @@ function setDbKg(v) { const l = String(v).split(/[ ,/]+/).map(Number).filter(x =
 function toggleDay(i) { let d = (S().train_days || [1, 3, 5]).slice(); d = d.indexOf(i) >= 0 ? d.filter(x => x !== i) : d.concat([i]).sort(); if (d.length < 1) return; sync('saveSettings', [{ train_days: d }], () => { D.settings.train_days = d; }); keepScroll(); }
 function eqDone() {
   const e = S().equip || [], o = { equip: e, eq_ok: true };
-  if (e.indexOf('db') >= 0 && !(S().db_kg || []).length && DBA().mode === 'adj') { o.db_adj = DBA(); o.db_kg = dbLadder(o.db_adj); }
+  if (e.indexOf('db') >= 0 && DBA().mode === 'adj' && (!(S().db_kg || []).length || (S().db_adj || {}).plate != null)) { o.db_adj = DBA(); o.db_kg = dbLadder(o.db_adj); }
   sync('saveSettings', [o], () => Object.assign(D.settings, o)); tSeg = 'today'; keepScroll();
 }
 const eqReady = () => !!(S().eq_ok || plan());
 
 // ---------- ดัมเบล ----------
-// db_adj = {mode:'adj'|'fix', handle, plate, max} · ปรับได้: ขั้น = ด้าม + แผ่นเล็กสุดทีละคู่ (ซ้าย+ขวา)
-const DBA = () => Object.assign({ mode: 'adj', handle: 2, plate: 1, max: 0 }, S().db_adj || {});
+// db_adj = {mode:'adj'|'fix', min, max, step} · ปรับได้: ขั้น = เบาสุด → หนักสุด ทีละ step (ของผู้ใช้: 2–32 กก. ปรับทีละ 1 หรือ 2)
+function DBA() {
+  const a = S().db_adj || {};
+  if (a.plate != null) return { mode: a.mode || 'adj', min: 2, max: 32, step: 1 }; // รูปแบบเก่า (ด้าม/แผ่น) ผู้ใช้ไม่รู้ค่า → ใช้สเปกจริง
+  return Object.assign({ mode: 'adj', min: 2, max: 32, step: 1 }, a);
+}
 function dbLadder(a) {
-  const st = a.plate * 2, top = a.max > a.handle ? a.max : a.handle + st * 10, l = [];
-  for (let k = a.handle; k <= top + 0.001 && l.length < 40; k += st) l.push(Math.round(k * 100) / 100);
+  const st = a.step > 0 ? a.step : 1, top = a.max > a.min ? a.max : a.min + st * 15, l = [];
+  for (let k = a.min; k <= top + 0.001 && l.length < 60; k += st) l.push(Math.round(k * 100) / 100);
   return l;
 }
 function setDba(ch) {
   const a = Object.assign(DBA(), ch);
-  ['handle', 'plate', 'max'].forEach(k => a[k] = Math.max(0, Number(a[k]) || 0));
-  if (!a.plate) a.plate = 1;
+  ['min', 'max', 'step'].forEach(k => a[k] = Math.max(0, Number(a[k]) || 0));
+  if (!a.step) a.step = 1;
   const kg = a.mode === 'adj' ? dbLadder(a) : (S().db_kg || []);
   sync('saveSettings', [{ db_adj: a, db_kg: kg }], () => { D.settings.db_adj = a; D.settings.db_kg = kg; });
   keepScroll();
@@ -1561,12 +1587,12 @@ function dbSetupHtml() {
   if (a.mode === 'fix') return head + `<div class="flbl">มีคู่ละกี่ กก. (คั่นด้วยจุลภาค)</div><label class="srch" style="margin:0"><input inputmode="decimal" placeholder="เช่น 4, 6, 8" value="${esc(kg.join(', '))}" onchange="setDbKg(this.value)"><span class="t2">กก.</span></label>`;
   const lad = dbLadder(a);
   return head + `<div class="setrows">
-      <label class="setrow"><span>ด้ามเปล่า (รวมตัวล็อก)</span><input inputmode="decimal" value="${num(a.handle)}" onchange="setDba({handle:this.value})"><i>กก.</i></label>
-      <div class="setrow col"><span>แผ่นที่เล็กที่สุด</span><div class="sugg">${[0.5, 1, 1.25, 2, 2.5].map(p => `<button class="chip ${a.plate === p ? 'on' : ''}" onclick="setDba({plate:${p}})">${p} กก.</button>`).join('')}</div></div>
-      <label class="setrow"><span>ใส่แผ่นหมดหนักสุด (ต่อข้าง)</span><input inputmode="decimal" placeholder="ไม่รู้" value="${a.max ? num(a.max) : ''}" onchange="setDba({max:this.value})"><i>กก.</i></label>
+      <label class="setrow"><span>เบาสุด (ต่อข้าง)</span><input inputmode="decimal" value="${num(a.min)}" onchange="setDba({min:this.value})"><i>กก.</i></label>
+      <label class="setrow"><span>หนักสุด (ต่อข้าง)</span><input inputmode="decimal" value="${num(a.max)}" onchange="setDba({max:this.value})"><i>กก.</i></label>
+      <div class="setrow col"><span>ปรับเพิ่มได้ทีละ</span><div class="sugg">${[1, 2, 2.5, 5].map(p => `<button class="chip ${a.step === p ? 'on' : ''}" onclick="setDba({step:${p}})">${p} กก.</button>`).join('')}</div></div>
     </div>
-    <div class="dbinfo">เพิ่มทีละแผ่นเล็กสุด 1 คู่ (ซ้าย+ขวา) = ดัมเบลหนักขึ้นข้างละ <b>${num(a.plate * 2)} กก.</b><br>ขั้นที่ใช้โปรเกรส: ${lad.slice(0, 12).map(num).join(' · ')}${lad.length > 12 ? ' …' : ''} กก.</div>
-    <p class="note" style="margin:6px 0 0">ไม่แน่ใจแผ่นละเท่าไร: ดูตัวเลขที่พิมพ์บนแผ่น หรือถือดัมเบลขึ้นเครื่องชั่ง แล้วลบน้ำหนักตัว · ตอนนี้ตั้ง ${num(a.plate)} กก. ไว้ก่อน แก้ทีหลังได้ · ระหว่างฝึกแตะเซ็ตซ้ำแก้ กก. จริงได้เสมอ</p>`;
+    <div class="dbinfo">ขั้นที่ใช้โปรเกรส (${lad.length} ขั้น): ${lad.slice(0, 16).map(num).join(' · ')}${lad.length > 16 ? ' …' : ''} กก.</div>
+    <p class="note" style="margin:6px 0 0">ดูได้จากกล่อง/หน้าสินค้า เช่น "2–32 กก. ปรับทีละ 1 หรือ 2" · ระหว่างฝึกแตะเซ็ตซ้ำแก้ กก. ที่ยกจริงได้เสมอ</p>`;
 }
 
 function trainToday() {
