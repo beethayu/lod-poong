@@ -21,9 +21,15 @@ const DEFAULT_SET_ = {
 const FIRST_WEIGHT_ = { date: '2026-10-18', weight: 108.0, fat_pct: 32.3, muscle: 69.1 };
 
 // ---------- ชีต ----------
-function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
+var ss__ = null, sheets__ = {};
+function ss_() { return ss__ || (ss__ = SpreadsheetApp.getActiveSpreadsheet()); }
 
+// จำชีตไว้ในรอบเรียกเดียวกัน (ไม่ต้องอ่านหัวตารางซ้ำทุกครั้ง)
 function sheet_(def) {
+  if (sheets__[def.name]) return sheets__[def.name];
+  return (sheets__[def.name] = sheetInit_(def));
+}
+function sheetInit_(def) {
   const ss = ss_();
   let sh = ss.getSheetByName(def.name);
   if (!sh) {
