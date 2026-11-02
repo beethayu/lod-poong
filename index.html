@@ -262,7 +262,11 @@
   .tcard { background: #fff; border: 1px solid #E0D8F7; border-radius: 16px; padding: 14px; margin-top: 12px; }
   .tcard.go { background: linear-gradient(180deg,#F4F0FE,#fff 50%); }
   .tch { font-weight: 700; font-size: 16px; color: #5B3FB0; }
-  .trow { padding: 10px 0; border-top: 1px solid #EEE9FA; }
+  .trow { padding: 10px 0; border-top: 1px solid #EEE9FA; display: flex; gap: 10px; align-items: flex-start; }
+  .exico { width: 54px; height: 54px; border-radius: 12px; font-size: 24px; }
+  .exth { width: 54px; height: 54px; border-radius: 12px; object-fit: cover; flex: none; background: #EEE; }
+  .expics { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 8px; }
+  .expics img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 8px; display: block; }
   .kn { font-size: 11px; background: #E3F5EC; color: #17694D; padding: 1px 6px; border-radius: 99px; font-weight: 600; vertical-align: 2px; }
   .hint { display: block; text-align: left; margin-top: 6px; font-size: 13px; padding: 6px 10px; border-radius: 10px; font-weight: 600; width: 100%; }
   .hint.up { background: #E3F5EC; color: #17694D; } .hint.down { background: #FFF1E6; color: #9A4A12; }
@@ -1373,65 +1377,73 @@ const EQ = [['none', 'ตัวเปล่า', '🙌'], ['db', 'ดัมเ�
 const GROUPS = [['chest', 'อก', '🫁'], ['shoulder', 'ไหล่', '🤷'], ['back', 'หลัง', '🧗'], ['arm', 'แขน', '💪'], ['leg', 'ขา/สะโพก', '🦵'], ['core', 'หน้าท้อง', '🎯']];
 // u: r = นับครั้ง, s = วินาที · k = ไม่กระแทกเข่า · iso = ท่าเล็ก · next = ท่ายากขึ้น
 const LIB = [
-  { id: 'pu_wall', n: 'วิดพื้นกับผนัง', g: 'chest', eq: 'none', u: 'r', k: 1, next: 'pu_knee', how: 'ยืนห่างผนัง 1 ก้าว มือดันผนังระดับไหล่ งอศอกให้อกเข้าใกล้ผนัง แล้วดันกลับ' },
-  { id: 'pu_knee', n: 'วิดพื้นเข่า', g: 'chest', eq: 'none', u: 'r', k: 1, next: 'pu', how: 'คุกเข่าบนเบาะ ลำตัวตรงจากเข่าถึงหัว ลดอกลงใกล้พื้น ดันขึ้น' },
-  { id: 'pu', n: 'วิดพื้น', g: 'chest', eq: 'none', u: 'r', k: 1, next: 'pu_decline', how: 'ตัวตรงเป็นแผ่นกระดาน มือกว้างกว่าไหล่เล็กน้อย ลดอกลงเกือบแตะพื้น ดันขึ้น' },
-  { id: 'pu_decline', n: 'วิดพื้นยกเท้า', g: 'chest', eq: 'none', u: 'r', k: 1, how: 'วางเท้าบนเก้าอี้/ขั้นบันได ทำเหมือนวิดพื้นปกติ เน้นอกส่วนบน' },
-  { id: 'db_press', n: 'ดัมเบลดันอก (นอน)', g: 'chest', eq: 'db', u: 'r', k: 1, how: 'นอนพื้นหรือม้านั่ง ถือดัมเบลข้างอก ดันขึ้นจนแขนเกือบตึง ลดลงช้า ๆ' },
-  { id: 'db_fly', n: 'ดัมเบลฟลาย', g: 'chest', eq: 'db', u: 'r', k: 1, iso: 1, how: 'นอนหงาย แขนงอเล็กน้อย กางดัมเบลออกข้างลำตัวช้า ๆ แล้วโอบกลับ' },
-  { id: 'band_press', n: 'ยางยืดดันอก', g: 'chest', eq: 'band', u: 'r', k: 1, how: 'คล้องยางหลังหลัง/เสา ดันมือไปข้างหน้าระดับอก ค้าง 1 วิ ผ่อนกลับช้า ๆ' },
-  { id: 'gym_chest', n: 'แมชชีนดันอก', g: 'chest', eq: 'gym', u: 'r', k: 1, how: 'ปรับเบาะให้ด้ามจับอยู่ระดับอก ดันออก ผ่อนกลับช้า ๆ' },
-  { id: 'db_ohp', n: 'ดัมเบลดันเหนือหัว (นั่ง)', g: 'shoulder', eq: 'db', u: 'r', k: 1, how: 'นั่งหลังตรง ถือดัมเบลระดับหู ดันขึ้นเหนือหัว ลดลงช้า ๆ ไม่แอ่นหลัง' },
-  { id: 'db_lat', n: 'ยกดัมเบลด้านข้าง', g: 'shoulder', eq: 'db', u: 'r', k: 1, iso: 1, how: 'ยืนตรง ยกดัมเบลออกข้างถึงระดับไหล่ ศอกงอนิด ลดลงช้า ๆ ใช้น้ำหนักเบา' },
-  { id: 'band_pull', n: 'ยางยืดดึงแยก', g: 'shoulder', eq: 'band', u: 'r', k: 1, iso: 1, how: 'จับยางระดับอก แขนตรง ดึงแยกออกจนยางแตะอก บีบสะบัก แล้วผ่อน' },
-  { id: 'pike', n: 'วิดพื้นสะโพกสูง (ไพค์)', g: 'shoulder', eq: 'none', u: 'r', k: 1, how: 'ท่าตัว ∧ สะโพกสูง ลดหัวลงระหว่างมือ แล้วดันขึ้น' },
-  { id: 'db_row', n: 'ดัมเบลโรว์', g: 'back', eq: 'db', u: 'r', k: 1, how: 'มือหนึ่งเท้าเก้าอี้ หลังตรง ดึงดัมเบลขึ้นข้างเอว บีบสะบัก ลดลงช้า ๆ' },
-  { id: 'band_row', n: 'ยางยืดดึงเข้าหาตัว', g: 'back', eq: 'band', u: 'r', k: 1, how: 'นั่งเหยียดขา คล้องยางที่เท้า ดึงมือเข้าหาท้อง ศอกชิดลำตัว บีบสะบัก' },
-  { id: 'table_row', n: 'โรว์ใต้โต๊ะ', g: 'back', eq: 'none', u: 'r', k: 1, how: 'นอนใต้โต๊ะแข็งแรง จับขอบ ดึงอกขึ้นหาโต๊ะ ตัวตรง ลดลงช้า ๆ' },
-  { id: 'superman', n: 'ซูเปอร์แมน', g: 'back', eq: 'none', u: 'r', k: 1, how: 'นอนคว่ำ ยกแขนและขาขึ้นพร้อมกันเล็กน้อย ค้าง 2 วิ แล้ววางลง' },
-  { id: 'hang', n: 'ห้อยบาร์', g: 'back', eq: 'bar', u: 's', k: 1, next: 'neg_pull', how: 'จับบาร์ปล่อยตัวห้อย ไหล่ดึงลงเล็กน้อย หายใจปกติ' },
-  { id: 'neg_pull', n: 'ดึงข้อแบบลงช้า', g: 'back', eq: 'bar', u: 'r', k: 1, next: 'pullup', how: 'ยืนบนเก้าอี้ให้คางอยู่เหนือบาร์ แล้วค่อย ๆ ลดตัวลงช้า 3–5 วิ' },
-  { id: 'pullup', n: 'ดึงข้อ', g: 'back', eq: 'bar', u: 'r', k: 1, how: 'ห้อยแขนตึง ดึงตัวขึ้นจนคางพ้นบาร์ ลดลงช้า ๆ' },
-  { id: 'gym_lat', n: 'แมชชีนดึงลง', g: 'back', eq: 'gym', u: 'r', k: 1, how: 'นั่งล็อกเข่า ดึงบาร์ลงหน้าอก อกยืด บีบสะบัก ผ่อนขึ้นช้า ๆ' },
-  { id: 'db_curl', n: 'ดัมเบลเคิร์ล', g: 'arm', eq: 'db', u: 'r', k: 1, iso: 1, how: 'ยืนตรง ศอกชิดลำตัว ยกดัมเบลขึ้นหาไหล่ ลดลงช้า ๆ ไม่เหวี่ยง' },
-  { id: 'hammer', n: 'ค้อนเคิร์ล', g: 'arm', eq: 'db', u: 'r', k: 1, iso: 1, how: 'เหมือนเคิร์ลแต่หันฝ่ามือเข้าหากัน (ถือแบบค้อน)' },
-  { id: 'band_curl', n: 'ยางยืดเคิร์ล', g: 'arm', eq: 'band', u: 'r', k: 1, iso: 1, how: 'เหยียบยาง จับปลาย ยกมือขึ้นหาไหล่ ศอกนิ่ง ผ่อนลงช้า ๆ' },
-  { id: 'dip_chair', n: 'ดิปเก้าอี้', g: 'arm', eq: 'none', u: 'r', k: 1, how: 'มือจับขอบเก้าอี้ด้านหลัง เท้าบนพื้น งอศอกลดตัวลงเล็กน้อย ดันขึ้น (ไม่ลงลึกจนเจ็บไหล่)' },
-  { id: 'db_tri', n: 'ดัมเบลเหยียดแขนหลังหัว', g: 'arm', eq: 'db', u: 'r', k: 1, iso: 1, how: 'ถือดัมเบลสองมือเหนือหัว งอศอกลดดัมเบลไปหลังหัว แล้วเหยียดขึ้น' },
-  { id: 'glute_bridge', n: 'สะพานสะโพก', g: 'leg', eq: 'none', u: 'r', k: 1, how: 'นอนหงาย ชันเข่า ดันสะโพกขึ้นบีบก้น ค้าง 1 วิ แล้วลง' },
-  { id: 'hip_thrust', n: 'ฮิปทรัสต์พิงม้านั่ง', g: 'leg', eq: 'bench', u: 'r', k: 1, how: 'หลังพิงขอบม้านั่ง ดันสะโพกขึ้นจนลำตัวขนานพื้น บีบก้น (วางดัมเบลบนสะโพกเพิ่มได้)' },
-  { id: 'box_squat', n: 'นั่ง-ลุกเก้าอี้', g: 'leg', eq: 'none', u: 'r', k: 1, next: 'squat', how: 'ยืนหน้าเก้าอี้ ดันสะโพกไปหลังนั่งแตะเบา ๆ แล้วลุกขึ้น เข่าไม่เลยปลายเท้ามาก' },
-  { id: 'squat', n: 'สควอทตัวเปล่า', g: 'leg', eq: 'none', u: 'r', next: 'db_goblet', how: 'เท้ากว้างเท่าไหล่ นั่งลงเหมือนนั่งเก้าอี้ หลังตรง ลุกขึ้นดันส้นเท้า' },
-  { id: 'db_goblet', n: 'ก็อบเบล็ตสควอท', g: 'leg', eq: 'db', u: 'r', how: 'ถือดัมเบลแนบอก นั่งลงถึงระดับที่เข่าไม่เจ็บ แล้วลุกขึ้น' },
-  { id: 'db_rdl', n: 'ดัมเบลโรมาเนียนเดดลิฟต์', g: 'leg', eq: 'db', u: 'r', k: 1, how: 'ยืนเข่างอนิด ดันสะโพกไปหลัง ดัมเบลไถลตามขา หลังตรง รู้สึกตึงหลังขา แล้วยืดขึ้น' },
-  { id: 'side_leg', n: 'นอนตะแคงยกขา', g: 'leg', eq: 'none', u: 'r', k: 1, iso: 1, how: 'นอนตะแคง ขาบนเหยียดตรง ยกขึ้นช้า ๆ แล้วลง ทำครบแล้วสลับข้าง' },
-  { id: 'calf', n: 'เขย่งปลายเท้า', g: 'leg', eq: 'none', u: 'r', k: 1, iso: 1, how: 'ยืนจับผนัง เขย่งขึ้นสุด ค้าง 1 วิ ลดลงช้า ๆ' },
-  { id: 'wall_sit', n: 'นั่งพิงผนัง', g: 'leg', eq: 'none', u: 's', how: 'หลังพิงผนัง ย่อเข่าเท่าที่ไม่เจ็บ (ไม่ต้องถึง 90°) ค้างไว้' },
-  { id: 'band_walk', n: 'ยางยืดเดินข้าง', g: 'leg', eq: 'band', u: 'r', k: 1, iso: 1, how: 'คล้องยางเหนือเข่า ย่อเล็กน้อย ก้าวเดินข้างทีละก้าว นับ 1 ก้าว = 1 ครั้ง' },
-  { id: 'step_up', n: 'ก้าวขึ้นม้านั่งต่ำ', g: 'leg', eq: 'bench', u: 'r', how: 'ก้าวขึ้นม้านั่ง/ขั้นบันไดต่ำ ดันส้นเท้าขึ้น ลงช้า ๆ สลับขา' },
-  { id: 'gym_legpress', n: 'แมชชีนเลกเพรส', g: 'leg', eq: 'gym', u: 'r', k: 1, how: 'เท้ากว้างเท่าไหล่บนแผ่น ลดลงเท่าที่เข่าสบาย ดันออกไม่ล็อกเข่า' },
-  { id: 'plank', n: 'แพลงก์', g: 'core', eq: 'none', u: 's', k: 1, how: 'ศอกและปลายเท้าแตะพื้น ตัวตรง เกร็งท้อง ไม่ให้สะโพกตก' },
-  { id: 'side_plank', n: 'แพลงก์ตะแคง', g: 'core', eq: 'none', u: 's', k: 1, how: 'ตะแคง ศอกเดียวยันพื้น สะโพกยกขึ้นตัวตรง ค้าง แล้วสลับข้าง' },
-  { id: 'dead_bug', n: 'เดดบั๊ก', g: 'core', eq: 'none', u: 'r', k: 1, how: 'นอนหงาย แขนชี้ฟ้า เข่างอ 90° เหยียดแขน-ขาตรงข้ามลงช้า ๆ หลังแนบพื้น สลับข้าง' },
-  { id: 'bird_dog', n: 'เบิร์ดด็อก', g: 'core', eq: 'none', u: 'r', k: 1, how: 'คลานสี่ขา เหยียดแขนกับขาตรงข้ามให้ตรง ค้าง 2 วิ สลับข้าง' },
-  { id: 'crunch', n: 'ครันช์', g: 'core', eq: 'none', u: 'r', k: 1, iso: 1, how: 'นอนชันเข่า มือแตะขมับ ม้วนไหล่ขึ้นเล็กน้อยใช้ท้อง ไม่ดึงคอ' },
-  { id: 'leg_raise', n: 'นอนยกขา', g: 'core', eq: 'none', u: 'r', k: 1, how: 'นอนหงาย มือใต้ก้น ยกขาตรงขึ้นช้า ๆ ลดลงไม่แตะพื้น' },
-  { id: 'hang_knee', n: 'ห้อยบาร์ยกเข่า', g: 'core', eq: 'bar', u: 'r', k: 1, how: 'ห้อยบาร์ ยกเข่าขึ้นหาอก ลดลงช้า ๆ ไม่แกว่ง' },
-  { id: 'farmer', n: 'ถือดัมเบลเดิน (ฟาร์มเมอร์)', g: 'core', eq: 'db', u: 's', k: 1, how: 'ถือดัมเบลหนัก ๆ ข้างตัวทั้งสองมือ ยืดอก ไหล่ไม่ห่อ เดินช้า ๆ ก้าวสั้น' },
-  { id: 'ez_curl', n: 'EZ bar เคิร์ล', g: 'arm', eq: 'ez', u: 'r', k: 1, iso: 1, how: 'จับช่วงหยัก ศอกชิดลำตัว ยกบาร์ขึ้นหาอก ลดลงช้า ๆ ไม่เหวี่ยงหลัง' },
-  { id: 'ez_rev', n: 'EZ bar เคิร์ลคว่ำมือ', g: 'arm', eq: 'ez', u: 'r', k: 1, iso: 1, how: 'เหมือนเคิร์ลแต่คว่ำมือ เน้นปลายแขน ใช้น้ำหนักเบากว่า' },
-  { id: 'ez_skull', n: 'EZ bar สกัลครัชเชอร์ (นอนพื้น)', g: 'arm', eq: 'ez', u: 'r', k: 1, iso: 1, how: 'นอนหงายบนพื้นหรือม้านั่ง แขนตั้งตรง งอศอกลดบาร์ลงข้างหน้าผาก ศอกไม่กาง แล้วเหยียดขึ้น' },
-  { id: 'ez_row', n: 'EZ bar โรว์ก้มตัว', g: 'back', eq: 'ez', u: 'r', k: 1, how: 'งอเข่าเล็กน้อย ก้มตัว 45° หลังตรง ดึงบาร์เข้าหาท้อง บีบสะบัก ลดลงช้า ๆ' },
-  { id: 'ez_rdl', n: 'EZ bar โรมาเนียนเดดลิฟต์', g: 'leg', eq: 'ez', u: 'r', k: 1, how: 'ยืนถือบาร์ เข่างอนิด ดันก้นไปข้างหลัง บาร์ไถลลงตามขา หลังตรง รู้สึกตึงหลังขาแล้วยืนขึ้น' },
-  { id: 'ez_press', n: 'EZ bar ดันไหล่ (ยืน)', g: 'shoulder', eq: 'ez', u: 'r', k: 1, how: 'ถือบาร์ระดับอก เกร็งท้อง ดันขึ้นเหนือหัว ไม่แอ่นหลัง ลดลงช้า ๆ' },
-  { id: 'sand_carry', n: 'กอดแซนด์แบ็กเดิน', g: 'core', eq: 'sand', u: 's', k: 1, how: 'ยกแซนด์แบ็กกอดแนบอก หลังตรง เกร็งท้อง เดินช้า ๆ หายใจปกติ' },
-  { id: 'sand_shoulder', n: 'แบกแซนด์แบ็กบนบ่าเดิน', g: 'core', eq: 'sand', u: 's', k: 1, how: 'พาดแซนด์แบ็กบนบ่าข้างเดียว ลำตัวตั้งตรงไม่เอียง เดินครบเวลาแล้วสลับบ่า' },
-  { id: 'sand_squat', n: 'กอดแซนด์แบ็กสควอท', g: 'leg', eq: 'sand', u: 'r', how: 'กอดแซนด์แบ็กแนบอก นั่งลงถึงระดับที่เข่าไม่เจ็บ แล้วลุกขึ้น' },
-  { id: 'sand_row', n: 'แซนด์แบ็กโรว์', g: 'back', eq: 'sand', u: 'r', k: 1, how: 'ก้มตัว 45° หลังตรง จับหูแซนด์แบ็ก ดึงเข้าหาท้อง ลดลงช้า ๆ' },
-  { id: 'sand_rlunge', n: 'แซนด์แบ็กลันจ์ถอยหลัง', g: 'leg', eq: 'sand', u: 'r', next: 'sand_wlunge', how: 'แบกแซนด์แบ็กบนบ่าหรือหลังคอ ก้าวถอยหลังแล้วย่อเข่าหลังลงใกล้พื้น ดันกลับยืน นับครั้งต่อข้าง · ถอยหลังถนอมเข่ากว่าก้าวหน้า' },
-  { id: 'sand_wlunge', n: 'แซนด์แบ็กลันจ์เดิน', g: 'leg', eq: 'sand', u: 'r', how: 'แบกแซนด์แบ็กบนบ่า/หลังคอ โน้มตัวหน้าเล็กน้อย ก้าวยาวย่อเข่าหลังลงใกล้พื้น แล้วก้าวต่อ เท้าห่างกันพอดีสะโพก (ไม่เดินบนเส้นเดียว) นับก้าวรวม · เจ็บเข่าให้ใช้ลันจ์ถอยหลังแทน' },
-  { id: 'sand_drag', n: 'ยกแซนด์แบ็กขึ้นอกจากพื้น', g: 'leg', eq: 'sand', u: 'r', k: 1, how: 'ย่อสะโพก หลังตรง กอดแซนด์แบ็กที่พื้นยกขึ้นแนบอก ยืนตรง แล้ววางลงช้า ๆ' }
+  { id: 'pu_wall', n: 'Wall Push-up', th: 'วิดพื้นกับผนัง', g: 'chest', eq: 'none', u: 'r', k: 1, next: 'pu_knee', how: 'ยืนห่างผนัง 1 ก้าว มือดันผนังระดับไหล่ งอศอกให้อกเข้าใกล้ผนัง แล้วดันกลับ' },
+  { id: 'pu_knee', n: 'Knee Push-up', th: 'วิดพื้นเข่า', g: 'chest', eq: 'none', u: 'r', k: 1, next: 'pu', how: 'คุกเข่าบนเบาะ ลำตัวตรงจากเข่าถึงหัว ลดอกลงใกล้พื้น ดันขึ้น' },
+  { id: 'pu', n: 'Push-up', th: 'วิดพื้น', g: 'chest', eq: 'none', u: 'r', k: 1, next: 'pu_decline', how: 'ตัวตรงเป็นแผ่นกระดาน มือกว้างกว่าไหล่เล็กน้อย ลดอกลงเกือบแตะพื้น ดันขึ้น' },
+  { id: 'pu_decline', n: 'Decline Push-up', th: 'วิดพื้นยกเท้า', g: 'chest', eq: 'none', u: 'r', k: 1, how: 'วางเท้าบนเก้าอี้/ขั้นบันได ทำเหมือนวิดพื้นปกติ เน้นอกส่วนบน' },
+  { id: 'db_press', n: 'Dumbbell Bench Press', th: 'ดัมเบลดันอก (นอน)', g: 'chest', eq: 'db', u: 'r', k: 1, how: 'นอนพื้นหรือม้านั่ง ถือดัมเบลข้างอก ดันขึ้นจนแขนเกือบตึง ลดลงช้า ๆ' },
+  { id: 'db_fly', n: 'Dumbbell Fly', th: 'ดัมเบลฟลาย', g: 'chest', eq: 'db', u: 'r', k: 1, iso: 1, how: 'นอนหงาย แขนงอเล็กน้อย กางดัมเบลออกข้างลำตัวช้า ๆ แล้วโอบกลับ' },
+  { id: 'band_press', n: 'Band Chest Press', th: 'ยางยืดดันอก', g: 'chest', eq: 'band', u: 'r', k: 1, how: 'คล้องยางหลังหลัง/เสา ดันมือไปข้างหน้าระดับอก ค้าง 1 วิ ผ่อนกลับช้า ๆ' },
+  { id: 'gym_chest', n: 'Machine Chest Press', th: 'แมชชีนดันอก', g: 'chest', eq: 'gym', u: 'r', k: 1, how: 'ปรับเบาะให้ด้ามจับอยู่ระดับอก ดันออก ผ่อนกลับช้า ๆ' },
+  { id: 'db_ohp', n: 'Seated Dumbbell Press', th: 'ดัมเบลดันเหนือหัว (นั่ง)', g: 'shoulder', eq: 'db', u: 'r', k: 1, how: 'นั่งหลังตรง ถือดัมเบลระดับหู ดันขึ้นเหนือหัว ลดลงช้า ๆ ไม่แอ่นหลัง' },
+  { id: 'db_lat', n: 'Lateral Raise', th: 'ยกดัมเบลด้านข้าง', g: 'shoulder', eq: 'db', u: 'r', k: 1, iso: 1, how: 'ยืนตรง ยกดัมเบลออกข้างถึงระดับไหล่ ศอกงอนิด ลดลงช้า ๆ ใช้น้ำหนักเบา' },
+  { id: 'band_pull', n: 'Band Pull-apart', th: 'ยางยืดดึงแยก', g: 'shoulder', eq: 'band', u: 'r', k: 1, iso: 1, how: 'จับยางระดับอก แขนตรง ดึงแยกออกจนยางแตะอก บีบสะบัก แล้วผ่อน' },
+  { id: 'pike', n: 'Pike Push-up', th: 'วิดพื้นสะโพกสูง (ไพค์)', g: 'shoulder', eq: 'none', u: 'r', k: 1, how: 'ท่าตัว ∧ สะโพกสูง ลดหัวลงระหว่างมือ แล้วดันขึ้น' },
+  { id: 'db_row', n: 'One-arm Dumbbell Row', th: 'ดัมเบลโรว์', g: 'back', eq: 'db', u: 'r', k: 1, how: 'มือหนึ่งเท้าเก้าอี้ หลังตรง ดึงดัมเบลขึ้นข้างเอว บีบสะบัก ลดลงช้า ๆ' },
+  { id: 'band_row', n: 'Band Row', th: 'ยางยืดดึงเข้าหาตัว', g: 'back', eq: 'band', u: 'r', k: 1, how: 'นั่งเหยียดขา คล้องยางที่เท้า ดึงมือเข้าหาท้อง ศอกชิดลำตัว บีบสะบัก' },
+  { id: 'table_row', n: 'Inverted Row (table)', th: 'โรว์ใต้โต๊ะ', g: 'back', eq: 'none', u: 'r', k: 1, how: 'นอนใต้โต๊ะแข็งแรง จับขอบ ดึงอกขึ้นหาโต๊ะ ตัวตรง ลดลงช้า ๆ' },
+  { id: 'superman', n: 'Superman', th: 'ซูเปอร์แมน', g: 'back', eq: 'none', u: 'r', k: 1, how: 'นอนคว่ำ ยกแขนและขาขึ้นพร้อมกันเล็กน้อย ค้าง 2 วิ แล้ววางลง' },
+  { id: 'hang', n: 'Dead Hang', th: 'ห้อยบาร์', g: 'back', eq: 'bar', u: 's', k: 1, next: 'neg_pull', how: 'จับบาร์ปล่อยตัวห้อย ไหล่ดึงลงเล็กน้อย หายใจปกติ' },
+  { id: 'neg_pull', n: 'Negative Pull-up', th: 'ดึงข้อแบบลงช้า', g: 'back', eq: 'bar', u: 'r', k: 1, next: 'pullup', how: 'ยืนบนเก้าอี้ให้คางอยู่เหนือบาร์ แล้วค่อย ๆ ลดตัวลงช้า 3–5 วิ' },
+  { id: 'pullup', n: 'Pull-up', th: 'ดึงข้อ', g: 'back', eq: 'bar', u: 'r', k: 1, how: 'ห้อยแขนตึง ดึงตัวขึ้นจนคางพ้นบาร์ ลดลงช้า ๆ' },
+  { id: 'gym_lat', n: 'Lat Pulldown', th: 'แมชชีนดึงลง', g: 'back', eq: 'gym', u: 'r', k: 1, how: 'นั่งล็อกเข่า ดึงบาร์ลงหน้าอก อกยืด บีบสะบัก ผ่อนขึ้นช้า ๆ' },
+  { id: 'db_curl', n: 'Dumbbell Curl', th: 'ดัมเบลเคิร์ล', g: 'arm', eq: 'db', u: 'r', k: 1, iso: 1, how: 'ยืนตรง ศอกชิดลำตัว ยกดัมเบลขึ้นหาไหล่ ลดลงช้า ๆ ไม่เหวี่ยง' },
+  { id: 'hammer', n: 'Hammer Curl', th: 'ค้อนเคิร์ล', g: 'arm', eq: 'db', u: 'r', k: 1, iso: 1, how: 'เหมือนเคิร์ลแต่หันฝ่ามือเข้าหากัน (ถือแบบค้อน)' },
+  { id: 'band_curl', n: 'Band Curl', th: 'ยางยืดเคิร์ล', g: 'arm', eq: 'band', u: 'r', k: 1, iso: 1, how: 'เหยียบยาง จับปลาย ยกมือขึ้นหาไหล่ ศอกนิ่ง ผ่อนลงช้า ๆ' },
+  { id: 'dip_chair', n: 'Bench Dip', th: 'ดิปเก้าอี้', g: 'arm', eq: 'none', u: 'r', k: 1, how: 'มือจับขอบเก้าอี้ด้านหลัง เท้าบนพื้น งอศอกลดตัวลงเล็กน้อย ดันขึ้น (ไม่ลงลึกจนเจ็บไหล่)' },
+  { id: 'db_tri', n: 'Overhead Triceps Extension', th: 'ดัมเบลเหยียดแขนหลังหัว', g: 'arm', eq: 'db', u: 'r', k: 1, iso: 1, how: 'ถือดัมเบลสองมือเหนือหัว งอศอกลดดัมเบลไปหลังหัว แล้วเหยียดขึ้น' },
+  { id: 'glute_bridge', n: 'Glute Bridge', th: 'สะพานสะโพก', g: 'leg', eq: 'none', u: 'r', k: 1, how: 'นอนหงาย ชันเข่า ดันสะโพกขึ้นบีบก้น ค้าง 1 วิ แล้วลง' },
+  { id: 'hip_thrust', n: 'Hip Thrust', th: 'ฮิปทรัสต์พิงม้านั่ง', g: 'leg', eq: 'bench', u: 'r', k: 1, how: 'หลังพิงขอบม้านั่ง ดันสะโพกขึ้นจนลำตัวขนานพื้น บีบก้น (วางดัมเบลบนสะโพกเพิ่มได้)' },
+  { id: 'box_squat', n: 'Box Squat (chair)', th: 'นั่ง-ลุกเก้าอี้', g: 'leg', eq: 'none', u: 'r', k: 1, next: 'squat', how: 'ยืนหน้าเก้าอี้ ดันสะโพกไปหลังนั่งแตะเบา ๆ แล้วลุกขึ้น เข่าไม่เลยปลายเท้ามาก' },
+  { id: 'squat', n: 'Bodyweight Squat', th: 'สควอทตัวเปล่า', g: 'leg', eq: 'none', u: 'r', next: 'db_goblet', how: 'เท้ากว้างเท่าไหล่ นั่งลงเหมือนนั่งเก้าอี้ หลังตรง ลุกขึ้นดันส้นเท้า' },
+  { id: 'db_goblet', n: 'Goblet Squat', th: 'ก็อบเบล็ตสควอท', g: 'leg', eq: 'db', u: 'r', how: 'ถือดัมเบลแนบอก นั่งลงถึงระดับที่เข่าไม่เจ็บ แล้วลุกขึ้น' },
+  { id: 'db_rdl', n: 'Dumbbell Romanian Deadlift', th: 'ดัมเบลโรมาเนียนเดดลิฟต์', g: 'leg', eq: 'db', u: 'r', k: 1, how: 'ยืนเข่างอนิด ดันสะโพกไปหลัง ดัมเบลไถลตามขา หลังตรง รู้สึกตึงหลังขา แล้วยืดขึ้น' },
+  { id: 'side_leg', n: 'Side-lying Leg Raise', th: 'นอนตะแคงยกขา', g: 'leg', eq: 'none', u: 'r', k: 1, iso: 1, how: 'นอนตะแคง ขาบนเหยียดตรง ยกขึ้นช้า ๆ แล้วลง ทำครบแล้วสลับข้าง' },
+  { id: 'calf', n: 'Calf Raise', th: 'เขย่งปลายเท้า', g: 'leg', eq: 'none', u: 'r', k: 1, iso: 1, how: 'ยืนจับผนัง เขย่งขึ้นสุด ค้าง 1 วิ ลดลงช้า ๆ' },
+  { id: 'wall_sit', n: 'Wall Sit', th: 'นั่งพิงผนัง', g: 'leg', eq: 'none', u: 's', how: 'หลังพิงผนัง ย่อเข่าเท่าที่ไม่เจ็บ (ไม่ต้องถึง 90°) ค้างไว้' },
+  { id: 'band_walk', n: 'Band Lateral Walk', th: 'ยางยืดเดินข้าง', g: 'leg', eq: 'band', u: 'r', k: 1, iso: 1, how: 'คล้องยางเหนือเข่า ย่อเล็กน้อย ก้าวเดินข้างทีละก้าว นับ 1 ก้าว = 1 ครั้ง' },
+  { id: 'step_up', n: 'Step-up', th: 'ก้าวขึ้นม้านั่งต่ำ', g: 'leg', eq: 'bench', u: 'r', how: 'ก้าวขึ้นม้านั่ง/ขั้นบันไดต่ำ ดันส้นเท้าขึ้น ลงช้า ๆ สลับขา' },
+  { id: 'gym_legpress', n: 'Leg Press', th: 'แมชชีนเลกเพรส', g: 'leg', eq: 'gym', u: 'r', k: 1, how: 'เท้ากว้างเท่าไหล่บนแผ่น ลดลงเท่าที่เข่าสบาย ดันออกไม่ล็อกเข่า' },
+  { id: 'plank', n: 'Plank', th: 'แพลงก์', g: 'core', eq: 'none', u: 's', k: 1, how: 'ศอกและปลายเท้าแตะพื้น ตัวตรง เกร็งท้อง ไม่ให้สะโพกตก' },
+  { id: 'side_plank', n: 'Side Plank', th: 'แพลงก์ตะแคง', g: 'core', eq: 'none', u: 's', k: 1, how: 'ตะแคง ศอกเดียวยันพื้น สะโพกยกขึ้นตัวตรง ค้าง แล้วสลับข้าง' },
+  { id: 'dead_bug', n: 'Dead Bug', th: 'เดดบั๊ก', g: 'core', eq: 'none', u: 'r', k: 1, how: 'นอนหงาย แขนชี้ฟ้า เข่างอ 90° เหยียดแขน-ขาตรงข้ามลงช้า ๆ หลังแนบพื้น สลับข้าง' },
+  { id: 'bird_dog', n: 'Bird Dog', th: 'เบิร์ดด็อก', g: 'core', eq: 'none', u: 'r', k: 1, how: 'คลานสี่ขา เหยียดแขนกับขาตรงข้ามให้ตรง ค้าง 2 วิ สลับข้าง' },
+  { id: 'crunch', n: 'Crunch', th: 'ครันช์', g: 'core', eq: 'none', u: 'r', k: 1, iso: 1, how: 'นอนชันเข่า มือแตะขมับ ม้วนไหล่ขึ้นเล็กน้อยใช้ท้อง ไม่ดึงคอ' },
+  { id: 'leg_raise', n: 'Lying Leg Raise', th: 'นอนยกขา', g: 'core', eq: 'none', u: 'r', k: 1, how: 'นอนหงาย มือใต้ก้น ยกขาตรงขึ้นช้า ๆ ลดลงไม่แตะพื้น' },
+  { id: 'hang_knee', n: 'Hanging Knee Raise', th: 'ห้อยบาร์ยกเข่า', g: 'core', eq: 'bar', u: 'r', k: 1, how: 'ห้อยบาร์ ยกเข่าขึ้นหาอก ลดลงช้า ๆ ไม่แกว่ง' },
+  { id: 'farmer', n: "Farmer's Walk", th: 'ถือดัมเบลเดิน (ฟาร์มเมอร์)', g: 'core', eq: 'db', u: 's', k: 1, how: 'ถือดัมเบลหนัก ๆ ข้างตัวทั้งสองมือ ยืดอก ไหล่ไม่ห่อ เดินช้า ๆ ก้าวสั้น' },
+  { id: 'ez_curl', n: 'EZ Bar Curl', th: 'EZ bar เคิร์ล', g: 'arm', eq: 'ez', u: 'r', k: 1, iso: 1, how: 'จับช่วงหยัก ศอกชิดลำตัว ยกบาร์ขึ้นหาอก ลดลงช้า ๆ ไม่เหวี่ยงหลัง' },
+  { id: 'ez_rev', n: 'EZ Bar Reverse Curl', th: 'EZ bar เคิร์ลคว่ำมือ', g: 'arm', eq: 'ez', u: 'r', k: 1, iso: 1, how: 'เหมือนเคิร์ลแต่คว่ำมือ เน้นปลายแขน ใช้น้ำหนักเบากว่า' },
+  { id: 'ez_skull', n: 'EZ Bar Skull Crusher', th: 'EZ bar สกัลครัชเชอร์ (นอนพื้น)', g: 'arm', eq: 'ez', u: 'r', k: 1, iso: 1, how: 'นอนหงายบนพื้นหรือม้านั่ง แขนตั้งตรง งอศอกลดบาร์ลงข้างหน้าผาก ศอกไม่กาง แล้วเหยียดขึ้น' },
+  { id: 'ez_row', n: 'EZ Bar Bent-over Row', th: 'EZ bar โรว์ก้มตัว', g: 'back', eq: 'ez', u: 'r', k: 1, how: 'งอเข่าเล็กน้อย ก้มตัว 45° หลังตรง ดึงบาร์เข้าหาท้อง บีบสะบัก ลดลงช้า ๆ' },
+  { id: 'ez_rdl', n: 'EZ Bar Romanian Deadlift', th: 'EZ bar โรมาเนียนเดดลิฟต์', g: 'leg', eq: 'ez', u: 'r', k: 1, how: 'ยืนถือบาร์ เข่างอนิด ดันก้นไปข้างหลัง บาร์ไถลลงตามขา หลังตรง รู้สึกตึงหลังขาแล้วยืนขึ้น' },
+  { id: 'ez_press', n: 'EZ Bar Overhead Press', th: 'EZ bar ดันไหล่ (ยืน)', g: 'shoulder', eq: 'ez', u: 'r', k: 1, how: 'ถือบาร์ระดับอก เกร็งท้อง ดันขึ้นเหนือหัว ไม่แอ่นหลัง ลดลงช้า ๆ' },
+  { id: 'sand_carry', n: 'Sandbag Bear-hug Carry', th: 'กอดแซนด์แบ็กเดิน', g: 'core', eq: 'sand', u: 's', k: 1, how: 'ยกแซนด์แบ็กกอดแนบอก หลังตรง เกร็งท้อง เดินช้า ๆ หายใจปกติ' },
+  { id: 'sand_shoulder', n: 'Sandbag Shoulder Carry', th: 'แบกแซนด์แบ็กบนบ่าเดิน', g: 'core', eq: 'sand', u: 's', k: 1, how: 'พาดแซนด์แบ็กบนบ่าข้างเดียว ลำตัวตั้งตรงไม่เอียง เดินครบเวลาแล้วสลับบ่า' },
+  { id: 'sand_squat', n: 'Sandbag Bear-hug Squat', th: 'กอดแซนด์แบ็กสควอท', g: 'leg', eq: 'sand', u: 'r', how: 'กอดแซนด์แบ็กแนบอก นั่งลงถึงระดับที่เข่าไม่เจ็บ แล้วลุกขึ้น' },
+  { id: 'sand_row', n: 'Sandbag Row', th: 'แซนด์แบ็กโรว์', g: 'back', eq: 'sand', u: 'r', k: 1, how: 'ก้มตัว 45° หลังตรง จับหูแซนด์แบ็ก ดึงเข้าหาท้อง ลดลงช้า ๆ' },
+  { id: 'sand_rlunge', n: 'Sandbag Reverse Lunge', th: 'แซนด์แบ็กลันจ์ถอยหลัง', g: 'leg', eq: 'sand', u: 'r', next: 'sand_wlunge', how: 'แบกแซนด์แบ็กบนบ่าหรือหลังคอ ก้าวถอยหลังแล้วย่อเข่าหลังลงใกล้พื้น ดันกลับยืน นับครั้งต่อข้าง · ถอยหลังถนอมเข่ากว่าก้าวหน้า' },
+  { id: 'sand_wlunge', n: 'Sandbag Walking Lunge', th: 'แซนด์แบ็กลันจ์เดิน', g: 'leg', eq: 'sand', u: 'r', how: 'แบกแซนด์แบ็กบนบ่า/หลังคอ โน้มตัวหน้าเล็กน้อย ก้าวยาวย่อเข่าหลังลงใกล้พื้น แล้วก้าวต่อ เท้าห่างกันพอดีสะโพก (ไม่เดินบนเส้นเดียว) นับก้าวรวม · เจ็บเข่าให้ใช้ลันจ์ถอยหลังแทน' },
+  { id: 'sand_drag', n: 'Sandbag Ground-to-Chest', th: 'ยกแซนด์แบ็กขึ้นอกจากพื้น', g: 'leg', eq: 'sand', u: 'r', k: 1, how: 'ย่อสะโพก หลังตรง กอดแซนด์แบ็กที่พื้นยกขึ้นแนบอก ยืนตรง แล้ววางลงช้า ๆ' }
 ];
+// รูปท่า: free-exercise-db (สาธารณสมบัติ) img/ex/<id>-0.jpg ท่าเริ่ม, -1.jpg ท่าจบ
+const EXIMG = new Set(["band_pull", "band_row", "band_walk", "box_squat", "calf", "crunch", "db_curl", "db_fly", "db_goblet", "db_lat", "db_ohp", "db_press", "db_rdl", "db_row", "db_tri", "dead_bug", "dip_chair", "ez_curl", "ez_press", "ez_rdl", "ez_rev", "ez_row", "ez_skull", "farmer", "glute_bridge", "gym_chest", "gym_lat", "gym_legpress", "hammer", "hang_knee", "hip_thrust", "leg_raise", "neg_pull", "plank", "pu", "pu_decline", "pu_wall", "pullup", "sand_drag", "sand_rlunge", "sand_row", "sand_squat", "sand_wlunge", "side_leg", "side_plank", "squat", "step_up", "superman", "table_row"]);
+const exName = it => (exOf(it.id || it.ex_id) || {}).n || it.name || it.ex_name || '';
+function exThumb(x) {
+  if (x && EXIMG.has(x.id)) return `<img class="exth" src="img/ex/${x.id}-0.jpg" loading="lazy" alt="">`;
+  return `<div class="ico exico">${(GROUPS.find(g => g[0] === (x || {}).g) || ['', '', '🏋️'])[2]}</div>`;
+}
+const exPics = x => x && EXIMG.has(x.id) ? `<div class="expics"><img src="img/ex/${x.id}-0.jpg" loading="lazy" alt=""><img src="img/ex/${x.id}-1.jpg" loading="lazy" alt=""></div>` : '';
 const libAll = () => LIB.concat((S().my_ex || []).map(x => Object.assign({ custom: 1, u: 'r', how: '' }, x)));
 const exOf = id => libAll().find(x => x.id === id);
 const myEq = () => ['none'].concat(S().equip || []);
@@ -1506,7 +1518,8 @@ function itemOf(id, g) {
 // แผนแนะนำจากอุปกรณ์ (ไม่ใช้ AI)
 function templatePlan() {
   const n = Math.max(2, Math.min(5, (S().train_days || [1, 3, 5]).length));
-  const pick = (c, used) => c.find(id => { const x = exOf(id); return x && canDo(x) && used.indexOf(id) < 0; });
+  const sore = BASE().knee === 1;
+  const pick = (c, used) => c.map(id => id === 'pu_knee' ? puPick() : id).find(id => { const x = exOf(id); return x && canDo(x) && used.indexOf(id) < 0 && !(sore && KNEE_HARD.indexOf(id) >= 0); });
   const SL = {
     push1: ['gym_chest', 'db_press', 'band_press', 'pu_knee'], push2: ['band_press', 'pu_knee', 'db_fly', 'pike'],
     pull1: ['gym_lat', 'neg_pull', 'db_row', 'ez_row', 'band_row', 'table_row'], pull2: ['ez_row', 'sand_row', 'db_row', 'band_row', 'table_row', 'superman'],
@@ -1515,7 +1528,7 @@ function templatePlan() {
     arms: ['ez_curl', 'db_curl', 'band_curl', 'hammer'], tri: ['ez_skull', 'db_tri', 'dip_chair'], calf: ['calf'],
     core1: ['dead_bug'], core2: ['plank'], core3: ['sand_carry', 'farmer', 'bird_dog', 'side_plank'], core4: ['sand_shoulder', 'farmer', 'hang_knee', 'leg_raise']
   };
-  const mk = (name, slots) => { const used = []; slots.forEach(sl => { const id = pick(SL[sl], used); if (id) used.push(id); }); return { name, items: used.map(id => itemOf(id)) }; };
+  const mk = (name, slots) => { const used = []; slots.forEach(sl => { const id = pick(SL[sl], used); if (id) used.push(id); }); return { name, items: used.map(id => levelFix(itemOf(id))) }; };
   const A = ['push1', 'pull1', 'squat', 'shoulder', 'core1'], B = ['push2', 'pull2', 'hinge', 'arms', 'core2'], C = ['push1', 'pull2', 'squat2', 'tri', 'core3'];
   const UA = ['push1', 'pull1', 'shoulder', 'arms', 'core1'], LA = ['squat', 'hinge', 'calf', 'core2'], UB = ['push2', 'pull2', 'shoulder2', 'tri', 'core3'], LB = ['squat2', 'hinge', 'core4'];
   let days;
@@ -1534,9 +1547,9 @@ function aiMakePlan() {
   if (aiBusy) return;
   aiBusy = true; keepScroll();
   const done = () => { aiBusy = false; keepScroll(); };
-  api('aiPlan', [lib, (S().train_days || [1, 3, 5]).length, '']).then(p => {
+  api('aiPlan', [lib, (S().train_days || [1, 3, 5]).length, baseNote()]).then(p => {
     aiBusy = false;
-    p.days.forEach(d => d.items = d.items.map(it => Object.assign(itemOf(it.id), { sets: it.sets, lo: it.lo, hi: it.hi })));
+    p.days.forEach(d => d.items = d.items.map(it => levelFix(Object.assign(itemOf(it.id), { sets: it.sets, lo: it.lo, hi: it.hi }))));
     if (!p.days.length) { done(); return toast('AI จัดไม่สำเร็จ ลองใหม่'); }
     savePlan(p, true); tSeg = 'plan'; keepScroll(); toast('✨ AI จัดแผนแล้ว');
   }).catch(e => { done(); handleErr(e); });
@@ -1574,6 +1587,7 @@ function eqSetupHtml(first) {
     ${eq.indexOf('db') >= 0 ? dbSetupHtml() : ''}
     ${eq.indexOf('sand') >= 0 ? `<div class="flbl">แซนด์แบ็ก</div><div class="setrows" style="margin-top:0"><label class="setrow"><span>หนัก (ไม่รู้ เว้นไว้)</span><input inputmode="decimal" placeholder="?" value="${num(S().sand_kg) || ''}" onchange="setSandKg(this.value)"><i>กก.</i></label></div>
       <p class="note" style="margin:6px 0 0">ชั่งเอง: ยืนบนเครื่องชั่งถือถุง แล้วลบน้ำหนักตัว</p>` : ''}
+    ${baseHtml()}
     <div class="flbl">วันที่สะดวกฝึก (${days.length} วัน/สัปดาห์)</div>
     <div class="daypick">${['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map((n, i) => `<button class="${days.indexOf(i) >= 0 ? 'on' : ''}" onclick="toggleDay(${i})">${n}</button>`).join('')}</div>
     <p class="note" style="margin:8px 0 0">ตัวเปล่าทำได้เสมอ · ม้านั่งใช้เก้าอี้แข็งแรงแทนได้</p>
@@ -1588,6 +1602,44 @@ function eqDone() {
   if (e.indexOf('db') >= 0 && DBA().mode === 'adj' && (!(S().db_kg || []).length || (S().db_adj || {}).plate != null)) { o.db_adj = DBA(); o.db_kg = dbLadder(o.db_adj); }
   sync('saveSettings', [o], () => Object.assign(D.settings, o)); tSeg = 'today'; keepScroll();
 }
+// ---------- ทดสอบพื้นฐาน (เลือกระดับท่า) ----------
+// base = {pu: วิดพื้นปกติ 0–4, pull: ดึงข้อ 0–3, plank: แพลงก์ 0–3, knee: 'ok'|'sore'}
+const BASEQ = [
+  ['pu', 'วิดพื้นปกติ (เต็มตัว) ได้กี่ครั้งติด', ['0', '1–5', '6–15', '16–25', '26+']],
+  ['pull', 'ดึงข้อ (Pull-up) ได้กี่ครั้ง', ['0', '1–3', '4–8', '9+'], 'bar'],
+  ['plank', 'แพลงก์ค้างได้นานแค่ไหน', ['< 20 วิ', '20–45 วิ', '45–90 วิ', '90 วิ+']],
+  ['knee', 'เข่าตอนนี้', ['ปกติ', 'เจ็บบ้าง']]
+];
+const BASE = () => S().base || {};
+function setBase(k, v) { const b = Object.assign({}, BASE(), { [k]: v }); sync('saveSettings', [{ base: b }], () => { D.settings.base = b; }); keepScroll(); }
+function baseHtml() {
+  const b = BASE(), eq = myEq();
+  return `<div class="flbl">📏 ทดสอบพื้นฐาน (ใช้เลือกระดับท่าในแผน)</div><div class="setrows" style="margin-top:0">${BASEQ.filter(q => !q[3] || eq.indexOf(q[3]) >= 0 || eq.indexOf('gym') >= 0).map(([k, t, opts]) =>
+    `<div class="setrow col"><span>${t}</span><div class="sugg">${opts.map((o, i) => `<button class="chip ${b[k] === i ? 'on' : ''}" onclick="setBase('${k}',${i})">${o}</button>`).join('')}</div></div>`).join('')}</div>
+    <p class="note" style="margin:6px 0 0">ไม่แน่ใจ ลองทำตอนนี้เลยก็ได้ · ตอบแล้วกดจัดแผนใหม่ แผนจะปรับตาม</p>`;
+}
+// ท่าวิดพื้นตามระดับ
+const puPick = () => { const v = BASE().pu; return v == null ? 'pu_knee' : ['pu_wall', 'pu_knee', 'pu', 'pu', 'pu_decline'][v]; };
+// ปรับท่าให้ตรงระดับ (ใช้กับแผนแนะนำและแผนจาก AI)
+function levelFix(it) {
+  const b = BASE();
+  if (b.pu != null && ['pu_wall', 'pu_knee', 'pu', 'pu_decline'].indexOf(it.id) >= 0) {
+    const id = puPick(); if (id !== it.id) it = Object.assign(itemOf(id), { sets: it.sets });
+    if (id === 'pu') Object.assign(it, b.pu >= 3 ? { lo: 10, hi: 15 } : { lo: 6, hi: 10 });
+  }
+  if (b.pull != null && ['neg_pull', 'pullup'].indexOf(it.id) >= 0) {
+    const id = b.pull >= 2 ? 'pullup' : 'neg_pull'; if (id !== it.id) it = Object.assign(itemOf(id), { sets: it.sets });
+    if (id === 'pullup') Object.assign(it, b.pull >= 3 ? { lo: 6, hi: 10 } : { lo: 3, hi: 6 });
+  }
+  if (b.plank != null && it.id === 'plank') Object.assign(it, [{ lo: 15, hi: 25 }, { lo: 20, hi: 40 }, { lo: 40, hi: 60 }, { lo: 60, hi: 90 }][b.plank]);
+  return it;
+}
+function baseNote() {
+  const b = BASE(), t = [];
+  BASEQ.forEach(([k, q, o]) => { if (b[k] != null) t.push(q + ': ' + o[b[k]]); });
+  return t.length ? 'ทดสอบพื้นฐาน — ' + t.join(' · ') + ' → เลือกระดับท่าให้เหมาะ (เช่น วิดพื้นปกติได้ 6 ครั้งขึ้นไป ห้ามใช้วิดพื้นเข่า/วิดพื้นกับผนัง)' + (b.knee === 1 ? ' · เข่าเจ็บอยู่ เลี่ยงลันจ์/ก้าวขึ้นม้านั่ง/สควอทลึก' : '') : '';
+}
+const KNEE_HARD = ['sand_rlunge', 'sand_wlunge', 'step_up', 'squat', 'sand_squat', 'db_goblet'];
 const eqReady = () => !!(S().eq_ok || plan());
 
 // ---------- ดัมเบล ----------
@@ -1642,7 +1694,7 @@ function trainToday() {
       <div class="tch">${doneToday ? '✅ วันนี้ฝึกแล้ว เก่งมาก' : train ? '💪 วันนี้วันฝึก' : '😴 วันนี้วันพัก — เดิน 20–30 นาทีพอ'}</div>
       <div class="hscroll" style="margin:8px -14px 10px">${p.days.map((d, i) => `<button class="chip ${i === di ? 'on' : ''}" onclick="pickDay=${i};keepScroll()">${esc(d.name)}${i === nextDayIdx() ? ' · ถัดไป' : ''}</button>`).join('')}</div>
       ${day.items.map((it, ii) => { const x = exOf(it.id) || {}, pr = prog(it);
-        return `<div class="trow"><div class="grow"><div class="t1">${esc(it.name)}${x.k ? ' <span class="kn">เข่าปลอดภัย</span>' : ''}</div>
+        return `<div class="trow">${exThumb(x)}<div class="grow"><div class="t1">${esc(exName(it))}${x.k ? ' <span class="kn">เข่าปลอดภัย</span>' : ''}</div>
           <div class="t2">${it.sets} × ${it.lo}–${it.hi} ${unitTxt(x)}${num(it.kg) ? ' · ' + num(it.kg) + ' กก.' : ''}</div><div class="t2">${lastTxt(it)}</div>
           ${pr ? `<button class="hint ${pr.dir}" onclick="applyProg(${di},${ii})">${pr.dir === 'up' ? '⬆️' : '⬇️'} ${pr.text} · <u>ปรับแผน</u></button>` : ''}</div></div>`; }).join('') || '<div class="empty">วันนี้ยังไม่มีท่า — ไปที่แท็บ แผน</div>'}
       ${day.items.length ? `<button class="btn pri full startbtn" onclick="startWorkout(${di})">▶ เริ่มฝึก ${esc(day.name)}</button>` : ''}
@@ -1659,7 +1711,7 @@ function startWorkout(di) {
   const day = plan().days[di];
   W = { day_idx: di, name: day.name, start: Date.now(), date: todayIso(), items: day.items.map(it => {
     const last = exSessions(it)[0];
-    return { ex_id: it.id, ex_name: it.name, lo: it.lo, hi: it.hi, kg: num(it.kg), feel: '',
+    return { ex_id: it.id, ex_name: exName(it), lo: it.lo, hi: it.hi, kg: num(it.kg), feel: '',
       sets: Array.from({ length: it.sets }, (_, i) => { const l = last && last.sets.find(x => Number(x.set_no) === i + 1); return { reps: it.hi, kg: num(it.kg), done: false, prev: l ? num(l.reps) : null }; }) };
   }) };
   saveW(); go('train');
@@ -1671,10 +1723,10 @@ function workoutHtml() {
       <button class="btn sm" onclick="cancelWorkout()">ยกเลิก</button></div>
       <div class="kbar" style="margin-top:2px"><i style="width:${all ? done / all * 100 : 0}%;background:linear-gradient(90deg,#A78BFA,#6B4FD0)"></i></div></div>
     ${W.items.map((it, ii) => { const x = exOf(it.ex_id) || {}, allDone = it.sets.every(s => s.done), u = unitTxt(x);
-      return `<div class="wex ${allDone ? 'fin' : ''}"><div class="wexh"><div class="grow"><div class="t1">${ii + 1}. ${esc(it.ex_name)}</div>
+      return `<div class="wex ${allDone ? 'fin' : ''}"><div class="wexh">${exThumb(x)}<div class="grow"><div class="t1">${ii + 1}. ${esc(exName(it))}</div>
           <div class="t2">เป้า ${it.lo}–${it.hi} ${u}${it.kg ? ' · ' + it.kg + ' กก.' : ''} · ${lastTxt({ id: it.ex_id, name: it.ex_name })}</div></div>
           <button class="lnk" onclick="exOpen=exOpen==='${ii}'?'':'${ii}';keepScroll()">${exOpen === String(ii) ? 'ปิด' : 'วิธีทำ'}</button></div>
-        ${exOpen === String(ii) ? `<div class="how">${esc(x.how || '-')}</div>` : ''}
+        ${exOpen === String(ii) ? `<div class="how">${exPics(x)}${esc(x.how || '-')}</div>` : ''}
         <div class="circles">${it.sets.map((s, si) => `<button class="cir ${s.done ? 'on' : ''} ${setOpen === ii + '-' + si ? 'sel' : ''}" onclick="tapSet(${ii},${si})"><b>${s.reps}</b><small>${s.done ? (s.kg ? s.kg + 'กก.' : u) : 'เซ็ต ' + (si + 1)}</small></button>`).join('')}
           <button class="cir add" onclick="addSet(${ii})">＋</button></div>
         ${setOpen.split('-')[0] === String(ii) ? setEditor(ii, Number(setOpen.split('-')[1])) : ''}
@@ -1735,8 +1787,8 @@ function planHtml() {
   if (!p) return head + `<div class="empty">ยังไม่มีแผน — เลือก AI จัด หรือ แผนแนะนำ ด้านบน<br><button class="btn" style="margin-top:10px" onclick="savePlan({days:[{name:'วัน A',items:[]}]},true)">✏️ เริ่มจัดเอง</button></div>`;
   return head + p.days.map((d, di) => `<div class="pday"><div class="pdh"><input value="${esc(d.name)}" onchange="renameDay(${di},this.value)"><button class="xbtn2" onclick="delDay(${di})" aria-label="ลบวัน">🗑️</button></div>
       ${d.items.map((it, ii) => { const x = exOf(it.id) || {}, key = di + '-' + ii, on = planOpen === key;
-        return `<button class="row" onclick="planOpen=planOpen==='${key}'?'':'${key}';keepScroll()"><div class="ico">${(GROUPS.find(g => g[0] === x.g) || ['', '', '🏋️'])[2]}</div>
-            <div class="grow"><div class="t1">${esc(it.name)}</div><div class="t2">${it.sets} × ${it.lo}–${it.hi} ${unitTxt(x)}${num(it.kg) ? ' · ' + num(it.kg) + ' กก.' : ''}</div></div><span class="t2">${on ? '▴' : '▾'}</span></button>
+        return `<button class="row" onclick="planOpen=planOpen==='${key}'?'':'${key}';keepScroll()">${exThumb(x)}
+            <div class="grow"><div class="t1">${esc(exName(it))}</div><div class="t2">${it.sets} × ${it.lo}–${it.hi} ${unitTxt(x)}${num(it.kg) ? ' · ' + num(it.kg) + ' กก.' : ''}</div></div><span class="t2">${on ? '▴' : '▾'}</span></button>
           ${on ? `<div class="seted" style="margin:0 12px 10px">${['sets', 'lo', 'hi'].map(k => `<div class="stp"><span>${{ sets: 'เซ็ต', lo: 'ขั้นต่ำ', hi: 'เพดาน' }[k]}</span><button onclick="adjPlan(${di},${ii},'${k}',-${k === 'sets' ? 1 : x.u === 's' ? 5 : 1})">−</button><b>${it[k]}</b><button onclick="adjPlan(${di},${ii},'${k}',${k === 'sets' ? 1 : x.u === 's' ? 5 : 1})">＋</button><span class="t2">${k === 'sets' ? '' : unitTxt(x)}</span></div>`).join('')}
             ${x.eq === 'db' || x.eq === 'gym' || num(it.kg) ? `<div class="stp"><span>น้ำหนัก</span><button onclick="adjPlan(${di},${ii},'kg',-${x.eq === 'gym' ? 2.5 : 1})">−</button><b>${num(it.kg)}</b><button onclick="adjPlan(${di},${ii},'kg',${x.eq === 'gym' ? 2.5 : 1})">＋</button><span class="t2">กก.</span></div>` : ''}
             <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn sm" onclick="moveItem(${di},${ii},-1)">↑</button><button class="btn sm" onclick="moveItem(${di},${ii},1)">↓</button>
@@ -1761,10 +1813,10 @@ function libHtml() {
     <div class="hscroll" style="margin-top:12px"><button class="chip ${!libG ? 'on' : ''}" onclick="libG='';keepScroll()">ทั้งหมด</button>${GROUPS.map(([k, n, ic]) => `<button class="chip ${libG === k ? 'on' : ''}" onclick="libG='${k}';keepScroll()">${ic} ${n}</button>`).join('')}</div>
     <label class="tgl2"><input type="checkbox" ${libAllOn ? 'checked' : ''} onchange="libAllOn=this.checked;keepScroll()"> โชว์ท่าที่ต้องใช้อุปกรณ์ที่ไม่มีด้วย</label>
     <div class="card">${list.map(x => { const on = exOpen === 'L' + x.id, eqn = EQ.find(e => e[0] === x.eq) || EQ[0];
-      return `<button class="row" onclick="exOpen=exOpen==='L${x.id}'?'':'L${x.id}';keepScroll()"><div class="ico">${(GROUPS.find(g => g[0] === x.g) || ['', '', '🏋️'])[2]}</div>
+      return `<button class="row" onclick="exOpen=exOpen==='L${x.id}'?'':'L${x.id}';keepScroll()">${exThumb(x)}
           <div class="grow"><div class="t1">${esc(x.n)}</div><div class="t2">${eqn[2]} ${eqn[1]}${x.u === 's' ? ' · จับเวลา' : ''}${x.k ? ' · 🦵 เข่าปลอดภัย' : ''}${canDo(x) ? '' : ' · ไม่มีอุปกรณ์'}</div></div>
           ${libPick >= 0 && p ? `<span class="plusb" onclick="event.stopPropagation();addToPlan('${x.id}')">＋</span>` : `<span class="t2">${on ? '▴' : '▾'}</span>`}</button>
-        ${on ? `<div class="how">${esc(x.how || 'ท่าที่เพิ่มเอง')}${x.next && exOf(x.next) ? `<br><b>ท่าถัดไป:</b> ${esc(exOf(x.next).n)}` : ''}</div>` : ''}`; }).join('') || '<div class="empty">ไม่มีท่าในกลุ่มนี้</div>'}</div>
+        ${on ? `<div class="how">${exPics(x)}${esc(x.how || 'ท่าที่เพิ่มเอง')}${x.next && exOf(x.next) ? `<br><b>ท่าถัดไป:</b> ${esc(exOf(x.next).n)}` : ''}</div>` : ''}`; }).join('') || '<div class="empty">ไม่มีท่าในกลุ่มนี้</div>'}</div>
     <div class="sec"><h3>➕ เพิ่มท่าเอง</h3></div>
     <div class="card fcard"><label class="frow"><span>ชื่อท่า</span><input id="myn" placeholder="เช่น ยกขวดน้ำ"></label>
       <div class="frow"><span>กลุ่ม</span><select id="myg" style="flex:1;border:0;background:none;text-align:right;font-size:16px">${GROUPS.map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</select></div>
