@@ -518,7 +518,7 @@ function api(fn, args) {
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({ fn: fn, args: args || [], k: lsGet(KEY_STORE) || '' })
   })
-    .catch(e => { throw new Error(e.name === 'AbortError' ? 'หมดเวลาเชื่อมต่อ สัญญาณอาจอ่อน ลองใหม่' : 'เชื่อมต่อไม่ได้ ตรวจสอบเน็ต'); })
+    .catch(e => { const x = new Error(e.name === 'AbortError' ? 'หมดเวลาเชื่อมต่อ สัญญาณอาจอ่อน ลองใหม่' : 'เชื่อมต่อไม่ได้ ตรวจสอบเน็ต'); x.net = true; throw x; })
     .then(r => r.json().catch(() => { throw new Error('เซิร์ฟเวอร์ตอบผิดรูปแบบ (สคริปต์อาจยังไม่ได้อนุญาตสิทธิ์)'); }))
     .then(j => {
       if (!j.ok) { const e = new Error(j.error || 'เกิดข้อผิดพลาด'); e.auth = /^AUTH/.test(j.error || ''); e.setup = /^SETUP/.test(j.error || ''); throw e; }
@@ -542,14 +542,22 @@ function pumpSync() {
   if (syncing) return;
   if (!syncQ.length) { dot.style.display = 'none'; return; }
   syncing = true; dot.style.display = 'block';
-  const [fn, args] = syncQ.shift();
+  const job = syncQ.shift(), [fn, args] = job;
   api(fn, args).then(d => {
-    syncing = false;
+    syncing = false; pumpSync.tries = 0;
     // ใช้ข้อมูลจากชีตเมื่อไม่มีอะไรค้างส่ง (กันจอกระพริบย้อนกลับ)
     if (!syncQ.length && d && d.log && !pending) { const sc = document.getElementById('app').scrollTop; D = Object.assign(d, { tip: d.tip || D.tip }); lsSet(DATA_STORE, JSON.stringify(D)); if (tab !== 'add' && tab !== 'set') { render(); document.getElementById('app').scrollTop = sc; } }
     pumpSync();
   }).catch(e => {
-    syncing = false; syncQ = []; dot.style.display = 'none';
+    syncing = false;
+    // เน็ตหลุดแวบเดียว: เก็บคำสั่งไว้แล้วลองส่งซ้ำเอง (ทุกคำสั่งส่งซ้ำได้ไม่เบิ้ล — ใช้ id จากฝั่งเว็บ)
+    if (e.net && (pumpSync.tries || 0) < 4) {
+      pumpSync.tries = (pumpSync.tries || 0) + 1; syncQ.unshift(job);
+      dot.textContent = 'สัญญาณหลุด กำลังลองใหม่…';
+      setTimeout(() => { dot.textContent = 'กำลังบันทึก…'; pumpSync(); }, [2000, 4000, 8000, 15000][pumpSync.tries - 1]);
+      return;
+    }
+    pumpSync.tries = 0; syncQ = []; dot.style.display = 'none';
     if (e.auth || e.setup) return handleErr(e);
     alert('บันทึกไม่สำเร็จ: ' + e.message + '\nโหลดข้อมูลล่าสุดจากชีตใหม่');
     load(true);
@@ -1676,7 +1684,8 @@ function finishWorkout() {
   const payload = { date: W.date, day_idx: W.day_idx, name: W.name, time: nowHM(), minutes: Math.max(5, Math.round((Date.now() - W.start) / 60000)),
     items: W.items.map(it => ({ ex_id: it.ex_id, ex_name: it.ex_name, feel: it.feel, sets: it.sets.filter(x => x.done).map(x => ({ reps: x.reps, kg: x.kg })) })).filter(it => it.sets.length) };
   // โชว์ผลทันที
-  const sid = 'tmp' + Date.now();
+  const sid = 'W' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  payload.session_id = sid;
   payload.items.forEach(it => it.sets.forEach((x, i) => (D.sets = D.sets || []).push({ set_id: sid + i, date: payload.date, session_id: sid, day_idx: payload.day_idx, ex_id: it.ex_id, ex_name: it.ex_name, set_no: i + 1, reps: x.reps, kg: x.kg, feel: i === it.sets.length - 1 ? it.feel : '', created_at: nowStr() })));
   W = null; saveW(); stopRest(); pickDay = -1;
   sync('saveWorkout', [payload]);

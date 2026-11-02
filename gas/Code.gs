@@ -377,7 +377,7 @@ function changeApiKey(newKey) {
 function saveWorkout(w) {
   w = w || {};
   const date = isoDate_(w.date || today_());
-  const sid = newId_('W');
+  const sid = String(w.session_id || newId_('W')).slice(0, 40);
   const rows = [];
   (w.items || []).forEach(it => {
     (it.sets || []).forEach((st, i) => {
@@ -389,6 +389,7 @@ function saveWorkout(w) {
   });
   if (!rows.length) throw new Error('ยังไม่ได้ทำเซ็ตไหนเลย');
   return withLock_(() => {
+    if (w.session_id && rows_(SH_.SETS).some(x => x.session_id === sid)) return getAll(); // ส่งซ้ำ (เน็ตหลุด) ไม่ลงเบิ้ล
     appendMany_(SH_.SETS, rows);
     const lw = latestWeight_(rows_(SH_.LOG)) || { weight: 100 };
     const min = Math.max(5, Math.round(num_(w.minutes)) || rows.length * 3);
