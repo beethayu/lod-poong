@@ -231,11 +231,20 @@ function getTip(force) {
   if (have && !force) return have.text;
   const s = settings_();
   const ctx = coachContext_(s, rows_(SH_.LOG), today);
-  const prompt = `คุณคือ "โค้ชลดพุง" เขียนคำแนะนำประจำวันนี้ (${today}) ให้ผู้ชายไทยที่กำลังลดน้ำหนัก ภาษาไทย 2–3 ประโยคสั้น ๆ ไม่เกิน 220 ตัวอักษร
-ดูจากข้อมูลจริง: แนวโน้มน้ำหนัก, เมื่อวานกินเกิน/ขาดเป้าไหม, โปรตีนพอไหม · ให้ 1 อย่างที่ทำได้วันนี้ (เช่น เมนูไทย/เซเว่นที่เหมาะ, เดินหลังมื้อ)
-เน้นของผู้ใช้: ${s.focus || '-'} · สไตล์ ตรง มีเหตุผล ไม่ดุ ไม่อวยเกิน ไม่ใช้ markdown ไม่ขึ้นต้นด้วยคำทักทาย
+  const prompt = `คุณคือ "โค้ชลดพุง" เขียนการ์ดโค้ชประจำวันนี้ (${today}) ให้ผู้ชายไทยที่กำลังลดน้ำหนัก ภาษาไทย ตอบ JSON อย่างเดียว:
+{"head":"หัวข้อ 1 ประโยค ไม่เกิน 55 ตัวอักษร","body":"คำแนะนำ 1–2 ประโยค ไม่เกิน 170 ตัวอักษร"}
+head = เรื่องที่สำคัญหรือน่าดีใจที่สุดจากข้อมูลจริง (เช่น น้ำหนักลงกี่ กก., จดครบกี่วัน, โปรตีนถึงเป้า) ให้มีกำลังใจ ใส่อีโมจิได้ 1 ตัวท้าย
+body = 1 อย่างที่ทำได้วันนี้ เจาะจง (เมนูไทย/เซเว่นที่เหมาะ, เดินหลังมื้อ, เติมโปรตีนกี่กรัม) ถ้าเมื่อวานเกินเป้าบอกตรง ๆ แบบไม่ดุ
+เน้นของผู้ใช้: ${s.focus || '-'} · สไตล์ ตรง มีเหตุผล ไม่อวยเกิน ไม่ใช้ markdown ไม่ขึ้นต้นด้วยคำทักทาย
 ${ctx.text}`;
-  const text = geminiCall_([{ text: prompt }], false).trim().replace(/\*\*/g, '');
+  let text;
+  try {
+    const d = JSON.parse(geminiCall_([{ text: prompt }], true).replace(/^```json\s*|```\s*$/g, ''));
+    text = JSON.stringify({ head: String(d.head || '').replace(/\*\*/g, '').trim(), body: String(d.body || '').replace(/\*\*/g, '').trim() });
+  } catch (e) {
+    if (/Gemini/.test(String(e.message))) throw e;
+    text = JSON.stringify({ head: '', body: 'วันนี้จดทุกมื้อให้ครบ แล้วเติมโปรตีนให้ถึงเป้า' });
+  }
   withLock_(() => {
     deleteWhere_(SH_.TIP, t => t.date === today || String(t.date) < addDays_(today, -60));
     appendMany_(SH_.TIP, [{ date: today, text: text, created_at: nowStr_() }]);
@@ -268,4 +277,42 @@ protein/carb/fat เป็นกรัม ตัวเลขเต็ม`;
   const d = JSON.parse(geminiCall_([{ text: prompt }], true).replace(/^```json\s*|```\s*$/g, ''));
   return { qty: String(d.qty || qty || ''), kcal: Math.round(num_(d.kcal)), protein: Math.round(num_(d.protein)),
     carb: Math.round(num_(d.carb)), fat: Math.round(num_(d.fat)), note: String(d.note || '').slice(0, 80) };
+}
+
+// ===== รูปหุ่น (หน้า / ข้าง / หลัง) =====
+// รูปเต็มเก็บ Drive · ในชีตเก็บรูปย่อ (base64 ~240px) ไว้โชว์เร็ว
+function savePhoto(date, pose, b64, thumb) {
+  if (['front', 'side', 'back'].indexOf(pose) < 0) throw new Error('ท่าไม่ถูกต้อง');
+  date = isoDate_(date || today_());
+  if (!b64) throw new Error('ไม่มีรูป');
+  const f = photoFolder_().createFile(Utilities.newBlob(Utilities.base64Decode(b64), 'image/jpeg',
+    'หุ่น_' + date + '_' + pose + '_' + Date.now() + '.jpg'));
+  return withLock_(() => {
+    // วันเดียวกัน ท่าเดียวกัน = แทนที่ของเดิม
+    const old = rows_(SH_.BODY).filter(p => p.date === date && p.pose === pose);
+    old.forEach(p => { try { DriveApp.getFileById(p.file_id).setTrashed(true); } catch (e) {} });
+    deleteWhere_(SH_.BODY, p => p.date === date && p.pose === pose);
+    appendMany_(SH_.BODY, [{ photo_id: newId_('P'), date: date, pose: pose, file_id: f.getId(), thumb: String(thumb || '').slice(0, 45000), created_at: nowStr_() }]);
+    return getAll();
+  });
+}
+
+function deletePhoto(id) {
+  return withLock_(() => {
+    const p = rows_(SH_.BODY).find(x => x.photo_id === id);
+    if (p) { try { DriveApp.getFileById(p.file_id).setTrashed(true); } catch (e) {} }
+    deleteWhere_(SH_.BODY, x => x.photo_id === id);
+    return getAll();
+  });
+}
+
+// ส่งให้หน้าเว็บ: ทุกรูป (ไม่มีรูปย่อ) + รูปย่อเฉพาะรูปแรกและล่าสุดของแต่ละท่า
+function bodyPhotos_() {
+  const all = rows_(SH_.BODY).sort((a, b) => a.date < b.date ? -1 : 1);
+  const keep = {};
+  ['front', 'side', 'back'].forEach(pose => {
+    const l = all.filter(p => p.pose === pose);
+    if (l.length) { keep[l[0].photo_id] = 1; keep[l[l.length - 1].photo_id] = 1; }
+  });
+  return all.map(p => ({ photo_id: p.photo_id, date: p.date, pose: p.pose, file_id: p.file_id, thumb: keep[p.photo_id] ? p.thumb : '' }));
 }

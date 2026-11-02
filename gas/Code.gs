@@ -6,7 +6,8 @@ const SH_ = {
     'ml', 'weight', 'fat_pct', 'muscle', 'minutes', 'source', 'msg_id', 'photo_id', 'note', 'created_at'] },
   CHAT: { name: 'Chat', head: ['msg_id', 'at', 'role', 'text', 'photo_id', 'log_ids', 'undone'] },
   SET: { name: 'Settings', head: ['key', 'value'] },
-  TIP: { name: 'Tips', head: ['date', 'text', 'created_at'] }
+  TIP: { name: 'Tips', head: ['date', 'text', 'created_at'] },
+  BODY: { name: 'BodyPhotos', head: ['photo_id', 'date', 'pose', 'file_id', 'thumb', 'created_at'] }
 };
 const TXT_COLS_ = ['date', 'time', 'at', 'key', 'value', 'qty'];
 const KINDS_ = ['food', 'exercise', 'water', 'weight'];
@@ -180,6 +181,7 @@ function getAll() {
     log: rows_(SH_.LOG).filter(l => String(l.date) >= from),
     chat: chat.slice(-80),
     tip: tip ? tip.text : '',
+    photos: bodyPhotos_(),
     gemini: !!props.getProperty('GEMINI_KEY'),
     sheetUrl: ss_().getUrl()
   };
