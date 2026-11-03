@@ -342,6 +342,8 @@ function latestWeight_(log) {
   return last ? { date: last.date, weight: num_(last.weight), fat_pct: lastFat ? num_(lastFat.fat_pct) : 0 } : null;
 }
 
+// สัดส่วนแมโคร (ตรงกับ SPLIT ในหน้าเว็บ): % ไขมัน
+const SPLIT_ = [['bal', 0.30], ['low', 0.40], ['high', 0.20]];
 // อายุจากวันเกิด (Settings.birth) ไม่งั้นใช้ age — ตรงกับ ageOf ในหน้าเว็บ
 function ageOf_(s) {
   const b = String(s.birth || ''); if (!/^\d{4}-\d{2}-\d{2}$/.test(b)) return num_(s.age);
@@ -361,7 +363,7 @@ function calcTarget_(s, log) {
   if (low) kcal = bmr;
   kcal = Math.round(kcal / 10) * 10;
   const lbm = f > 0 ? w * (1 - f / 100) : num_(s.goal_weight || w) * 0.75;
-  let protein = Math.round(lbm * 2), fat = Math.round(kcal * 0.25 / 9);
+  let protein = Math.round(lbm * 2), fat = Math.round(kcal * ((SPLIT_.find(x => x[0] === s.macro_split) || SPLIT_[0])[1]) / 9);
   let carb = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
   if (!isTrue_(s.macro_auto)) {
     kcal = num_(s.kcal) || kcal; protein = num_(s.protein) || protein; carb = num_(s.carb) || carb; fat = num_(s.fat) || fat;

@@ -664,6 +664,9 @@ const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 
 const TH_D = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 const MEALS = [['breakfast', 'เช้า', '🌅'], ['lunch', 'กลางวัน', '☀️'], ['dinner', 'เย็น', '🌙'], ['snack', 'ของว่าง', '🍪']];
 const KIND = { food: ['อาหาร', '🍚'], exercise: ['ออกกำลัง', '🏃'], water: ['น้ำ', '💧'], weight: ['น้ำหนัก', '⚖️'], fast: ['อดอาหาร', '⏱️'] };
+// สัดส่วนแมโคร: โปรตีนคงที่ 2 ก./กก. มวลไม่รวมไขมัน · เปลี่ยนแค่ % ไขมัน ที่เหลือเป็นคาร์บ (ตรงกับ SPLIT_ ใน GAS)
+const SPLIT = [['bal', 'สมดุล', 0.30], ['low', 'คาร์บต่ำ', 0.40], ['high', 'คาร์บสูง', 0.20]];
+const splitOf = s => SPLIT.find(x => x[0] === s.macro_split) || SPLIT[0];
 const ACT = [[1.2, 'นั่งทำงาน', 'แทบไม่ได้เดิน'], [1.375, 'เดินบ้าง', 'งานยืน/เดินบางช่วง'], [1.55, 'เดินทั้งวัน', 'งานใช้แรงปานกลาง'], [1.725, 'ใช้แรงหนัก', 'งานไร่/ยกของทั้งวัน']];
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = x => { const n = Number(String(x == null ? '' : x).replace(/,/g, '')); return isFinite(n) ? n : 0; };
@@ -761,7 +764,7 @@ function calcTarget(s, lw) {
   if (low) kcal = bmr;
   kcal = Math.round(kcal / 10) * 10;
   const lbm = f > 0 ? w * (1 - f / 100) : num(s.goal_weight || w) * 0.75;
-  let protein = Math.round(lbm * 2), fat = Math.round(kcal * 0.25 / 9);
+  let protein = Math.round(lbm * 2), fat = Math.round(kcal * splitOf(s)[2] / 9);
   let carb = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
   const auto = { kcal, protein, carb, fat };
   if (!isTrue(s.macro_auto)) { kcal = num(s.kcal) || kcal; protein = num(s.protein) || protein; carb = num(s.carb) || carb; fat = num(s.fat) || fat; }
@@ -2598,12 +2601,14 @@ function setHtml() {
           ${tg.low ? `<br>⚠️ กินต่ำกว่า BMR (${fmt(tg.bmr)}) ไม่ได้ เลยลดจากการกินได้สูงสุด ~${r1(maxRate)} กก./เดือน — เลือก ${[1, 2, 3, 4].filter(r => r > maxRate).join('/')} ได้ผลเท่ากัน · อยากเร็วกว่านี้ = เดิน/ออกกำลังเพิ่ม` : ''}
           <br><span style="opacity:.8">จากน้ำหนักล่าสุด ${lw ? lw.weight + ' กก.' : '-'}${tg.fat_pct ? ' ไขมัน ' + tg.fat_pct + '%' : ''} · BMR ${fmt(tg.bmr)} × ${s.activity} = ${fmt(tg.tdee)}</span></div></div>
       <div class="flbl">ชีวิตประจำวัน (ไม่นับออกกำลัง)</div>
-      <div class="card">${ACT.map(([v, n, d]) => `<button class="row" onclick="SS.activity=${v};render()"><div class="grow"><div class="t1">${n}</div><div class="t2">${d}</div></div><div class="amt" style="color:var(--brand)">${num(s.activity) === v ? '✓' : ''}</div></button>`).join('')}</div>
+      <div class="card">${ACT.map(([v, n, d]) => `<button class="row" onclick="SS.activity=${v};render()"><div class="grow"><div class="t1">${n}</div><div class="t2">${d}</div></div><div class="amt" style="text-align:right;${num(s.activity) === v ? 'color:var(--brand);font-weight:700' : 'color:var(--muted);font-weight:500'}">${fmt(Math.round(tg.bmr * v))} <small>แคล</small>${num(s.activity) === v ? ' ✓' : ''}</div></button>`).join('')}</div>
+      <p class="note" style="margin:6px 2px 0">ตัวเลข = กินเท่านี้น้ำหนักคงที่ · การเดินนับแยกจากก้าวนาฬิกาแล้ว เลือก "นั่งทำงาน" ได้เลย</p>
       <div class="flbl">ร่างกาย</div>
       <div class="card fcard">${fr('ส่วนสูง', 'height', 'ซม.')}${birthRow(s)}
         <div class="frow"><span>เพศ</span><div class="seg" style="flex:1">${[['male', 'ชาย'], ['female', 'หญิง']].map(([v, n]) => `<button class="${s.sex === v ? 'on' : ''}" onclick="SS.sex='${v}';render()">${n}</button>`).join('')}</div></div></div>
       <div class="flbl">แมโครต่อวัน</div>
-      <div class="card fcard"><label class="frow chk"><span>ตั้งอัตโนมัติ<small>โปรตีน 2 ก./กก. มวลไม่รวมไขมัน (เก็บกล้าม) · ไขมัน 25%</small></span><input type="checkbox" ${isTrue(s.macro_auto) ? 'checked' : ''} onchange="SS.macro_auto=this.checked;render()"></label>
+      <div class="card fcard"><label class="frow chk"><span>ตั้งอัตโนมัติ<small>โปรตีน 2 ก./กก. มวลไม่รวมไขมัน (เก็บกล้าม) · ไขมัน ${Math.round(splitOf(s)[2] * 100)}% · ที่เหลือคาร์บ</small></span><input type="checkbox" ${isTrue(s.macro_auto) ? 'checked' : ''} onchange="SS.macro_auto=this.checked;render()"></label>
+        <div class="frow"><span>สัดส่วน</span><div class="seg" style="flex:1">${SPLIT.map(([v, n]) => `<button class="${splitOf(s)[0] === v ? 'on' : ''}" onclick="SS.macro_split='${v}';render()">${n}</button>`).join('')}</div></div>
         ${isTrue(s.macro_auto) ? `<div class="preview">แคล ${fmt(tg.kcal)} · โปรตีน ${tg.protein} · คาร์บ ${tg.carb} · ไขมัน ${tg.fat} ก.</div>` :
           fr('แคลอรี่', 'kcal', 'แคล', tg.auto.kcal) + fr('โปรตีน', 'protein', 'ก.', tg.auto.protein) + fr('คาร์บ', 'carb', 'ก.', tg.auto.carb) + fr('ไขมัน', 'fat', 'ก.', tg.auto.fat)}
         ${fr('น้ำดื่มต่อวัน', 'water_goal', 'มล.')}${fr('เป้าก้าวต่อวัน', 'step_goal', 'ก้าว', '8000')}</div>
