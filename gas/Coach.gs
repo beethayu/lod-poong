@@ -124,7 +124,7 @@ function coachContext_(s, log, today) {
   const ses = {};
   sets.forEach(x => { (ses[x.session_id] = ses[x.session_id] || { date: x.date, ex: {} }).ex[x.ex_name] = (ses[x.session_id].ex[x.ex_name] || []).concat([x.reps + (num_(x.kg) ? '@' + x.kg : '')]); });
   Object.keys(ses).forEach(k => lines.push(`ฝึก ${ses[k].date}: ` + Object.keys(ses[k].ex).map(n => n + ' ' + ses[k].ex[n].join('/')).join(', ')));
-  return { text: lines.join('\n'), target: tg, left: left, planNames: plan ? [].concat.apply([], plan.days.map(d => (d.items || []).map(x => x.name))) : [] };
+  return { text: lines.join('\n'), target: tg, left: left, eaten: Math.round(tt.kcal), pLeft: Math.max(0, Math.round(tg.protein - tt.protein)), planNames: plan ? [].concat.apply([], plan.days.map(d => (d.items || []).map(x => x.name))) : [] };
 }
 
 // ส่งข้อความ (+รูป) ให้โค้ช → AI แยกสิ่งที่ต้องจด → จดทันที → คืนคำตอบ
@@ -193,7 +193,8 @@ ${text || '(ส่งรูปอย่างเดียว)'}${pages.length ? 
 - คำถามเรื่องฝึก: ตอบจากอุปกรณ์/แผน/ประวัติฝึกด้านบน · เน้นท่าไม่กระแทกเข่า · เจ็บ/ปวดผิดปกติ → หยุดท่านั้น หาหมอ
 - ถ้าผู้ใช้แก้รายการที่เพิ่งจด (เช่น "ไม่ใช่ 2 จาน 1 จาน", "ผิด ลบ") → replace_last = true แล้วใส่ entries ชุดใหม่ที่ถูกต้องทั้งหมดของข้อความนั้น (ลบทิ้งอย่างเดียว entries = [])
 reply:
-- ถ้าจด: ยืนยันสั้น ๆ (ชื่อ + แคลรวม) แล้วบอกเหลือกินได้อีกกี่แคลวันนี้ (คิดจากเหลือ ${ctx.left} ลบสิ่งที่เพิ่งจดวันนี้) + คำแนะนำ 1 ประโยคถ้ามีประโยชน์ (เช่น โปรตีนยังขาด)
+- ถ้าจด: ยืนยันสั้น ๆ (ชื่อ + แคลรวมของที่เพิ่งจด) + คำแนะนำ 1 ประโยคถ้ามีประโยชน์ · ห้ามบอกยอดกินรวมวันนี้/เหลือกินได้/โปรตีนขาด เป็นตัวเลข (ระบบต่อท้ายตัวเลขที่ถูกต้องให้เอง)
+- ตัวเลขยอดวันนี้ (กินแล้ว เหลือ โปรตีน) ใช้ตามข้อมูลด้านบนเท่านั้น ห้ามบวกลบเอง ห้ามเดา
 - ถ้าถาม: ตอบตรงประเด็นจากข้อมูลจริง 2–6 บรรทัด แนะเมนูไทย/เซเว่นที่หาง่าย พร้อมแคลประมาณ
 - ห้ามใช้ markdown ตาราง ใช้ขึ้นบรรทัดใหม่และ • ได้`;
 
@@ -237,10 +238,18 @@ reply:
       } catch (err) {}
     });
     appendMany_(SH_.LOG, entries);
+    // ตัวเลขยอดวันนี้ ระบบคิดเอง (AI เคยบวกผิด: บอกเหลือ 153 ทั้งที่จริงเหลือ 703) — สูตรเดียวกับหัวแชตในแอป
+    let reply = String(data.reply || 'จดแล้ว').trim();
+    if (entries.some(e => e.date === today && (e.kind === 'food' || e.kind === 'exercise')) || replaced) {
+      const c2 = coachContext_(s, rows_(SH_.LOG), today);
+      reply += '\n\n📊 วันนี้กินแล้ว ' + c2.eaten.toLocaleString('en-US') + ' แคล · ' +
+        (c2.left >= 0 ? 'เหลือกินได้ ' + c2.left.toLocaleString('en-US') : 'เกินแล้ว ' + (-c2.left).toLocaleString('en-US')) + ' แคล · ' +
+        (c2.pLeft > 0 ? 'โปรตีนขาดอีก ' + c2.pLeft + ' ก.' : 'โปรตีนครบแล้ว');
+    }
     const at = nowStr_();
     appendMany_(SH_.CHAT, [
       { msg_id: msgId, at: at, role: 'user', text: text, photo_id: photoIds, log_ids: '', undone: '' },
-      { msg_id: msgId + 'R', at: at, role: 'model', text: String(data.reply || 'จดแล้ว').trim(),
+      { msg_id: msgId + 'R', at: at, role: 'model', text: reply,
         photo_id: '', log_ids: entries.map(e => e.log_id).join(','), undone: replaced ? 'replaced:' + lastUser.msg_id : '' }
     ]);
     const all = getAll();
