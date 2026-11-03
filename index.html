@@ -2088,7 +2088,7 @@ function prog(item) {
   if (ss.length === 2 && top(ss[0]) && top(ss[1]) && ss[0].feel !== 'hard') {
     if (ex.u === 's') return { dir: 'up', text: `ค้างได้ครบ 2 ครั้งติด → เพิ่มเป็น ${item.lo + 10}–${item.hi + 10} วิ`, ch: { lo: item.lo + 10, hi: item.hi + 10 } };
     if (ex.eq === 'db' && num(item.kg) > 0) { const k = nextKg(num(item.kg), true); if (k) return { dir: 'up', text: `ครบเพดานทุกเซ็ต 2 ครั้งติด → เพิ่มเป็น ${k} กก.`, ch: { kg: k } }; }
-    if (ex.vol) { const v = volUp(item); return v ? { dir: 'up', text: `ครบเพดาน 2 ครั้งติด → เพิ่มวอลุ่มเป็น ${v.t}`, ch: v.ch } : { dir: 'up', text: 'ครบ 5 × 20 แล้ว → ลงช้า 3 วิ ค้างล่าง 1 วิ ให้หนักขึ้น', ch: {} }; }
+    if (ex.vol || (ex.eq === 'sand' && ex.u !== 's')) { const v = volUp(item); return v ? { dir: 'up', text: `ครบเพดาน 2 ครั้งติด → เพิ่มวอลุ่มเป็น ${v.t}`, ch: v.ch } : { dir: 'up', text: 'ครบ 5 × 20 แล้ว → ลงช้า 3 วิ ค้างล่าง 1 วิ ให้หนักขึ้น', ch: {} }; }
     if (ex.next && exOf(ex.next)) return { dir: 'up', text: `ครบเพดาน 2 ครั้งติด → ลองท่ายากขึ้น: ${exOf(ex.next).n}`, ch: { id: ex.next, name: exOf(ex.next).n } };
     return { dir: 'up', text: `ครบเพดาน 2 ครั้งติด → เพิ่มเป็น ${item.lo + 2}–${item.hi + 2} ครั้ง`, ch: { lo: item.lo + 2, hi: item.hi + 2 } };
   }
@@ -2182,8 +2182,9 @@ function volUp(it) {
 function lvStep(it, up) {
   const x = exOf(it.id) || {}, sec = x.u === 's';
   if (x.eq === 'db' && num(it.kg) > 0) { const k = nextKg(num(it.kg), up); if (k && k !== num(it.kg)) return { t: (up ? 'เพิ่มเป็น ' : 'ลดเป็น ') + k + ' กก.', ch: { kg: k } }; }
-  if (x.eq === 'sand' || x.eq === 'ez' || (x.eq !== 'db' && num(it.kg) > 0)) { const k = Math.max(0, num(it.kg) + (up ? 2 : -2)); if (num(it.kg) > 0 && k > 0) return { t: k + ' กก.', ch: { kg: k } }; }
-  if (up && x.vol) return volUp(it);
+  if (x.eq === 'ez' || (x.eq !== 'db' && x.eq !== 'sand' && num(it.kg) > 0)) { const k = Math.max(0, num(it.kg) + (up ? 2 : -2)); if (num(it.kg) > 0 && k > 0) return { t: k + ' กก.', ch: { kg: k } }; }
+  // ถุงทรายน้ำหนักเดียว ปรับกิโลไม่ได้ → ท่านับครั้งไต่แบบวอลุ่มเหมือน Push-up
+  if (up && (x.vol || (x.eq === 'sand' && !sec))) return volUp(it);
   const nx = up ? (x.next && exOf(x.next)) : libAll().find(y => y.next === it.id && canDo(y));
   if (nx && canDo(nx)) { const n = itemOf(nx.id); return { t: 'เปลี่ยนเป็น ' + nx.n, ch: { id: nx.id, name: nx.n, lo: n.lo, hi: n.hi, kg: n.kg } }; }
   const d = sec ? 10 : 2, lo = Math.max(sec ? 10 : 3, it.lo + (up ? d : -d)), hi = Math.max(lo + (sec ? 10 : 2), it.hi + (up ? d : -d));
@@ -2191,7 +2192,7 @@ function lvStep(it, up) {
   return { t: lo + '–' + hi + ' ' + unitTxt(x), ch: { lo, hi } };
 }
 function trEditor(di, ii, it, x) {
-  const up = lvStep(it, true), dn = lvStep(it, false), sec = x.u === 's', hasKg = x.eq === 'db' || x.eq === 'sand' || x.eq === 'ez' || num(it.kg) > 0;
+  const up = lvStep(it, true), dn = lvStep(it, false), sec = x.u === 's', hasKg = x.eq === 'db' || x.eq === 'ez' || (x.eq !== 'sand' && num(it.kg) > 0);
   const stp = (lbl, val, f) => `<div class="stp"><span>${lbl}</span><div style="display:flex;align-items:center"><button onclick="trAdj(${di},${ii},'${f}',-1)">−</button><b>${val}</b><button onclick="trAdj(${di},${ii},'${f}',1)">＋</button></div></div>`;
   const alts = trSw ? libAll().filter(y => y.g === x.g && y.id !== it.id && canDo(y) && !(BASE().knee === 1 && KNEE_HARD.indexOf(y.id) >= 0)) : [];
   return `<div class="ted">
