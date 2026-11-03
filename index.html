@@ -493,6 +493,21 @@
   .hungc.calm .hf { padding-top: 2px; }
   .rhrc.calm { border-color: var(--line); } .rhrc.calm .rh { background: linear-gradient(90deg,#FDE7EC,#FFF4F6); color: #8A2238; } .rhrc.calm .rh b { font-size: 15px; }
   .wbox.idle { background: #F1F3EF; color: var(--ink); }
+  /* อ่านง่าย: หัวเล็กสีจาง → หัวข้อหนาสี → ข้อเท็จจริงสีเข้ม → หมายเหตุเทาเล็ก */
+  .kick { font-size: 12px; font-weight: 600; letter-spacing: .2px; color: var(--muted); margin-bottom: 1px; }
+  .fact { color: var(--ink) !important; font-size: 14.5px !important; line-height: 1.55; margin-top: 4px; }
+  .fact strong { font-weight: 700; }
+  .note2 { padding: 8px 14px 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+  .hungc .hh b, .rhrc .rh b { font-size: 17px !important; line-height: 1.35; margin-top: 1px; }
+  .hungc .hh, .rhrc .rh { padding-top: 14px; padding-bottom: 10px; }
+  .rhrc.calm .rh { background: #fff; border-bottom: 1px solid var(--line); }
+  .hungc.calm { background: #fff; border-color: var(--line); } .hungc.calm .hh b { color: #353A99; }
+  .hungc ol { color: var(--ink); font-size: 14.5px; line-height: 1.6; }
+  .wbox { color: var(--ink) !important; font-size: 14px !important; line-height: 1.6 !important; } .wbox > b { color: #1f5f91; font-size: 17px !important; margin-bottom: 4px; }
+  .wbox.idle > b { color: var(--ink); }
+  .wchips span { color: #1f4f78; font-weight: 600; border: 1px solid #C9DDF0; }
+  .bodyc .slp .lg { color: var(--ink); } .bodyc .slp .hd2 { color: #4A4F8C; font-weight: 600; }
+  .rdy { font-weight: 600; }
   .wbc { background: #fff; border: 1px solid var(--line); border-radius: 16px; margin-top: 12px; overflow: hidden; }
   .wtop2 { display: flex; justify-content: space-between; align-items: flex-end; padding: 12px 14px 10px; } .wtop2 b { font-size: 26px; }
   .wbox { margin: 0 12px; padding: 12px; border-radius: 14px; background: #E3F0FB; color: #1f4f78; font-size: 13px; line-height: 1.5; } .wbox > b { font-size: 16px; display: block; }
@@ -894,7 +909,7 @@ function rhrAlertCard(td) {
   const hi = Math.max(...a.v, a.base) + 2, lo = Math.min(a.base, ...a.v) - 8, h = v => Math.round(16 + (v - lo) / (hi - lo) * 44);
   const dn = d => ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'][new Date(d + 'T12:00:00').getDay()];
   const bars = [[a.base, 'ปกติ ' + a.base, '#E1E3DD']].concat(a.days.map((d, i) => [a.v[i], (d === td ? 'วันนี้ ' : dn(d) + ' ') + a.v[i], ['#E8857D', '#D8574D', '#B3261E'][i]]));
-  return `<div class="rhrc"><div class="rh"><div class="ri">❤️</div><div class="grow"><b>ชีพจรพักสูงกว่าปกติ 3 วันติด</b><div>ร่างกายอาจล้าสะสม หรือกำลังจะป่วย${a.stress != null && a.stress > 50 ? ' · ความเครียดเมื่อวานก็สูง (' + a.stress + ')' : ''}</div></div></div>
+  return `<div class="rhrc"><div class="rh"><div class="ri">❤️</div><div class="grow"><b>ชีพจรพักสูงกว่าปกติ 3 วันติด</b><div class="fact">ร่างกายอาจล้าสะสม หรือกำลังจะป่วย${a.stress != null && a.stress > 50 ? ' · ความเครียดเมื่อวานก็สูง (' + a.stress + ')' : ''}</div></div></div>
     <div class="rbars">${bars.map(b => `<div><i style="height:${h(b[0])}px;background:${b[2]}"></i><span>${b[1]}</span></div>`).join('')}</div>
     <div class="rtxt">วันนี้พัก หรือเดินเบา ๆ 20–30 นาทีพอ<br>ดื่มน้ำให้พอ และเข้านอนเร็วกว่าปกติ<br><span style="color:var(--red)">มีไข้ เจ็บคอ หรือเหนื่อยผิดปกติ ไปพบแพทย์</span></div>
     <div class="rbtn">${restToday(td) ? `<div class="t2" style="flex:1;padding:12px 0">✓ วันนี้เป็นวันพักแล้ว</div>` : `<button class="btn pri" style="flex:1" onclick="lsSet('lp_rest','${td}');lsSet('lp_rhr_ack','${td}');keepScroll()">วันนี้เป็นวันพัก</button>`}<button class="btn" style="flex:1" onclick="lsSet('lp_rhr_ack','${td}');keepScroll()">รับทราบ</button></div>
@@ -911,18 +926,19 @@ function rhrCalmCard(td) {
   const bars = [[base, 'ปกติ ' + Math.round(base), '#E1E3DD']].concat(days.map((d, i) => v[i] ? [v[i], (d === td ? 'วันนี้ ' : dn(d) + ' ') + v[i], col(v[i])] : null).filter(Boolean));
   const up = v.filter(x => x && x - base >= 5).length, mid = v.some(x => x && x - base >= 3);
   const head = up ? `สูงกว่าปกติ ${up} วัน · เฝ้าดูต่อ` : mid ? 'สูงขึ้นเล็กน้อย ยังไม่น่าห่วง' : 'ปกติ ไม่มีสัญญาณล้าสะสม';
-  return `<div class="rhrc calm"><div class="rh"><div class="ri">❤️</div><div class="grow"><b>ชีพจรขณะพัก · ${head}</b><div>ถ้าสูงกว่าปกติ 5 ครั้ง/นาที ติดกัน 3 วัน มักเป็นสัญญาณล้าสะสมหรือกำลังจะป่วย แอปจะเตือนทันที</div></div></div>
+  return `<div class="rhrc calm"><div class="rh"><div class="ri">❤️</div><div class="grow"><div class="kick">ชีพจรขณะพัก</div><b style="color:${up ? 'var(--red)' : mid ? 'var(--warn)' : 'var(--ok)'}">${head}</b></div></div>
     <div class="rbars">${bars.map(b => `<div><i style="height:${h(b[0])}px;background:${b[2]}"></i><span>${b[1]}</span></div>`).join('')}</div>
-    <div class="ref" style="padding-top:10px">ค่าปกติ = มัธยฐาน 2 สัปดาห์ก่อนหน้า · Radin 2020 · Lancet Digital Health</div></div>`;
+    <div class="note2">ถ้าสูงกว่าปกติ 5 ครั้ง/นาที ติดกัน 3 วัน มักเป็นสัญญาณล้าสะสมหรือกำลังจะป่วย แอปจะเตือนทันที</div>
+    <div class="ref" style="padding-top:6px">ค่าปกติ = มัธยฐาน 2 สัปดาห์ก่อนหน้า · Radin 2020 · Lancet Digital Health</div></div>`;
 }
 // นอนน้อย → วันนี้หิวง่าย · Al Khatib 2017 (นอนน้อยกินเพิ่ม ~385 แคล/วัน)
 function hungerCard(td) {
   const sl = gv(dailyOf(td), 'sleep_min'); if (rhrAlert(td)) return '';
-  if (!sl) return `<div class="hungc calm"><div class="hh"><div class="hi">😴</div><div class="grow"><b>วันนี้จะหิวง่ายไหม</b><div>ยังไม่มีข้อมูลการนอนเมื่อคืน · ใส่นาฬิกานอน แล้วแอปจะบอกทุกเช้า</div></div></div>
+  if (!sl) return `<div class="hungc calm"><div class="hh"><div class="hi">😴</div><div class="grow"><div class="kick">การนอน · ความหิว</div><b>วันนี้จะหิวง่ายไหม</b><div class="fact">ยังไม่มีข้อมูลการนอนเมื่อคืน<br>ใส่นาฬิกานอน แล้วแอปจะบอกทุกเช้า</div></div></div>
     <div class="hf"><span class="ref">นอนน้อยกว่า 6 ชม. คนมักกินเพิ่มราว 385 แคล/วัน · Al Khatib 2017</span></div></div>`;
-  if (sl >= 360) return `<div class="hungc calm"><div class="hh"><div class="hi">😴</div><div class="grow"><b>${sl >= 420 ? 'นอนพอ ความหิววันนี้น่าจะปกติ' : 'นอนพอใช้ ความหิวไม่น่าเพิ่มมาก'}</b><div>นอน ${sleepTxt(sl)} · คนที่นอนน้อยกว่า 6 ชม. มักกินเพิ่มราว 385 แคล/วัน${sl < 420 ? ' · คืนนี้ลองให้ถึง 7 ชม.' : ''}</div></div></div>
+  if (sl >= 360) return `<div class="hungc calm"><div class="hh"><div class="hi">😴</div><div class="grow"><div class="kick">การนอน · ความหิว</div><b>${sl >= 420 ? 'นอนพอ ความหิววันนี้น่าจะปกติ' : 'นอนพอใช้ ความหิวไม่น่าเพิ่มมาก'}</b><div class="fact">เมื่อคืนนอน <strong>${sleepTxt(sl)}</strong>${sl < 420 ? '<br>คืนนี้ลองให้ถึง 7 ชม.' : ''}</div><div class="note2" style="padding:4px 0 0">คนที่นอนน้อยกว่า 6 ชม. มักกินเพิ่มราว 385 แคล/วัน</div></div></div>
     <div class="hf"><span class="ref">Al Khatib 2017 · Eur J Clin Nutr</span></div></div>`;
-  return `<div class="hungc"><div class="hh"><div class="hi">🍳</div><div class="grow"><b>วันนี้มักหิวง่ายกว่าปกติ</b><div>นอน ${sleepTxt(sl)} · งานวิจัยพบคนนอนน้อยกินเพิ่มราว 385 แคล/วัน</div></div></div>
+  return `<div class="hungc"><div class="hh"><div class="hi">🍳</div><div class="grow"><div class="kick">การนอน · ความหิว</div><b>วันนี้มักหิวง่ายกว่าปกติ</b><div class="fact">เมื่อคืนนอนแค่ <strong>${sleepTxt(sl)}</strong></div><div class="note2" style="padding:4px 0 0">งานวิจัยพบคนนอนน้อยกินเพิ่มราว 385 แคล/วัน</div></div></div>
     <ol><li>มื้อแรกเน้นโปรตีน 30 ก. ขึ้นไป (ไข่ 3 ฟอง + อกไก่ / นมโปรตีน) อิ่มนานกว่า</li><li>หิวช่วงบ่าย ดื่มน้ำ 1 แก้ว รอ 10 นาทีก่อนตัดสินใจ</li><li>วันนี้ไม่ซื้อขนมติดมือจากร้านสะดวกซื้อ</li></ol>
     <div class="hf"><span class="ref">Al Khatib 2017 · Eur J Clin Nutr</span><a class="lnk" onclick="go('coach');sendChat('นอนน้อย วันนี้กินอะไรดีให้อิ่มนาน')">ถามโค้ช: วันนี้กินอะไรดี ›</a></div></div>`;
 }
