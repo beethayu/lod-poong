@@ -278,6 +278,17 @@
   .expics span { position: absolute; left: 8px; top: 6px; font-size: 12px; font-weight: 700; color: rgba(0,0,0,.45); }
   .kn { font-size: 11px; background: #E3F5EC; color: #17694D; padding: 1px 6px; border-radius: 99px; font-weight: 600; vertical-align: 2px; }
   .hint { display: block; text-align: left; margin-top: 6px; font-size: 13px; padding: 6px 10px; border-radius: 10px; font-weight: 600; width: 100%; }
+  .trow.tap { cursor: pointer; } .trow.open { background: #FBFAFF; margin: 0 -14px; padding: 10px 14px; }
+  .ted { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .ted .lv { display: flex; gap: 8px; } .ted .lv button { flex: 1; border-radius: 12px; padding: 9px 6px; font-weight: 600; font-size: 14px; line-height: 1.25; }
+  .ted .lv small { display: block; font-weight: 500; font-size: 11.5px; opacity: .8; margin-top: 2px; }
+  .ted .lv .dn { background: #FFF1E6; color: #9A4A12; } .ted .lv .up { background: #E3F5EC; color: #17694D; }
+  .ted .stp { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #EEE9FA; border-radius: 12px; padding: 4px 6px 4px 12px; }
+  .ted .stp > span { color: var(--muted); font-size: 14px; } .ted .stp b { min-width: 74px; text-align: center; font-size: 16px; }
+  .ted .stp button { width: 38px; height: 34px; border-radius: 10px; background: #F1ECFD; color: #5B3FB0; font-size: 20px; font-weight: 700; }
+  .ted .sw { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 0 14px; } .ted .sw::-webkit-scrollbar { display: none; }
+  .ted .sw button { flex: none; border: 1px solid #E0D8F7; background: #fff; border-radius: 99px; padding: 6px 12px; font-size: 13.5px; }
+  .ted .row2 { display: flex; justify-content: space-between; font-size: 13.5px; } .ted .row2 button { color: var(--muted); }
   .hint.up { background: #E3F5EC; color: #17694D; } .hint.down { background: #FFF1E6; color: #9A4A12; }
   .startbtn { margin-top: 12px; height: 52px; font-size: 17px; background: linear-gradient(135deg,#6B4FD0,#9C6ADE); border: 0; }
   .basecard { margin-top: 10px; }
@@ -2143,7 +2154,42 @@ function nextDayIdx() {
   return last ? (Number(last.day_idx) + 1) % p.days.length : 0;
 }
 const isTrainDay = d => (S().train_days || [1, 3, 5]).indexOf(new Date(d + 'T12:00:00').getDay()) >= 0;
-let pickDay = -1;
+let pickDay = -1, trOpen = '', trSw = false;
+// ---------- แก้ท่าในแผนเอง (แตะแถวในการ์ดวันนี้) ----------
+// ง่ายไป/ยากไป = ขั้นเดียวตามบันได: ดัมเบลขยับน้ำหนัก → ท่าถัดไป/ก่อนหน้า → ครั้ง ±2 (วินาที ±10)
+function lvStep(it, up) {
+  const x = exOf(it.id) || {}, sec = x.u === 's';
+  if (x.eq === 'db' && num(it.kg) > 0) { const k = nextKg(num(it.kg), up); if (k && k !== num(it.kg)) return { t: (up ? 'เพิ่มเป็น ' : 'ลดเป็น ') + k + ' กก.', ch: { kg: k } }; }
+  if (x.eq === 'sand' || x.eq === 'ez' || (x.eq !== 'db' && num(it.kg) > 0)) { const k = Math.max(0, num(it.kg) + (up ? 2 : -2)); if (num(it.kg) > 0 && k > 0) return { t: k + ' กก.', ch: { kg: k } }; }
+  const nx = up ? (x.next && exOf(x.next)) : libAll().find(y => y.next === it.id && canDo(y));
+  if (nx && canDo(nx)) { const n = itemOf(nx.id); return { t: 'เปลี่ยนเป็น ' + nx.n, ch: { id: nx.id, name: nx.n, lo: n.lo, hi: n.hi, kg: n.kg } }; }
+  const d = sec ? 10 : 2, lo = Math.max(sec ? 10 : 3, it.lo + (up ? d : -d)), hi = Math.max(lo + (sec ? 10 : 2), it.hi + (up ? d : -d));
+  if (lo === it.lo && hi === it.hi) return null;
+  return { t: lo + '–' + hi + ' ' + unitTxt(x), ch: { lo, hi } };
+}
+function trEditor(di, ii, it, x) {
+  const up = lvStep(it, true), dn = lvStep(it, false), sec = x.u === 's', hasKg = x.eq === 'db' || x.eq === 'sand' || x.eq === 'ez' || num(it.kg) > 0;
+  const stp = (lbl, val, f) => `<div class="stp"><span>${lbl}</span><div style="display:flex;align-items:center"><button onclick="trAdj(${di},${ii},'${f}',-1)">−</button><b>${val}</b><button onclick="trAdj(${di},${ii},'${f}',1)">＋</button></div></div>`;
+  const alts = trSw ? libAll().filter(y => y.g === x.g && y.id !== it.id && canDo(y) && !(BASE().knee === 1 && KNEE_HARD.indexOf(y.id) >= 0)) : [];
+  return `<div class="ted">
+    <div class="lv"><button class="dn" ${dn ? `onclick="trLv(${di},${ii},false)"` : 'disabled style="opacity:.45"'}>😮‍💨 ยากไป<small>${dn ? esc(dn.t) : 'ง่ายสุดแล้ว'}</small></button>
+      <button class="up" ${up ? `onclick="trLv(${di},${ii},true)"` : 'disabled style="opacity:.45"'}>😌 ง่ายไป<small>${up ? esc(up.t) : 'ยากสุดแล้ว'}</small></button></div>
+    ${stp('เซ็ต', it.sets, 'sets')}${stp(sec ? 'วินาที' : 'ครั้ง', it.lo + '–' + it.hi, 'rep')}${hasKg ? stp('น้ำหนัก', num(it.kg) ? num(it.kg) + ' กก.' : '–', 'kg') : ''}
+    ${trSw ? `<div class="sw">${alts.map(y => `<button onclick="trSwap(${di},${ii},'${y.id}')">${esc(y.n)}</button>`).join('') || '<span class="t2">ไม่มีท่าอื่นในกลุ่มนี้ที่อุปกรณ์ทำได้</span>'}</div>` : ''}
+    <div class="row2"><button onclick="trSw=!trSw;keepScroll()">🔁 ${trSw ? 'ปิด' : 'เปลี่ยนท่า (กลุ่มเดียวกัน)'}</button><button style="color:#B3261E" onclick="trDel(${di},${ii})">ลบท่านี้</button></div></div>`;
+}
+function trEdit(di, ii, f) { const p = JSON.parse(JSON.stringify(plan())), it = p.days[di].items[ii]; f(it, p); savePlan(p); }
+function trLv(di, ii, up) { const st = lvStep(plan().days[di].items[ii], up); if (!st) return; trEdit(di, ii, it => Object.assign(it, st.ch)); toast((up ? '⬆️ ' : '⬇️ ') + st.t); }
+function trAdj(di, ii, f, d) {
+  trEdit(di, ii, it => {
+    const x = exOf(it.id) || {}, sec = x.u === 's';
+    if (f === 'sets') it.sets = Math.max(1, Math.min(8, it.sets + d));
+    if (f === 'rep') { const k = sec ? 5 : 1, lo = Math.max(sec ? 5 : 1, it.lo + d * k); it.hi = Math.max(lo, it.hi + d * k); it.lo = lo; }
+    if (f === 'kg') { const k = x.eq === 'db' ? nextKg(num(it.kg), d > 0) : Math.max(0, num(it.kg) + d); if (k !== null) it.kg = k; }
+  });
+}
+function trSwap(di, ii, id) { const n = itemOf(id); trEdit(di, ii, it => Object.assign(it, { id, name: n.name, lo: n.lo, hi: n.hi, kg: n.kg })); trSw = false; toast('เปลี่ยนเป็น ' + n.name); }
+function trDel(di, ii) { if (!confirm('ลบ ' + exName(plan().days[di].items[ii]) + ' ออกจากแผน?')) return; trEdit(di, ii, (it, p) => p.days[di].items.splice(ii, 1)); trOpen = ''; }
 
 // ---------- หน้า ฝึก ----------
 function trainHtml() {
@@ -2289,9 +2335,12 @@ function trainToday() {
       <div class="tch">${doneToday ? '✅ วันนี้ฝึกแล้ว เก่งมาก' : train ? '💪 วันนี้วันฝึก' : '😴 วันนี้วันพัก — เดิน 20–30 นาทีพอ'}</div>
       <div class="hscroll" style="margin:8px -14px 10px">${p.days.map((d, i) => `<button class="chip ${i === di ? 'on' : ''}" onclick="pickDay=${i};keepScroll()">${esc(d.name)}${i === nextDayIdx() ? ' · ถัดไป' : ''}</button>`).join('')}</div>
       ${day.items.map((it, ii) => { const x = exOf(it.id) || {}, pr = prog(it);
-        return `<div class="trow">${exThumb(x)}<div class="grow"><div class="t1">${esc(exName(it))}${x.k ? ' <span class="kn">เข่าปลอดภัย</span>' : ''}</div>
+        const op = trOpen === di + '-' + ii;
+        return `<div class="trow tap ${op ? 'open' : ''}" onclick="if(!event.target.closest('.ted,.hint')){trOpen=trOpen==='${di}-${ii}'?'':'${di}-${ii}';trSw=false;keepScroll()}">${exThumb(x)}<div class="grow"><div class="t1">${esc(exName(it))}${x.k ? ' <span class="kn">เข่าปลอดภัย</span>' : ''}</div>
           <div class="t2">${it.sets} × ${it.lo}–${it.hi} ${unitTxt(x)}${num(it.kg) ? ' · ' + num(it.kg) + ' กก.' : ''}</div><div class="t2">${lastTxt(it)}</div>
-          ${pr ? `<button class="hint ${pr.dir}" onclick="applyProg(${di},${ii})">${pr.dir === 'up' ? '⬆️' : '⬇️'} ${pr.text} · <u>ปรับแผน</u></button>` : ''}</div></div>`; }).join('') || '<div class="empty">วันนี้ยังไม่มีท่า — ไปที่แท็บ แผน</div>'}
+          ${pr ? `<button class="hint ${pr.dir}" onclick="applyProg(${di},${ii})">${pr.dir === 'up' ? '⬆️' : '⬇️'} ${pr.text} · <u>ปรับแผน</u></button>` : ''}
+          ${op ? trEditor(di, ii, it, x) : ''}</div></div>`; }).join('') || '<div class="empty">วันนี้ยังไม่มีท่า — ไปที่แท็บ แผน</div>'}
+      ${day.items.length ? `<p class="note" style="margin:8px 0 0">แตะท่า = ปรับ ง่ายไป/ยากไป · เซ็ต · ครั้ง · น้ำหนัก · เปลี่ยนท่า</p>` : ''}
       ${day.items.length ? `<button class="btn pri full startbtn" onclick="startWorkout(${di})">▶ เริ่มฝึก ${esc(day.name)}</button>` : ''}
     </div>
     <div class="sec"><h3>🏠 อุปกรณ์และวันฝึก</h3><a class="lnk" onclick="eqEdit=!eqEdit;keepScroll()">${eqEdit ? 'ปิด' : 'แก้'}</a></div>
