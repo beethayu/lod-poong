@@ -342,12 +342,18 @@ function latestWeight_(log) {
   return last ? { date: last.date, weight: num_(last.weight), fat_pct: lastFat ? num_(lastFat.fat_pct) : 0 } : null;
 }
 
+// อายุจากวันเกิด (Settings.birth) ไม่งั้นใช้ age — ตรงกับ ageOf ในหน้าเว็บ
+function ageOf_(s) {
+  const b = String(s.birth || ''); if (!/^\d{4}-\d{2}-\d{2}$/.test(b)) return num_(s.age);
+  const t = today_(); return Number(t.slice(0, 4)) - Number(b.slice(0, 4)) - (t.slice(5) < b.slice(5) ? 1 : 0);
+}
+
 function calcTarget_(s, log) {
   const lw = latestWeight_(log) || { weight: 100, fat_pct: 0 };
   const w = lw.weight, f = lw.fat_pct;
   let bmr;
   if (f > 0) bmr = 370 + 21.6 * w * (1 - f / 100);
-  else bmr = 10 * w + 6.25 * num_(s.height || 170) - 5 * (num_(s.age) || 40) + (s.sex === 'female' ? -161 : 5);
+  else bmr = 10 * w + 6.25 * num_(s.height || 170) - 5 * (ageOf_(s) || 40) + (s.sex === 'female' ? -161 : 5);
   const tdee = bmr * (num_(s.activity) || 1.2);
   const rate = num_(s.rate) || 2;
   let kcal = tdee - rate * 7700 / 30;

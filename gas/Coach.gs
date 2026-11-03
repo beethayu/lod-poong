@@ -77,7 +77,7 @@ function coachContext_(s, log, today) {
   tt.ex += stepK(today);
   const left = Math.round(tg.kcal - tt.kcal + tt.ex / 2);
   const lines = [];
-  lines.push(`โปรไฟล์: ${s.sex === 'female' ? 'หญิง' : 'ชาย'} สูง ${s.height || '?'} ซม.${s.age ? ' อายุ ' + s.age : ''} · น้ำหนักล่าสุด ${tg.weight} กก.${tg.fat_pct ? ' ไขมัน ' + tg.fat_pct + '%' : ''} · เป้า ${s.goal_weight} กก. ลด ${s.rate} กก./เดือน`);
+  lines.push(`โปรไฟล์: ${s.sex === 'female' ? 'หญิง' : 'ชาย'} สูง ${s.height || '?'} ซม.${ageOf_(s) ? ' อายุ ' + ageOf_(s) : ''} · น้ำหนักล่าสุด ${tg.weight} กก.${tg.fat_pct ? ' ไขมัน ' + tg.fat_pct + '%' : ''} · เป้า ${s.goal_weight} กก. ลด ${s.rate} กก./เดือน`);
   lines.push(`เป้าต่อวัน: ${tg.kcal} แคล · โปรตีน ${tg.protein} ก. คาร์บ ${tg.carb} ก. ไขมัน ${tg.fat} ก. · BMR ${tg.bmr} TDEE ${tg.tdee} · น้ำ ${s.water_goal} มล.`);
   lines.push(`กติกา: แคลอรี่ออกกำลังบวกคืนครึ่งเดียว · ก้าวเดินนับเฉพาะส่วนที่เกิน ${STEP_BASE_} ก้าว (ก้าวปกติรวมในเป้าแล้ว) แล้วบวกคืนครึ่งเดียวเหมือนกัน · ตัวเลข "ออกกำลัง" ด้านล่างรวมแคลจากก้าวแล้ว · เป้าก้าว ${s.step_goal || 8000}/วัน`);
   lines.push(`วันนี้กินแล้ว ${Math.round(tt.kcal)} แคล (โปรตีน ${Math.round(tt.protein)} คาร์บ ${Math.round(tt.carb)} ไขมัน ${Math.round(tt.fat)}) · ออกกำลัง ${Math.round(tt.ex)} แคล · น้ำ ${tt.water} มล. · เหลือกินได้ ${left} แคล โปรตีนขาดอีก ${Math.max(0, Math.round(tg.protein - tt.protein))} ก.`);
