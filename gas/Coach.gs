@@ -71,11 +71,15 @@ function coachContext_(s, log, today) {
     return t;
   };
   const td = day(today), tt = tot(td);
+  const daily = {};
+  if (ss_().getSheetByName(SH_.DAILY.name)) rows_(SH_.DAILY).forEach(r => daily[r.date] = r);
+  const stepK = d => daily[d] && daily[d].steps !== '' ? stepKcal_(daily[d].steps, tg.weight, day(d)) : 0;
+  tt.ex += stepK(today);
   const left = Math.round(tg.kcal - tt.kcal + tt.ex / 2);
   const lines = [];
   lines.push(`โปรไฟล์: ${s.sex === 'female' ? 'หญิง' : 'ชาย'} สูง ${s.height || '?'} ซม.${s.age ? ' อายุ ' + s.age : ''} · น้ำหนักล่าสุด ${tg.weight} กก.${tg.fat_pct ? ' ไขมัน ' + tg.fat_pct + '%' : ''} · เป้า ${s.goal_weight} กก. ลด ${s.rate} กก./เดือน`);
   lines.push(`เป้าต่อวัน: ${tg.kcal} แคล · โปรตีน ${tg.protein} ก. คาร์บ ${tg.carb} ก. ไขมัน ${tg.fat} ก. · BMR ${tg.bmr} TDEE ${tg.tdee} · น้ำ ${s.water_goal} มล.`);
-  lines.push(`กติกา: แคลอรี่ออกกำลังบวกคืนครึ่งเดียว`);
+  lines.push(`กติกา: แคลอรี่ออกกำลังบวกคืนครึ่งเดียว · ก้าวเดินนับเฉพาะส่วนที่เกิน ${STEP_BASE_} ก้าว (ก้าวปกติรวมในเป้าแล้ว) แล้วบวกคืนครึ่งเดียวเหมือนกัน · ตัวเลข "ออกกำลัง" ด้านล่างรวมแคลจากก้าวแล้ว · เป้าก้าว ${s.step_goal || 8000}/วัน`);
   lines.push(`วันนี้กินแล้ว ${Math.round(tt.kcal)} แคล (โปรตีน ${Math.round(tt.protein)} คาร์บ ${Math.round(tt.carb)} ไขมัน ${Math.round(tt.fat)}) · ออกกำลัง ${Math.round(tt.ex)} แคล · น้ำ ${tt.water} มล. · เหลือกินได้ ${left} แคล โปรตีนขาดอีก ${Math.max(0, Math.round(tg.protein - tt.protein))} ก.`);
   lines.push('รายการวันนี้:');
   td.forEach(l => {
@@ -84,11 +88,21 @@ function coachContext_(s, log, today) {
     else if (l.kind === 'weight') lines.push(`- [น้ำหนัก] ${l.weight} กก.${l.fat_pct ? ' ไขมัน ' + l.fat_pct + '%' : ''}`);
   });
   if (!td.length) lines.push('- (ยังไม่มี)');
+  const dl = [];
+  for (let i = 7; i >= 0; i--) {
+    const d = addDays_(today, -i), x = daily[d]; if (!x) continue;
+    const p = [];
+    if (x.steps !== '') p.push(`ก้าว ${x.steps}${i === 0 && x.steps_at ? ' (ถึง ' + x.steps_at + ' ยังไม่จบวัน)' : ''}`);
+    if (x.sleep_min !== '' && num_(x.sleep_min) > 0) p.push(`นอน ${(num_(x.sleep_min) / 60).toFixed(1)} ชม. (${x.sleep_from}–${x.sleep_to})`);
+    if (p.length) dl.push(`- ${d}: ${p.join(' · ')}`);
+  }
+  if (dl.length) { lines.push('ก้าวเดิน / การนอน (จากนาฬิกา Garmin ผ่าน Apple Health, นอน = คืนก่อนวันนั้น):'); dl.forEach(x => lines.push(x)); }
   lines.push('14 วันก่อนหน้า (วันที่: กิน/โปรตีน/ออกกำลัง แคล):');
   // วันที่จดอาหารน้อยมาก (มื้อเดียว หรือต่ำกว่าครึ่งเป้า) = จดไม่ครบ ไม่ใช่กินน้อย
   const partial = d => { const f = day(d).filter(l => l.kind === 'food'), meals = {}; f.forEach(l => meals[l.meal || l.time] = 1); return f.length > 0 && (Object.keys(meals).length < 2 || tot(f).kcal < tg.kcal * 0.5); };
   for (let i = 14; i >= 1; i--) {
     const d = addDays_(today, -i), t = tot(day(d));
+    t.ex += stepK(d);
     if (t.kcal || t.ex) lines.push(`- ${d}: ${Math.round(t.kcal)}/${Math.round(t.protein)}ก./${Math.round(t.ex)}` + (partial(d) ? ' ⚠️ จดไม่ครบ (จดแค่บางมื้อ) — ตัวเลขนี้ไม่ใช่ที่กินจริง' : ''));
   }
   lines.push('หมายเหตุ: วันที่ระบุ "จดไม่ครบ" ห้ามสรุปว่ากินน้อยหรือกินเกิน ให้ชวนจดทุกมื้อแทน · วันนี้ยังไม่จบวัน ตัวเลขวันนี้ยังไม่ครบ');

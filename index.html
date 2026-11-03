@@ -427,6 +427,23 @@
   .pbusy { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(255,255,255,.55); }
   .photo-btn { background: #E8763A; color: #fff; border-color: #E8763A; }
   .excard { background: linear-gradient(180deg,#F6F3FE,#fff 60%); border-color: #E0D8F7; }
+  .stepcard { background: linear-gradient(180deg,#FFF1E6,#fff 62%); border-color: #F7D5BF; padding: 0; overflow: hidden; }
+  .stepcard .stp { display: block; width: 100%; text-align: left; padding: 14px; }
+  .stp .top { display: flex; align-items: flex-end; gap: 10px; }
+  .stp .big { font-size: 30px; font-weight: 700; line-height: 1; color: #B4471A; letter-spacing: -.5px; }
+  .stp .big small { font-size: 14px; font-weight: 500; color: #8A5A40; letter-spacing: 0; }
+  .stp .kc { margin-left: auto; background: #FFE1CC; color: #A5400F; font-weight: 700; font-size: 14px; border-radius: 999px; padding: 5px 11px; white-space: nowrap; }
+  .stp .sbar { height: 10px; border-radius: 99px; background: #FBE3D3; margin: 12px 0 8px; overflow: hidden; position: relative; }
+  .stp .sbar i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: linear-gradient(90deg,#F7A26B,#E8662A); }
+  .stp .sbar em { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(120,50,10,.35); }
+  .stp .meta { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: #8A5A40; }
+  .stp .why { margin-top: 10px; background: #fff; border: 1px solid #F7D5BF; border-radius: 12px; padding: 10px 12px; font-size: 13.5px; line-height: 1.55; color: #5A3A28; }
+  .slrow { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid #F3E4D9; background: linear-gradient(90deg,#EEF0FD,#F8F8FE); }
+  .slrow .ico { background: #DFE2FA; }
+  .slrow b { font-size: 17px; color: #353A99; } .slrow .t2 { color: #5A5E9E; }
+  .c-s .ch { background: linear-gradient(90deg,#FFE9DA,#FFF5EE); color: #A5400F; }
+  .c-n .ch { background: linear-gradient(90deg,#E7E8FB,#F3F3FD); color: #3B3F9E; }
+  .m-step .mh { background: linear-gradient(90deg,#FFE9DA,#FFF5EE); color: #A5400F; }
   .excard .ico { background: #EDE7FC; }
   .cmpgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .cimg { aspect-ratio: 3/4; border-radius: 12px; background: #EEF0EC; overflow: hidden; display: grid; place-items: center; margin-bottom: 6px; }
@@ -468,6 +485,9 @@
     .tbl th:first-child, .tbl td:first-child { text-align: left; }
     .steps { padding-left: 20px; margin: 6px 0; font-size: 15px; }
     .steps li { margin-bottom: 8px; }
+    .cprow { display: flex; gap: 6px; align-items: center; margin: 4px 0; } .cprow .code { flex: 1; margin: 0; min-width: 0; } .cprow .btn { flex: none; }
+    .hkcard { margin: 10px 0 4px; } .hkst { display: flex; justify-content: space-between; gap: 10px; padding: 7px 12px; font-size: 14px; border-top: 1px solid var(--line); }
+    .hkst b { font-weight: 600; text-align: right; } .hkst b.no { color: #9AA0A2; font-weight: 500; }
     .code { font-family: ui-monospace, Menlo, monospace; font-size: 13px; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; word-break: break-all; display: block; margin: 4px 0; }
 
     /* แชต */
@@ -696,6 +716,23 @@ function latestW() {
   return { date: last.date, weight: num(last.weight), fat_pct: lf ? num(lf.fat_pct) : 0, muscle: num(last.muscle) };
 }
 
+// ===== ก้าวเดิน / การนอน (ทางลัด Apple Health ← Garmin) =====
+const STEP_BASE = 5000, STEP_KCAL_KG = 0.0005;   // ตรงกับ Health.gs
+const dailyOf = d => (D.daily || []).find(x => x.date === d) || null;
+const hasSteps = x => x && x.steps !== '' && x.steps != null;
+function stepInfo(d) {
+  const x = dailyOf(d); if (!hasSteps(x)) return null;
+  let used = 0;
+  dayLogs(d).forEach(l => { if (l.kind !== 'exercise') return; if (/วิ่ง|run/i.test(l.name)) used += num(l.minutes) * 150; else if (/เดิน|walk|hik/i.test(l.name)) used += num(l.minutes) * 110; });
+  const steps = num(x.steps), extra = Math.max(0, steps - STEP_BASE - used), w = (latestW() || { weight: 100 }).weight;
+  return { steps, used, extra, kcal: Math.round(extra * STEP_KCAL_KG * w / 5) * 5, at: x.steps_at || '' };
+}
+function stepKcal(d) { const i = stepInfo(d); return i ? i.kcal : 0; }
+// ยอดรวมของวัน + แคลจากก้าว (t.step) — โควต้า = เป้า + (ออกกำลัง + ก้าว) ÷ 2
+function dayT(d) { const t = totals(dayLogs(d)); t.step = stepKcal(d); return t; }
+const exAll = t => t.ex + (t.step || 0);
+function sleepTxt(min) { min = Math.round(num(min)); return Math.floor(min / 60) + ' ชม.' + (min % 60 ? ' ' + (min % 60) + ' นาที' : ''); }
+
 // ===== คำนวณเป้า (ตรงกับ calcTarget_ ใน GAS) =====
 function calcTarget(s, lw) {
   lw = lw || latestW() || { weight: 100, fat_pct: 0 };
@@ -751,21 +788,23 @@ function macroBars(t, tg) {
   return `<div class="card maccard">${one('💪 โปรตีน', t.protein, tg.protein, 'linear-gradient(90deg,#6aa8ea,#2a78d6)')}${one('🍚 คาร์บ', t.carb, tg.carb, 'linear-gradient(90deg,#f3c75a,#c98a00)')}${one('🥑 ไขมัน', t.fat, tg.fat, 'linear-gradient(90deg,#f6a07a,#eb6834)')}</div>`;
 }
 function todayHtml() {
-  const s = S(), tg = calcTarget(s), td = todayIso(), t = totals(dayLogs(td));
-  const budget = tg.kcal + t.ex / 2, left = Math.round(budget - t.kcal), over = left < 0;
+  const s = S(), tg = calcTarget(s), td = todayIso(), t = dayT(td);
+  const budget = tg.kcal + exAll(t) / 2, left = Math.round(budget - t.kcal), over = left < 0;
   const ex = dayLogs(td).filter(l => l.kind === 'exercise');
   return `<div class="hd tall"><div class="hd-in">
       <div class="hd-top"><div class="hd-title">วันนี้ <span class="hd-sub" style="font-weight:400">${thDate(td, true)}</span></div>
         <button class="hd-btn" onclick="go('set')" aria-label="ตั้งค่า">⚙️</button></div>
       <div class="ringbox"><div class="ring">${ringSvg(t.kcal, budget, over)}<div class="c"><b>${fmt(Math.abs(left))}</b><small>${over ? 'เกินเป้า' : 'เหลือกินได้'}<br>แคล</small></div></div>
         <div class="eq"><div><span>เป้า</span><b>${fmt(tg.kcal)}</b></div><div><span>กินแล้ว</span><b>− ${fmt(t.kcal)}</b></div>
-          <div><span>ออกกำลัง ÷ 2</span><b>+ ${fmt(t.ex / 2)}</b></div><div><span>${over ? 'เกิน' : 'เหลือ'}</span><b>${fmt(Math.abs(left))}</b></div></div></div>
+          <div><span>${t.step ? 'ออกกำลัง+ก้าว' : 'ออกกำลัง'} ÷ 2</span><b>+ ${fmt(exAll(t) / 2)}</b></div><div><span>${over ? 'เกิน' : 'เหลือ'}</span><b>${fmt(Math.abs(left))}</b></div></div></div>
     </div></div>
     <div class="wrap">
       ${coachCard(tg)}
       ${alertsHtml(tg)}
       <div class="sec"><h3>🥗 แมโครวันนี้</h3><a class="lnk" onclick="go('diary')">ไดอารี่ ›</a></div>
       ${macroBars(t, tg)}
+      <div class="sec"><h3>👣 ก้าวเดิน · การนอน</h3>${(D.daily || []).length ? `<a class="lnk" onclick="go('sum');setTimeout(()=>{const e=document.getElementById('c_steps');if(e)e.scrollIntoView()},50)">กราฟ ›</a>` : ''}</div>
+      ${stepCard(td)}
       <div class="sec"><h3>⏱️ IF อดอาหาร</h3><a class="lnk" onclick="go('ifh')">ประวัติ ›</a></div>
       ${ifCard()}
       <div class="sec"><h3>💧 น้ำดื่ม</h3><span class="sm">เป้า ${fmt(num(s.water_goal) || 2500)} มล.</span></div>
@@ -775,6 +814,31 @@ function todayHtml() {
       <div class="sec"><h3>🏃 ออกกำลัง / ฝึกวันนี้</h3><a class="lnk" onclick="openForm('exercise')">＋ เพิ่ม</a></div>
       <div class="card excard">${trainCardToday()}${ex.map(l => logRow(l, true)).join('')}</div>
     </div>`;
+}
+
+// ---------- การ์ดก้าว + การนอน ----------
+let stepOpen = false;
+function stepCard(td) {
+  if (!(D.daily || []).length) return `<div class="card stepcard"><button class="row" onclick="openShortcut()"><div class="ico">⌚</div><div class="grow"><div class="t1">ดึงก้าว + การนอนจากนาฬิกา</div><div class="t2">ตั้งทางลัดครั้งเดียว ข้อมูลไหลเข้าเอง</div></div><span>›</span></button></div>`;
+  const goal = num(S().step_goal) || 8000, si = stepInfo(td), x = dailyOf(td);
+  const last = (D.daily || []).filter(r => hasSteps(r)).sort((a, b) => a.date < b.date ? -1 : 1).pop();
+  let top;
+  if (si) {
+    const p = Math.min(100, si.steps / goal * 100);
+    top = `<button class="stp" onclick="stepOpen=!stepOpen;keepScroll()">
+      <div class="top"><div class="big">${fmt(si.steps)} <small>/ ${fmt(goal)} ก้าว</small></div><span class="kc">${si.kcal ? '+' + fmt(si.kcal / 2) + ' แคล' : 'ยังไม่ได้คืน'}</span></div>
+      <div class="sbar"><i style="width:${p}%"></i><em style="left:${Math.min(100, STEP_BASE / goal * 100)}%"></em></div>
+      <div class="meta"><span>${si.steps >= goal ? 'ถึงเป้าแล้ว 🎉' : 'อีก ' + fmt(goal - si.steps) + ' ก้าว ≈ ' + Math.ceil((goal - si.steps) / 110) + ' นาที'}</span><span>${si.at ? 'อัปเดต ' + si.at : ''} ⓘ</span></div>
+      ${stepOpen ? `<div class="why">ก้าวปกติวันละ ${fmt(STEP_BASE)} รวมอยู่ในเป้า ${fmt(calcTarget(S()).kcal)} แคลแล้ว จึงนับเฉพาะส่วนที่เกิน<br>
+        ${fmt(si.steps)}${si.used ? ' − ' + fmt(si.used) + ' (ช่วงเดิน/วิ่งที่จดเป็นออกกำลังแล้ว)' : ''} − ${fmt(STEP_BASE)} = <b>${fmt(si.extra)} ก้าว</b> ≈ ${fmt(si.kcal)} แคล<br>
+        บวกคืนครึ่งเดียวเหมือนออกกำลัง = <b>+${fmt(si.kcal / 2)} แคล</b><br><span style="opacity:.75">เลขแคลในแอปสุขภาพนับการขยับทุกอย่าง รวมช่วงที่จดแยกไว้แล้ว ตัวเลขจึงไม่เท่ากัน</span></div>` : ''}
+    </button>`;
+  } else {
+    top = `<div class="row"><div class="ico">👣</div><div class="grow"><div class="t1">ยังไม่มีก้าววันนี้</div><div class="t2">${last ? 'ล่าสุด ' + dayLabel(last.date) + ' ' + fmt(num(last.steps)) + ' ก้าว · ' : ''}เปิด Garmin Connect แล้วปิด เพื่อดึงใหม่</div></div></div>`;
+  }
+  const sl = x && num(x.sleep_min) > 0 ? x : null;
+  const slr = sl ? `<div class="slrow"><div class="ico">😴</div><div class="grow"><b>${sleepTxt(sl.sleep_min)}</b><div class="t2">เมื่อคืน ${esc(sl.sleep_from)}–${esc(sl.sleep_to)}${num(sl.sleep_min) < 360 ? ' · นอนน้อย หิวง่ายขึ้น ระวังมื้อดึก' : ''}</div></div></div>` : '';
+  return `<div class="card stepcard">${top}${slr}</div>`;
 }
 
 // ---------- การ์ดโค้ช ----------
@@ -1166,7 +1230,7 @@ function logRow(l, compact) {
   const on = openRow === l.log_id;
   return `<button class="row" onclick="toggleRow('${l.log_id}')"><div class="ico">${l.kind === 'food' ? (MEALS.find(m => m[0] === l.meal) || MEALS[3])[2] : k[1]}</div>
     <div class="grow"><div class="t1">${title}</div>${sub ? `<div class="t2">${sub}</div>` : ''}</div><div class="amt">${right}</div></button>
-    ${on ? `<div class="t2" style="padding:0 12px 6px 56px;white-space:normal">${esc(l.time || '')}${l.source === 'chat' ? ' · จดจากแชต' : l.source === 'shortcut' ? ' · Apple Health' : ''}${l.photo_id ? ` · <a class="lnk" onclick="showPhoto('${l.photo_id}')">ดูรูป</a>` : ''}${l.note ? ' · ' + esc(l.note) : ''}</div>
+    ${on ? `<div class="t2" style="padding:0 12px 6px 56px;white-space:normal">${esc(l.time || '')}${l.source === 'chat' ? ' · จดจากแชต' : l.source === 'shortcut' ? ' · Apple Health' : l.source === 'health' ? ' · จากนาฬิกา' : ''}${l.photo_id ? ` · <a class="lnk" onclick="showPhoto('${l.photo_id}')">ดูรูป</a>` : ''}${l.note ? ' · ' + esc(l.note) : ''}</div>
       <div class="acts" style="padding-left:56px"><button class="btn sm" onclick="editLog('${l.log_id}')">แก้</button><button class="btn sm red" onclick="delLog('${l.log_id}')">ลบ</button></div>` : ''}`;
 }
 function macroTxt(l) { return `โปรตีน ${fmt(num(l.protein))} · คาร์บ ${fmt(num(l.carb))} · ไขมัน ${fmt(num(l.fat))} ก.`; }
@@ -1470,16 +1534,16 @@ function weekStrip(sel, tg) {
     return `<button class="wd ${d === sel ? 'on' : ''} ${fut ? 'fut' : ''}" ${fut ? '' : `onclick="dDate='${d}';openRow='';render()"`}>${n}${miniRing(t.kcal / tg.kcal, d === td, fut || !t.n)}<b>${new Date(d + 'T12:00:00').getDate()}</b></button>`; }).join('')}</div>`;
 }
 function statFloat(t, tg, extra) {
-  const budget = tg.kcal + t.ex / 2, left = Math.round(budget - t.kcal), over = left < 0;
+  const budget = tg.kcal + exAll(t) / 2, left = Math.round(budget - t.kcal), over = left < 0;
   const pe = Math.min(100, t.kcal / Math.max(budget, 1) * 100);
-  return `<div class="float"><div class="stat3c"><div class="sc eat"><small>🍽️ กิน</small><b>${fmt(t.kcal)}</b></div><div class="sc ex"><small>🏃 ออกกำลัง</small><b>${fmt(t.ex)}</b></div>
+  return `<div class="float"><div class="stat3c"><div class="sc eat"><small>🍽️ กิน</small><b>${fmt(t.kcal)}</b></div><div class="sc ex"><small>🏃 ${t.step ? 'ออกกำลัง+ก้าว' : 'ออกกำลัง'}</small><b>${fmt(exAll(t))}</b></div>
       <div class="sc ${over ? 'over' : 'left'}"><small>${over ? '⚠️ เกิน' : '✅ เหลือ'}</small><b>${fmt(Math.abs(left))}</b></div></div>
     <div class="kbar"><i style="width:${pe}%;background:${over ? 'linear-gradient(90deg,#f6a07a,#e2553a)' : 'linear-gradient(90deg,#9fe0c4,#2f9e78)'}"></i></div>${extra || ''}</div>`;
 }
 
 // ---------- ไดอารี่ ----------
 function diaryHtml() {
-  const tg = calcTarget(S()), list = dayLogs(dDate), t = totals(list);
+  const tg = calcTarget(S()), list = dayLogs(dDate), t = dayT(dDate), si = stepInfo(dDate), dx = dailyOf(dDate);
   const meals = MEALS.map(([m, name, ic]) => {
     const it = list.filter(l => l.kind === 'food' && l.meal === m), k = it.reduce((s, l) => s + num(l.kcal), 0);
     return `<div class="meal ${MEAL_CLS[m]}"><div class="mh"><div class="mi">${ic}</div><b>${name}</b><span>${it.length ? fmt(k) + ' <small>แคล</small>' : ''}</span></div>
@@ -1497,6 +1561,9 @@ function diaryHtml() {
       ${meals}
       <div class="meal m-ex"><div class="mh"><div class="mi">🏃</div><b>ออกกำลัง</b><span>${ex.length ? fmt(t.ex) + ' <small>แคล</small>' : ''}</span></div>
         ${ex.map(l => logRow(l)).join('')}<button class="addr" onclick="openForm('exercise')">＋ เพิ่มการออกกำลัง</button></div>
+      ${si || (dx && num(dx.sleep_min) > 0) ? `<div class="meal m-step"><div class="mh"><div class="mi">👣</div><b>ก้าว · การนอน</b><span>${si && si.kcal ? '+' + fmt(si.kcal / 2) + ' <small>แคล</small>' : ''}</span></div>
+        ${si ? `<div class="row"><div class="ico">👣</div><div class="grow"><div class="t1">เดิน ${fmt(si.steps)} ก้าว</div><div class="t2">เกินปกติ ${fmt(si.extra)} ก้าว · ได้คืนครึ่งเดียว</div></div><div class="amt">+${fmt(si.kcal / 2)} <small>แคล</small></div></div>` : ''}
+        ${dx && num(dx.sleep_min) > 0 ? `<div class="row"><div class="ico">😴</div><div class="grow"><div class="t1">นอน ${sleepTxt(dx.sleep_min)}</div><div class="t2">คืนก่อน ${esc(dx.sleep_from)}–${esc(dx.sleep_to)}</div></div></div>` : ''}</div>` : ''}
       <div class="meal m-water"><div class="mh"><div class="mi">💧</div><b>น้ำ</b><span>${fmt(t.water)} <small>/ ${fmt(wg)} มล.</small></span></div>
         <div class="wmini"><div class="bar"><i style="width:${Math.min(100, t.water / wg * 100)}%"></i></div>${t.water ? `<button class="wsm" onclick="water(-1)">−</button>` : ''}<button class="wsm" onclick="water(250)">+250</button></div></div>
       <div class="meal m-weight"><div class="mh"><div class="mi">⚖️</div><b>น้ำหนัก</b><span>${wt.length ? num(wt[wt.length - 1].weight) + ' <small>กก.</small>' : ''}</span></div>
@@ -1506,8 +1573,8 @@ function diaryHtml() {
 
 // ---------- โค้ช ----------
 function coachHtml() {
-  const tg = calcTarget(S()), t = totals(dayLogs(todayIso()));
-  const left = Math.round(tg.kcal + t.ex / 2 - t.kcal), pl = Math.round(tg.protein - t.protein);
+  const tg = calcTarget(S()), t = dayT(todayIso());
+  const left = Math.round(tg.kcal + exAll(t) / 2 - t.kcal), pl = Math.round(tg.protein - t.protein);
   const h = Number(nowHM().split(':')[0]);
   const quick = [h < 15 ? 'มื้อต่อไปกินอะไรดี' : 'เย็นนี้กินอะไรดี', 'สรุปวันนี้', 'ฝึกอะไรวันนี้', 'ทำไมน้ำหนักไม่ลง'];
   const chat = (D.chat || []).filter(c => c.role === 'user' || c.role === 'model');
@@ -1561,7 +1628,7 @@ function sumHtml() {
   const first = dw[0], lw = latestW(), g = num(s.goal_weight);
   const lost = first && lw ? r1(first.w - lw.weight) : 0;
   const span = first ? first.w - g : 0, pct = span > 0 && lw ? Math.max(0, Math.min(1, (first.w - lw.weight) / span)) : 0;
-  const days = []; for (let i = 13; i >= 0; i--) { const d = addDays(td, -i); days.push({ d, ...totals(dayLogs(d)) }); }
+  const days = []; for (let i = 13; i >= 0; i--) { const d = addDays(td, -i); const t = dayT(d); t.ex = exAll(t); days.push({ d, ...t }); }
   const wk = [], mon = addDays(td, -((new Date(td + 'T12:00:00').getDay() + 6) % 7));
   for (let i = 0; i < 6; i++) {
     const a = addDays(mon, -7 * i), b = addDays(a, 6), dd = [];
@@ -1582,6 +1649,7 @@ function sumHtml() {
         <div class="chart">${dwr.filter(w => w.f).length ? lineChart('cf', dwr.filter(w => w.f), 'f', 'var(--c-f)', '#f4b596') + '<div class="ctip" id="cf_tip"></div>' : '<div class="empty">ยังไม่มีข้อมูล % ไขมัน</div>'}</div></div>
       <div class="ccard c-k"><div class="ch"><div class="mi">🍽️</div><b>แคลอรี่ 14 วัน</b><span>เป้า ${fmt(tg.kcal)}</span></div>
         <div class="chart">${kcalChart(days, tg)}<div class="ctip" id="ck_tip">แตะแท่งเพื่อดูตัวเลข</div></div></div>
+      ${stepCharts(td)}
       <div class="ccard c-t"><div class="ch"><div class="mi">📅</div><b>รายสัปดาห์</b><span>เฉลี่ยต่อวันที่จด</span></div>
         <table class="tbl"><tr><th>สัปดาห์</th><th>แคล</th><th>โปรตีน</th><th>น้ำหนัก</th></tr>
         ${wk.map((w, i) => { const nw = wk[i + 1]; const dlt = w.w && nw && nw.w ? r1(w.w - nw.w) : null;
@@ -2417,6 +2485,39 @@ function kcalChart(days, tg) {
   return `<div class="legend"><span><i class="dot" style="background:var(--c-pro);border-radius:2px"></i>ไม่เกินเป้า</span><span><i class="dot" style="background:var(--c-fat);border-radius:2px"></i>เกินเป้า</span><span><i style="height:0;border-top:2px dashed #1B2224"></i>เป้า</span></div>
     <svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${g}</svg>`;
 }
+// กราฟแท่ง 14 วัน ก้าว / นอน
+function barChart(id, pts, goal, color, lab, unit) {
+  const W = 360, H = 150, L = 34, R = 6, T = 10, B = 22;
+  const hi = Math.ceil((Math.max(goal * 1.15, ...pts.map(p => p.v)) || 1) / unit) * unit;
+  const bw = (W - L - R) / pts.length, Y = v => T + (1 - v / hi) * (H - T - B);
+  let g = '';
+  [0, 0.5, 1].forEach(f => { const v = hi * f; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#E6E8E3"/><text x="${L - 5}" y="${Y(v) + 4}" font-size="10.5" text-anchor="end" fill="#8A9294">${lab(v)}</text>`; });
+  pts.forEach((p, i) => {
+    const x = L + i * bw + bw * 0.18, w = bw * 0.64, h = p.v ? Math.max(2, Y(0) - Y(p.v)) : 2;
+    g += `<rect x="${x.toFixed(1)}" y="${(Y(0) - h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${p.v ? color : '#E6E8E3'}" opacity="${p.v && p.v < goal ? .55 : 1}"/>
+      <rect x="${(L + i * bw).toFixed(1)}" y="${T}" width="${bw.toFixed(1)}" height="${H - T - B}" fill="transparent" onclick="document.getElementById('${id}_tip').innerHTML=CH['${id}'][${i}]"/>`;
+    if (i % 2 === 1 || i === pts.length - 1) g += `<text x="${(x + w / 2).toFixed(1)}" y="${H - 6}" font-size="10" text-anchor="middle" fill="#8A9294">${new Date(p.d + 'T12:00:00').getDate()}</text>`;
+  });
+  g += `<line x1="${L}" x2="${W - R}" y1="${Y(goal)}" y2="${Y(goal)}" stroke="#1B2224" stroke-dasharray="4 4"/>`;
+  CH[id] = pts.map(p => p.tip);
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${g}</svg>`;
+}
+function stepCharts(td) {
+  if (!(D.daily || []).length) return '';
+  const goal = num(S().step_goal) || 8000, sp = [], np = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = addDays(td, -i), x = dailyOf(d), si = stepInfo(d);
+    sp.push({ d, v: si ? si.steps : 0, tip: `<b>${thDate(d, true)}</b> · ${si ? fmt(si.steps) + ' ก้าว' + (si.kcal ? ' · ได้คืน +' + fmt(si.kcal / 2) + ' แคล' : '') : 'ไม่มีข้อมูล'}` });
+    const m = x ? num(x.sleep_min) : 0;
+    np.push({ d, v: m / 60, tip: `<b>${thDate(d, true)}</b> · ${m ? 'นอน ' + sleepTxt(m) + ' (' + esc(x.sleep_from) + '–' + esc(x.sleep_to) + ')' : 'ไม่มีข้อมูล'}` });
+  }
+  const sv = sp.filter(p => p.v && p.d !== td), nv = np.filter(p => p.v);
+  const avgS = sv.length ? sv.reduce((s, p) => s + p.v, 0) / sv.length : 0, avgN = nv.length ? nv.reduce((s, p) => s + p.v, 0) / nv.length : 0;
+  return `<div class="ccard c-s" id="c_steps"><div class="ch"><div class="mi">👣</div><b>ก้าวเดิน 14 วัน</b><span>${avgS ? 'เฉลี่ย ' + fmt(avgS) + '/วัน' : ''}</span></div>
+      <div class="chart"><div class="legend"><span><i style="height:0;border-top:2px dashed #1B2224"></i>เป้า ${fmt(goal)}</span><span>แท่งจาง = ไม่ถึงเป้า</span></div>${barChart('cs', sp, goal, '#E8662A', v => v >= 1000 ? r1(v / 1000) + 'k' : Math.round(v), 2000)}<div class="ctip" id="cs_tip">แตะแท่งเพื่อดูตัวเลข</div></div></div>
+    ${nv.length ? `<div class="ccard c-n"><div class="ch"><div class="mi">😴</div><b>การนอน 14 คืน</b><span>เฉลี่ย ${sleepTxt(avgN * 60)}</span></div>
+      <div class="chart"><div class="legend"><span><i style="height:0;border-top:2px dashed #1B2224"></i>7 ชม.</span></div>${barChart('cn', np, 7, '#5A5FD0', v => r1(v) + 'h', 2)}<div class="ctip" id="cn_tip">แตะแท่งเพื่อดูเวลา</div></div></div>` : ''}`;
+}
 function kTip(i) { const d = CH.k[i]; document.getElementById('ck_tip').innerHTML = `<b>${thDate(d.d, true)}</b> · กิน ${fmt(d.kcal)} · โปรตีน ${fmt(d.protein)} ก.${d.ex ? ' · ออกกำลัง ' + fmt(d.ex) : ''}`; }
 
 // ---------- ตั้งค่า (แท็บ) ----------
@@ -2443,13 +2544,13 @@ function setHtml() {
       <div class="card fcard"><label class="frow chk"><span>ตั้งอัตโนมัติ<small>โปรตีน 2 ก./กก. มวลไม่รวมไขมัน (เก็บกล้าม) · ไขมัน 25%</small></span><input type="checkbox" ${isTrue(s.macro_auto) ? 'checked' : ''} onchange="SS.macro_auto=this.checked;render()"></label>
         ${isTrue(s.macro_auto) ? `<div class="preview">แคล ${fmt(tg.kcal)} · โปรตีน ${tg.protein} · คาร์บ ${tg.carb} · ไขมัน ${tg.fat} ก.</div>` :
           fr('แคลอรี่', 'kcal', 'แคล', tg.auto.kcal) + fr('โปรตีน', 'protein', 'ก.', tg.auto.protein) + fr('คาร์บ', 'carb', 'ก.', tg.auto.carb) + fr('ไขมัน', 'fat', 'ก.', tg.auto.fat)}
-        ${fr('น้ำดื่มต่อวัน', 'water_goal', 'มล.')}</div>
+        ${fr('น้ำดื่มต่อวัน', 'water_goal', 'มล.')}${fr('เป้าก้าวต่อวัน', 'step_goal', 'ก้าว', '8000')}</div>
       <div class="flbl">โค้ชเน้นเรื่อง</div>
       <div class="card fcard"><label class="frow tall"><textarea onchange="SS.focus=this.value">${esc(s.focus)}</textarea></label></div>
       <button class="btn pri full" style="margin-top:14px" onclick="saveSet()">บันทึกการตั้งค่า</button>
       <div class="flbl" style="margin-top:22px">อื่น ๆ</div>
       <div class="card">
-        <button class="row" onclick="openShortcut()"><div class="ico">⚖️</div><div class="grow"><div class="t1">ทางลัดเครื่องชั่ง Xiaomi</div><div class="t2">ดึงน้ำหนัก + % ไขมันจาก Apple Health ทุกเช้า</div></div><span>›</span></button>
+        <button class="row" onclick="openShortcut()"><div class="ico">⌚</div><div class="grow"><div class="t1">ทางลัด Apple Health</div><div class="t2">น้ำหนัก ไขมัน ก้าว การนอน ออกกำลังจากนาฬิกา</div></div><span>›</span></button>
         <button class="row" onclick="openGemini()"><div class="ico">✨</div><div class="grow"><div class="t1">รหัส Gemini</div><div class="t2">${D.gemini ? 'ใส่แล้ว' : 'ยังไม่ได้ใส่ — โค้ชยังใช้ไม่ได้'}</div></div><span>›</span></button>
         <button class="row" onclick="openChangeKey()"><div class="ico">🔑</div><div class="grow"><div class="t1">เปลี่ยนรหัสเข้าแอป</div></div><span>›</span></button>
         <a class="row" href="${esc(D.sheetUrl || '#')}" target="_blank" style="color:inherit;text-decoration:none"><div class="ico">📄</div><div class="grow"><div class="t1">เปิด Google Sheets</div></div><span>›</span></a>
@@ -2460,31 +2561,61 @@ function setHtml() {
 function saveSet() {
   document.querySelectorAll('#app input').forEach(el => el.blur());
   const o = Object.assign({}, SS);
-  ['goal_weight', 'height', 'age', 'water_goal', 'kcal', 'protein', 'carb', 'fat'].forEach(k => o[k] = o[k] === '' ? '' : num(o[k]));
+  ['goal_weight', 'height', 'age', 'water_goal', 'step_goal', 'kcal', 'protein', 'carb', 'fat'].forEach(k => o[k] = o[k] === '' ? '' : num(o[k]));
   o.rate = num(o.rate); o.activity = num(o.activity); o.macro_auto = isTrue(o.macro_auto);
   if (!o.goal_weight) return alert('ใส่น้ำหนักเป้า');
   sync('saveSettings', [o], () => { D.settings = Object.assign({}, D.settings, o); SS = null; tab = 'today'; });
   document.getElementById('app').scrollTop = 0;
   toast('บันทึกแล้ว');
 }
+function copyTxt(t, el) {
+  const done = () => { toast('ก๊อปแล้ว'); if (el) { el.textContent = '✓ ก๊อปแล้ว'; setTimeout(() => el.textContent = 'ก๊อป', 1600); } };
+  try { navigator.clipboard.writeText(t).then(done, () => { prompt('ก๊อปข้อความนี้', t); }); } catch (e) { prompt('ก๊อปข้อความนี้', t); }
+}
+function cpy(label, t) { return `<span class="cprow"><span class="code">${esc(t)}</span><button class="btn sm" onclick="copyTxt('${esc(t).replace(/'/g, '&#39;')}',this)">ก๊อป</button></span>`; }
+function hkStatus() {
+  const ws = weights().filter(w => w.source === 'shortcut').pop(), dl = (D.daily || []).slice().sort((a, b) => a.date < b.date ? -1 : 1);
+  const st = dl.filter(x => hasSteps(x)).pop(), sl = dl.filter(x => num(x.sleep_min) > 0).pop(), wo = logs().filter(l => l.source === 'health').sort((a, b) => a.date < b.date ? -1 : 1).pop();
+  const r = (ic, n, v) => `<div class="hkst"><span>${ic} ${n}</span><b class="${v ? '' : 'no'}">${v || 'ยังไม่มี'}</b></div>`;
+  return `<div class="card hkcard"><div class="t2" style="padding:10px 12px 2px;font-weight:600">ข้อมูลล่าสุดที่เข้าแอป</div>
+    ${r('⚖️', 'น้ำหนัก', ws ? thDate(ws.date) + ' · ' + num(ws.weight) + ' กก.' : '')}
+    ${r('👣', 'ก้าว', st ? dayLabel(st.date) + (st.steps_at ? ' ' + st.steps_at : '') + ' · ' + fmt(num(st.steps)) : '')}
+    ${r('😴', 'การนอน', sl ? dayLabel(sl.date) + ' · ' + sleepTxt(sl.sleep_min) : '')}
+    ${r('⌚', 'ออกกำลังจากนาฬิกา', wo ? dayLabel(wo.date) + ' · ' + esc(wo.name.replace('นาฬิกา: ', '')) : '')}</div>`;
+}
 function openShortcut() {
   const k = lsGet(KEY_STORE) || '';
-  openSheet('ทางลัดเครื่องชั่ง Xiaomi', `<div class="alert info" style="margin-top:0">เครื่องชั่ง → Xiaomi Home → Apple Health → ทางลัดนี้ส่งเข้าแอปทุกเช้า (วันที่มีแล้วไม่ลงซ้ำ)</div>
-    <p class="note">ก่อนเริ่ม: ตั้งค่า iPhone → สุขภาพ → การเข้าถึงข้อมูลและอุปกรณ์ → Xiaomi Home → เปิด น้ำหนัก + % ไขมันในร่างกาย</p>
+  const rep = (lead, extra) => `เพิ่ม <b>ทำซ้ำกับแต่ละรายการ</b> → ข้างในเพิ่ม <b>ข้อความ</b>: พิมพ์ <code>${lead}</code> เว้นวรรค ${extra} → ต่อด้วย <b>เพิ่มไปยังตัวแปร</b> ชื่อ <code>ข้อมูล</code> (ยังอยู่ข้างในทำซ้ำ)`;
+  const iso = n => `แทรก <b>รายการที่ทำซ้ำ › ${n}</b> (แตะแล้วเลือกรูปแบบ <b>ISO 8601</b>)`;
+  openSheet('ทางลัด Apple Health', `<div class="alert info" style="margin-top:0">เครื่องชั่ง Xiaomi + นาฬิกา Garmin → Apple Health → ทางลัดนี้ → แอปลดพุง · ส่งซ้ำได้ ไม่ลงเบิ้ล</div>
+    ${hkStatus()}
+    <div class="flbl">ก่อนเริ่ม (ทำครั้งเดียว)</div>
     <ol class="steps">
-      <li>แอป <b>คำสั่งลัด</b> → ＋ → ตั้งชื่อ "ส่งน้ำหนักลดพุง"</li>
-      <li>เพิ่ม <b>ค้นหาตัวอย่างสุขภาพ</b> → ประเภท <b>น้ำหนัก</b> · ตัวกรอง วันที่เริ่ม อยู่ใน 14 วันล่าสุด (ครั้งแรกลบตัวกรองออก = ส่งย้อนหลังทั้งหมด) · เรียงตาม วันที่เริ่ม</li>
-      <li>เพิ่ม <b>ทำซ้ำกับแต่ละรายการ</b> → ข้างใน เพิ่ม <b>ข้อความ</b>: พิมพ์ <code>w</code> เว้นวรรค แทรก <b>รายการที่ทำซ้ำ › วันที่เริ่ม</b> (แตะแล้วเลือกรูปแบบ ISO 8601) เว้นวรรค แทรก <b>รายการที่ทำซ้ำ › ค่า</b></li>
-      <li>ทำข้อ 2–3 อีกรอบ ประเภท <b>เปอร์เซ็นต์ไขมันในร่างกาย</b> ใช้ตัวนำ <code>f</code> แทน <code>w</code></li>
-      <li>เพิ่ม <b>ข้อความ</b>: แทรก <b>ผลลัพธ์การทำซ้ำ</b> (ชุดแรก) ขึ้นบรรทัดใหม่ แทรก <b>ผลลัพธ์การทำซ้ำ</b> (ชุดที่สอง)</li>
-      <li>เพิ่ม <b>รับเนื้อหาของ URL</b>: URL <span class="code">${esc(API_URL)}</span>
-        วิธี <b>POST</b> · เนื้อหาคำขอ <b>JSON</b> เพิ่ม 3 ช่อง (ข้อความ):<br>
-        <code>fn</code> = <span class="code">importHealth</span><code>k</code> = <span class="code">${esc(k || '(รหัสเข้าแอป)')}</span><code>args</code> = แทรกข้อความจากข้อ 5</li>
-      <li>เพิ่ม <b>แสดงการแจ้งเตือน</b> → แทรก <b>เนื้อหาของ URL</b> (จะขึ้น "เพิ่ม n วัน")</li>
-      <li>กดรันครั้งแรก → ดูหน้า สรุป ว่ากราฟขึ้น</li>
-      <li>แท็บ <b>ระบบอัตโนมัติ</b> → ＋ → <b>เวลาของวัน</b> 08:00 ทุกวัน → <b>เรียกใช้ทันที</b> → เลือกทางลัดนี้</li>
+      <li>แอป <b>Garmin Connect</b> → เพิ่มเติม → ตั้งค่า → แอปที่เชื่อมต่อ → <b>Apple Health</b> → เปิดทุกอย่าง</li>
+      <li>ตั้งค่า iPhone → สุขภาพ → การเข้าถึงข้อมูลและอุปกรณ์ → <b>Xiaomi Home</b> → เปิด น้ำหนัก + % ไขมันในร่างกาย</li>
+      <li>แอป <b>สุขภาพ</b> → ค้นหา "ก้าว" → แหล่งข้อมูลและการเข้าถึง → แก้ไข → ลาก <b>Garmin Connect</b> ขึ้นบนสุด (กันนับก้าวซ้ำกับ iPhone)</li>
     </ol>
-    <p class="note">ถ้าเครื่องชั่งขึ้น "ยังไม่ได้เชื่อมเกตเวย์ Bluetooth Mesh" ค่าจะค้าง ให้เปิดแอป Xiaomi Home ใกล้เครื่องชั่งตอนชั่ง</p>`);
+    <div class="flbl">สร้างทางลัด</div>
+    <p class="note">ถ้าทำทางลัดน้ำหนักแบบเก่าไว้แล้ว ลบแล้วทำใหม่ตามนี้ง่ายกว่า</p>
+    <ol class="steps">
+      <li>แอป <b>คำสั่งลัด</b> → ＋ → ตั้งชื่อ ${cpy('', 'ส่งข้อมูลลดพุง')}</li>
+      <li><b>น้ำหนัก</b>: เพิ่ม <b>ค้นหาตัวอย่างสุขภาพ</b> → ประเภท <b>น้ำหนัก</b> · ตัวกรอง วันที่เริ่ม อยู่ใน <b>14 วันล่าสุด</b> (ครั้งแรกลบตัวกรอง = ส่งย้อนหลังทั้งหมด)<br>${rep('w', iso('วันที่เริ่ม') + ' เว้นวรรค แทรก <b>รายการที่ทำซ้ำ › ค่า</b>')}</li>
+      <li><b>% ไขมัน</b>: ทำเหมือนข้อ 2 ประเภท <b>เปอร์เซ็นต์ไขมันในร่างกาย</b> ใช้ <code>f</code> แทน <code>w</code></li>
+      <li><b>ก้าว</b>: ค้นหาตัวอย่างสุขภาพ ประเภท <b>ก้าว</b> · 14 วันล่าสุด · <b>จัดกลุ่มตาม วัน</b> (สำคัญ — ได้ยอดรวมต่อวันเท่ากับในแอปสุขภาพ)<br>${rep('s', iso('วันที่เริ่ม') + ' เว้นวรรค แทรก <b>ค่า</b>')}</li>
+      <li><b>การนอน</b>: ประเภท <b>การวิเคราะห์การนอนหลับ</b> · <b>3 วันล่าสุด</b><br>${rep('n', iso('วันที่เริ่ม') + ' เว้นวรรค ' + iso('วันที่สิ้นสุด') + ' เว้นวรรค แทรก <b>ค่า</b>')}</li>
+      <li><b>ออกกำลังจากนาฬิกา</b> (ถ้าในรายการประเภทมี <b>การออกกำลังกาย</b> — ไม่มีข้ามได้): 3 วันล่าสุด<br>${rep('o', iso('วันที่เริ่ม') + ' เว้นวรรค ' + iso('วันที่สิ้นสุด') + ' เว้นวรรค แทรก <b>ประเภท</b>')}</li>
+      <li>เพิ่ม <b>รับเนื้อหาของ URL</b> (อยู่นอกทำซ้ำทั้งหมด) URL ${cpy('', API_URL)}
+        วิธี <b>POST</b> · เนื้อหาคำขอ <b>JSON</b> เพิ่ม 3 ช่องแบบ <b>ข้อความ</b>:<br>
+        <code>fn</code> = ${cpy('', 'importHealth')}<code>k</code> = ${k ? cpy('', k) : '<span class="code">(รหัสเข้าแอป)</span>'}<code>args</code> = แทรกตัวแปร <b>ข้อมูล</b></li>
+      <li>เพิ่ม <b>แสดงการแจ้งเตือน</b> → แทรก <b>เนื้อหาของ URL</b> แล้วกด ▶ รัน (ครั้งแรกกดอนุญาตสุขภาพ) → ขึ้น "ลดพุง: น้ำหนัก +… · ก้าว … วัน · นอน … คืน" แล้วกล่องด้านบนจะเปลี่ยน<br><span class="t2">ผ่านแล้วลบขั้นแจ้งเตือนทิ้งได้ จะได้ไม่เด้งทุกรอบ</span></li>
+    </ol>
+    <div class="flbl">ให้ส่งเอง (ระบบอัตโนมัติ)</div>
+    <ol class="steps">
+      <li>แท็บ <b>ระบบอัตโนมัติ</b> → ＋ → <b>เวลาของวัน</b> 08:00 ทุกวัน → <b>เรียกใช้ทันที</b> · ปิด <b>แจ้งเตือนเมื่อเรียกใช้</b> → เลือกทางลัดนี้</li>
+      <li>ทำซ้ำอีก 3 อัน: <b>12:00 · 16:00 · 20:00</b></li>
+      <li>＋ → <b>แอป</b> → เลือก <b>Garmin Connect</b> → ติ๊ก <b>ถูกปิด</b> (เอา ถูกเปิด ออก) → เรียกใช้ทันที → ทางลัดนี้</li>
+    </ol>
+    <p class="note">อยากเห็นก้าวล่าสุด: เปิด Garmin Connect รอซิงก์ 5–10 วิ แล้วปัดปิด ทางลัดจะส่งเข้าแอปเอง · เครื่องชั่งขึ้น "ยังไม่ได้เชื่อมเกตเวย์ Bluetooth Mesh" ให้เปิด Xiaomi Home ใกล้เครื่องชั่งตอนชั่ง</p>`);
 }
 
 // ---------- ตั้งค่าครั้งแรก / รหัส ----------

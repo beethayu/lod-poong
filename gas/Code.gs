@@ -8,16 +8,17 @@ const SH_ = {
   SET: { name: 'Settings', head: ['key', 'value'] },
   TIP: { name: 'Tips', head: ['date', 'text', 'created_at'] },
   BODY: { name: 'BodyPhotos', head: ['photo_id', 'date', 'pose', 'file_id', 'thumb', 'created_at'] },
-  SETS: { name: 'Sets', head: ['set_id', 'date', 'session_id', 'day_idx', 'ex_id', 'ex_name', 'set_no', 'reps', 'kg', 'feel', 'msg_id', 'created_at'] }
+  SETS: { name: 'Sets', head: ['set_id', 'date', 'session_id', 'day_idx', 'ex_id', 'ex_name', 'set_no', 'reps', 'kg', 'feel', 'msg_id', 'created_at'] },
+  DAILY: { name: 'Daily', head: ['date', 'steps', 'steps_at', 'sleep_min', 'sleep_from', 'sleep_to', 'updated_at'] }
 };
-const TXT_COLS_ = ['date', 'time', 'at', 'key', 'value', 'qty'];
+const TXT_COLS_ = ['date', 'time', 'at', 'key', 'value', 'qty', 'steps_at', 'sleep_from', 'sleep_to'];
 const KINDS_ = ['food', 'exercise', 'water', 'weight', 'fast'];
 const MEALS_ = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 // ค่าเริ่มต้น (จากเครื่องชั่ง Xiaomi 18 ต.ค. 2569)
 const DEFAULT_SET_ = {
   sex: 'male', height: 177, age: '', activity: 1.375, goal_weight: 100, rate: 2, water_goal: 2500,
-  macro_auto: true, kcal: '', protein: '', carb: '', fat: '',
+  step_goal: 8000, macro_auto: true, kcal: '', protein: '', carb: '', fat: '',
   focus: 'ลดไขมันหน้าท้อง · อาหารไทย/ร้านสะดวกซื้อ · โปรตีนพอเก็บกล้าม · ท่าไม่กระแทกเข่า'
 };
 const FIRST_WEIGHT_ = { date: '2026-10-18', weight: 108.0, fat_pct: 32.3, muscle: 69.1 };
@@ -194,6 +195,7 @@ function getAll() {
     tip: tip ? tip.text : '',
     photos: bodyPhotos_(),
     sets: rows_(SH_.SETS).filter(x => String(x.date) >= addDays_(t, -180)),
+    daily: ss_().getSheetByName(SH_.DAILY.name) ? rows_(SH_.DAILY).filter(x => String(x.date) >= addDays_(t, -120)) : [],
     gemini: !!props.getProperty('GEMINI_KEY'),
     sheetUrl: ss_().getUrl()
   };
@@ -259,6 +261,9 @@ function saveLog(o) {
 
 function deleteLog(id) {
   return withLock_(() => {
+    // ออกกำลังที่มาจากนาฬิกา: จำไว้ ทางลัดรอบหน้าจะได้ไม่ใส่กลับมา
+    const h = rows_(SH_.LOG).find(l => String(l.log_id) === String(id) && l.source === 'health' && l.msg_id);
+    if (h) { const sk = (settings_().hk_skip || []).concat([h.msg_id]).slice(-200); upsert_(SH_.SET, { key: 'hk_skip', value: JSON.stringify(sk) }); }
     deleteWhere_(SH_.LOG, l => String(l.log_id) === String(id));
     return getAll();
   });
@@ -284,9 +289,8 @@ function addWater(date, ml) {
 //   w 2026-10-18T07:12:00+07:00 108.0   (น้ำหนัก กก.)
 //   f 2026-10-18T07:12:00+07:00 32.3    (% ไขมัน — 0.323 ก็ได้)
 // ไม่มีตัวนำหน้า: เลข > 45 = น้ำหนัก, ไม่งั้น = % ไขมัน · หลายค่าในวันเดียวกันใช้ค่าล่าสุด · วันที่มีน้ำหนักแล้วไม่ลงซ้ำ (เติม % ไขมันให้ได้)
-function importHealth(text) {
-  return withLock_(() => {
-    const lines = (Array.isArray(text) ? text : String(text || '').split(/[\n;]+/)).map(s => String(s).trim()).filter(Boolean);
+function importWeight_(lines) {
+  {
     const day = {};
     lines.forEach(line => {
       const m = line.match(/(\d{4}-\d{2}-\d{2})(?:[T ](\d{1,2}):(\d{2}))?/);
@@ -325,9 +329,8 @@ function importHealth(text) {
       added++;
     });
     appendMany_(SH_.LOG, add);
-    return { ok: true, added: added, updated: updated, skipped: skipped,
-      message: 'ลดพุง: เพิ่ม ' + added + ' วัน' + (updated ? ' · เติม % ไขมัน ' + updated : '') + (skipped ? ' · มีแล้ว ' + skipped : '') };
-  });
+    return { added: added, updated: updated, skipped: skipped };
+  }
 }
 
 // ---------- คำนวณเป้า (ตรงกับ calcTarget ในหน้าเว็บ) ----------
