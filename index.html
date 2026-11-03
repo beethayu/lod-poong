@@ -867,13 +867,18 @@ function bodyCardToday(td) {
 // ----- รอบ 2: เตือนจากข้อมูลร่างกาย (ไม่ใช้ AI) -----
 // วันพักที่ผู้ใช้กดเอง (จากการ์ดชีพจรสูง) — แท็บฝึกขึ้นวันพัก แผนไม่เลื่อน
 const restToday = d => lsGet('lp_rest') === d;
+// ค่าปกติ = มัธยฐานชีพจรพักวัน −3 ถึง −16 (ไม่รวม 3 วันล่าสุด · มัธยฐานไม่โดนดึงขึ้นถ้าสูงต่อเนื่องเกิน 3 วัน)
+function rhrMedian(td) {
+  const b = []; for (let i = 3; i <= 16; i++) { const r = gv(dailyOf(addDays(td, -i)), 'rhr'); if (r) b.push(r); }
+  if (b.length < 4) return null;
+  b.sort((x, y) => x - y); const m = b.length >> 1;
+  return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2;
+}
 // ชีพจรพักสูงกว่าปกติ +5 ติดกัน 3 วัน (ปกติ = เฉลี่ย 7 วันก่อนช่วง 3 วันนี้) · Radin 2020, Mishra 2020
 function rhrAlert(td) {
   const days = [addDays(td, -2), addDays(td, -1), td], v = days.map(d => gv(dailyOf(d), 'rhr'));
   if (v.some(x => !x)) return null;
-  const b = []; for (let i = 3; i <= 9; i++) { const r = gv(dailyOf(addDays(td, -i)), 'rhr'); if (r) b.push(r); }
-  if (b.length < 4) return null;
-  const base = b.reduce((s, x) => s + x, 0) / b.length;
+  const base = rhrMedian(td); if (base == null) return null;
   if (!v.every(x => x - base >= 5)) return null;
   const st = gv(dailyOf(addDays(td, -1)), 'stress');
   return { days, v, base: Math.round(base), stress: st };
@@ -892,7 +897,7 @@ function rhrAlertCard(td) {
 }
 // นอนน้อย → วันนี้หิวง่าย · Al Khatib 2017 (นอนน้อยกินเพิ่ม ~385 แคล/วัน)
 function hungerCard(td) {
-  const sl = gv(dailyOf(td), 'sleep_min'); if (!sl || sl >= 360) return '';
+  const sl = gv(dailyOf(td), 'sleep_min'); if (!sl || sl >= 360 || rhrAlert(td)) return '';
   return `<div class="hungc"><div class="hh"><div class="hi">🍳</div><div class="grow"><b>วันนี้มักหิวง่ายกว่าปกติ</b><div>นอน ${sleepTxt(sl)} · งานวิจัยพบคนนอนน้อยกินเพิ่มราว 385 แคล/วัน</div></div></div>
     <ol><li>มื้อแรกเน้นโปรตีน 30 ก. ขึ้นไป (ไข่ 3 ฟอง + อกไก่ / นมโปรตีน) อิ่มนานกว่า</li><li>หิวช่วงบ่าย ดื่มน้ำ 1 แก้ว รอ 10 นาทีก่อนตัดสินใจ</li><li>วันนี้ไม่ซื้อขนมติดมือจากร้านสะดวกซื้อ</li></ol>
     <div class="hf"><span class="ref">Al Khatib 2017 · Eur J Clin Nutr</span><a class="lnk" onclick="go('coach');sendChat('นอนน้อย วันนี้กินอะไรดีให้อิ่มนาน')">ถามโค้ช: วันนี้กินอะไรดี ›</a></div></div>`;
@@ -934,6 +939,20 @@ function weightBounce(tg, td) {
   return `<div class="wbc"><div class="wtop2"><div><div class="t2">น้ำหนักเช้านี้</div><b>${cur.w}</b> <small class="t2">กก.</small></div><div style="text-align:right"><div style="color:var(--warn);font-weight:700">+${up}</div><div class="t2">จาก${dayDiff(prev.date, td) === 1 ? 'เมื่อวาน' : 'ครั้งก่อน'}</div></div></div>
     <div class="wbox"><b>${head}</b><div>${body}</div>${causes.length ? `<div style="margin-top:8px">สิ่งที่เจอ</div><div class="wchips">${causes.map(c => `<span>${esc(c)}</span>`).join('')}</div><div style="font-size:12px;margin-top:8px;opacity:.85">อย่างนี้ทำให้ร่างกายเก็บน้ำได้ชั่วคราว 1–3 วัน</div>` : `<div style="font-size:12px;margin-top:6px;opacity:.85">น้ำหนักแกว่งวันละ 0.5–1 กก. เป็นปกติ (เกลือ แป้ง ขับถ่าย เวลาชั่ง)</div>`}</div>
     ${trend ? `<div class="wavg"><div class="t2" style="display:flex;justify-content:space-between"><span>ดูเฉลี่ย 7 วันแทน</span>${trend}</div>${svg}${a1 != null && a0 != null && a1 <= a0 ? '<div style="font-size:13px;color:var(--brand);font-weight:600;margin-top:6px">ทิศทางยังลง ทำตามแผนต่อได้เลย</div>' : ''}</div>` : ''}</div>`;
+}
+// เมื่อวานนอน < 6 ชม. แต่จดครบและกินไม่เกินเป้า (+100) → ชมในการ์ดโค้ช (ตรงกับบรรทัด ⭐ ใน Coach.gs)
+function toughDay(tg) {
+  const yd = addDays(todayIso(), -1), sl = gv(dailyOf(yd), 'sleep_min');
+  if (!sl || sl >= 360) return false;
+  const t = dayT(yd); if (!t.n || partialDay(yd, tg)) return false;
+  return t.kcal <= tg.kcal + exAll(t) / 2 + 100;
+}
+// เดินชดเชย: วันนี้ฝึกแบบเบา หรือร่างกายยังไม่พร้อม (ไม่ใช่ชีพจรสูงที่ควรพัก) → ชวนเดินให้ถึงเป้าก้าวแทน
+function neatHint(td, si, goal) {
+  if (!si || si.steps >= goal || rhrAlert(td)) return '';
+  const lite = logs().some(l => l.date === td && l.kind === 'exercise' && /\(เบา\)/.test(l.name)), rd = readiness(td);
+  if (!lite && !(rd && rd.lv === 'light')) return '';
+  return `<div class="t2" style="padding:0 14px 12px;color:#A5400F">${lite ? 'วันนี้ฝึกเวทแบบเบา' : 'วันนี้ร่างกายยังฟื้นไม่เต็มที่'} · เดินเพิ่มให้ถึง ${fmt(goal)} ก้าวช่วยเผาผลาญแทน โดยไม่ล้าเพิ่ม</div>`;
 }
 // แถวเล็กในไดอารี่ / ในการ์ดก้าว
 function gmRow(d) {
@@ -1061,7 +1080,7 @@ function stepCard(td) {
   }
   const sl = x && num(x.sleep_min) > 0 && !x.garmin_at ? x : null;   // มีการ์ดร่างกายวันนี้แล้ว ไม่ซ้ำการนอน
   const slr = sl ? `<div class="slrow"><div class="ico">😴</div><div class="grow"><b>${sleepTxt(sl.sleep_min)}</b><div class="t2">เมื่อคืน ${esc(sl.sleep_from)}–${esc(sl.sleep_to)}${num(sl.sleep_min) < 360 ? ' · นอนน้อย หิวง่ายขึ้น ระวังมื้อดึก' : ''}</div></div></div>` : '';
-  return `<div class="card stepcard">${top}${slr}</div>`;
+  return `<div class="card stepcard">${top}${si ? neatHint(td, si, goal) : ''}${slr}</div>`;
 }
 
 // ---------- การ์ดโค้ช ----------
@@ -1094,6 +1113,7 @@ function coachCard(tg) {
   const badges = [];
   if (st) badges.push(`<span class="badge fire">🔥 จดติดกัน ${st} วัน</span>`);
   if (pd.seen) badges.push(`<span class="badge pro">🎯 โปรตีนถึงเป้า ${pd.hit}/${pd.seen} วัน</span>`);
+  if (toughDay(tg)) badges.push(`<span class="badge pro" style="background:#EEF0FD;color:#353A99">💪 เมื่อวานนอนน้อย แต่คุมอาหารอยู่</span>`);
   let goal = '';
   if (lw && dw.length) {
     const start = dw[0].w, g = num(s.goal_weight), span = start - g;

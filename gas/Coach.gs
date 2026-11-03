@@ -107,10 +107,17 @@ function coachContext_(s, log, today) {
   // เตือนจากข้อมูลร่างกาย (ตรงกับ hungerCard / rhrAlert ในหน้าเว็บ)
   const tx = daily[today] || {};
   if (num_(tx.sleep_min) > 0 && num_(tx.sleep_min) < 360) lines.push('⚠️ เมื่อคืนนอนไม่ถึง 6 ชม. → วันนี้มักหิวง่าย (Al Khatib 2017: นอนน้อยกินเพิ่ม ~385 แคล/วัน) ถ้าถามเรื่องกิน แนะนำแบบอิ่มนาน โปรตีนสูง ไม่ดุ');
+  const yx = daily[addDays_(today, -1)] || {};
+  if (num_(yx.sleep_min) > 0 && num_(yx.sleep_min) < 360) {
+    const yt = tot(day(addDays_(today, -1)));
+    if (day(addDays_(today, -1)).filter(l => l.kind === 'food').length >= 2 && yt.kcal > tg.kcal * 0.5 && yt.kcal <= tg.kcal + (yt.ex + stepK(addDays_(today, -1))) / 2 + 100)
+      lines.push('⭐ เมื่อวานนอนไม่ถึง 6 ชม. แต่ยังคุมอาหารอยู่ในเป้า (วันที่ยาก) → ชมเรื่องนี้สั้น ๆ ได้');
+  }
   const rr = [2, 1, 0].map(i => num_((daily[addDays_(today, -i)] || {}).rhr));
-  const rb = []; for (let i = 3; i <= 9; i++) { const v = num_((daily[addDays_(today, -i)] || {}).rhr); if (v) rb.push(v); }
+  const rb = []; for (let i = 3; i <= 16; i++) { const v = num_((daily[addDays_(today, -i)] || {}).rhr); if (v) rb.push(v); }
   if (rb.length >= 4 && rr.every(v => v > 0)) {
-    const base = rb.reduce((s, v) => s + v, 0) / rb.length;
+    rb.sort((a, b) => a - b);   // มัธยฐาน (ตรงกับ rhrMedian ในหน้าเว็บ)
+    const base = rb.length % 2 ? rb[rb.length >> 1] : (rb[(rb.length >> 1) - 1] + rb[rb.length >> 1]) / 2;
     if (rr.every(v => v - base >= 5)) lines.push(`⚠️ ชีพจรพักสูงกว่าปกติ 3 วันติด (${rr.join(', ')} · ปกติ ${Math.round(base)}) อาจล้าสะสมหรือกำลังจะป่วย → แนะนำพัก/เดินเบา ไม่ฝึกหนัก ถ้ามีไข้ เจ็บคอ ให้พบแพทย์`);
   }
   lines.push('14 วันก่อนหน้า (วันที่: กิน/โปรตีน/ออกกำลัง แคล):');
