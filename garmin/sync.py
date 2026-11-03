@@ -45,12 +45,26 @@ def call(fn, *args):
             time.sleep(5 * (i + 1))
 
 
+DIAG = {}
+
+
 def safe(f, *a):
+    """เรียก Garmin แบบไม่ล้มทั้งรอบ · จดสถิติไว้ไล่ปัญหา (ชื่อ error / ว่าง / มีข้อมูล ไม่มีค่าสุขภาพ)"""
+    k = getattr(f, "__name__", "?")
+    d = DIAG.setdefault(k, {})
     try:
-        return f(*a)
+        r = f(*a)
+        st = "ok" if r else "empty"
+        if k == "get_sleep_data" and isinstance(r, dict):
+            dto = r.get("dailySleepDTO") or {}
+            st = "ok" if dto.get("sleepTimeSeconds") else "no-sleep(" + ",".join(sorted(k2 for k2, v in dto.items() if v is not None))[:120] + ")"
+        d[st] = d.get(st, 0) + 1
+        return r
     except GarminConnectTooManyRequestsError:
         raise
-    except Exception:
+    except Exception as e:
+        n = type(e).__name__ + ":" + str(getattr(e, "status_code", "") or "")
+        d[n] = d.get(n, 0) + 1
         return None
 
 
@@ -173,6 +187,8 @@ def main():
     print(f"ส่งเข้าชีตแล้ว: {r.get('days')} วัน · ออกกำลัง {r.get('acts')} รายการ (ใหม่ {r.get('added')})")
     got = sorted({k for d in days for k in d if k != "date"})
     print("ชนิดข้อมูลที่ได้: " + ", ".join(got))
+    for k, v in DIAG.items():
+        print(f"  {k}: " + ", ".join(f"{a} {b}" for a, b in v.items()))
 
 
 if __name__ == "__main__":
