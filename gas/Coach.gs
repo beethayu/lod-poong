@@ -104,6 +104,15 @@ function coachContext_(s, log, today) {
     if (p.length) dl.push(`- ${d}: ${p.join(' · ')}`);
   }
   if (dl.length) { lines.push('ก้าวเดิน / การนอน / ร่างกาย (จากนาฬิกา Garmin, นอนและ HRV = คืนก่อนวันนั้น · Body Battery 0–100 · ความเครียด 0–100 ยิ่งต่ำยิ่งดี):'); dl.forEach(x => lines.push(x)); }
+  // เตือนจากข้อมูลร่างกาย (ตรงกับ hungerCard / rhrAlert ในหน้าเว็บ)
+  const tx = daily[today] || {};
+  if (num_(tx.sleep_min) > 0 && num_(tx.sleep_min) < 360) lines.push('⚠️ เมื่อคืนนอนไม่ถึง 6 ชม. → วันนี้มักหิวง่าย (Al Khatib 2017: นอนน้อยกินเพิ่ม ~385 แคล/วัน) ถ้าถามเรื่องกิน แนะนำแบบอิ่มนาน โปรตีนสูง ไม่ดุ');
+  const rr = [2, 1, 0].map(i => num_((daily[addDays_(today, -i)] || {}).rhr));
+  const rb = []; for (let i = 3; i <= 9; i++) { const v = num_((daily[addDays_(today, -i)] || {}).rhr); if (v) rb.push(v); }
+  if (rb.length >= 4 && rr.every(v => v > 0)) {
+    const base = rb.reduce((s, v) => s + v, 0) / rb.length;
+    if (rr.every(v => v - base >= 5)) lines.push(`⚠️ ชีพจรพักสูงกว่าปกติ 3 วันติด (${rr.join(', ')} · ปกติ ${Math.round(base)}) อาจล้าสะสมหรือกำลังจะป่วย → แนะนำพัก/เดินเบา ไม่ฝึกหนัก ถ้ามีไข้ เจ็บคอ ให้พบแพทย์`);
+  }
   lines.push('14 วันก่อนหน้า (วันที่: กิน/โปรตีน/ออกกำลัง แคล):');
   // วันที่จดอาหารน้อยมาก (มื้อเดียว หรือต่ำกว่าครึ่งเป้า) = จดไม่ครบ ไม่ใช่กินน้อย
   const partial = d => { const f = day(d).filter(l => l.kind === 'food'), meals = {}; f.forEach(l => meals[l.meal || l.time] = 1); return f.length > 0 && (Object.keys(meals).length < 2 || tot(f).kcal < tg.kcal * 0.5); };

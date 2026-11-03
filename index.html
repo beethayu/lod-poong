@@ -474,6 +474,26 @@
   .rdybox.ok { background: var(--brand-soft); color: var(--brand-d); } .rdybox.light { background: var(--warn-soft); color: #7A4400; } .rdybox.rest { background: #EEF0FD; color: #353A99; }
   .rdybox b { font-size: 15px; } .rdybox .t2 { color: inherit; opacity: .85; white-space: normal; overflow: visible; }
   .gmrow { display: flex; gap: 12px; flex-wrap: wrap; padding: 10px 14px; font-size: 13px; color: #353A99; background: linear-gradient(90deg,#EEF0FD,#F8F8FE); border-top: 1px solid #ECEEF8; }
+  .rhrc { background: #fff; border: 1px solid #F1C9C5; border-radius: 16px; overflow: hidden; margin-top: 12px; }
+  .rhrc .rh { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: var(--red-soft); color: #7D1B15; font-size: 13px; }
+  .rhrc .rh b { font-size: 16px; display: block; } .rhrc .ri { font-size: 22px; }
+  .rbars { display: flex; gap: 8px; align-items: flex-end; padding: 12px 14px 0; }
+  .rbars > div { flex: 1; text-align: center; } .rbars i { display: block; border-radius: 6px 6px 0 0; }
+  .rbars span { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .rtxt { padding: 10px 14px; font-size: 14px; line-height: 1.6; }
+  .rbtn { display: flex; gap: 8px; padding: 0 12px 10px; }
+  .ref { font-size: 11.5px; color: var(--faint); }
+  .rhrc .ref { padding: 0 14px 10px; }
+  .hungc { background: linear-gradient(180deg,#FFF4E2,#fff 70%); border: 1px solid #F3D9AE; border-radius: 16px; margin-top: 12px; overflow: hidden; }
+  .hungc .hh { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px 4px; color: #7A4400; font-size: 13px; }
+  .hungc .hh b { font-size: 16px; display: block; } .hungc .hi { width: 36px; height: 36px; border-radius: 12px; background: #FBE3BC; display: grid; place-items: center; font-size: 18px; flex: none; }
+  .hungc ol { margin: 6px 0 0; padding: 0 14px 0 34px; font-size: 14px; line-height: 1.55; } .hungc li { margin-bottom: 4px; } .hungc li::marker { color: #C98A00; font-weight: 700; }
+  .hungc .hf { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 14px 12px; flex-wrap: wrap; }
+  .wbc { background: #fff; border: 1px solid var(--line); border-radius: 16px; margin-top: 12px; overflow: hidden; }
+  .wtop2 { display: flex; justify-content: space-between; align-items: flex-end; padding: 12px 14px 10px; } .wtop2 b { font-size: 26px; }
+  .wbox { margin: 0 12px; padding: 12px; border-radius: 14px; background: #E3F0FB; color: #1f4f78; font-size: 13px; line-height: 1.5; } .wbox > b { font-size: 16px; display: block; }
+  .wchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; } .wchips span { background: #fff; border-radius: 99px; padding: 3px 10px; }
+  .wavg { padding: 12px 14px 12px; font-size: 13px; }
   .c-h .ch { background: linear-gradient(90deg,#FDE7EC,#FFF4F6); color: #A3263F; }
   .c-b .ch { background: linear-gradient(90deg,#E3F5EC,#F3FBF7); color: #17694D; }
   .c-x .ch { background: linear-gradient(90deg,#FFF1D6,#FFF9EC); color: #8A5300; }
@@ -798,6 +818,7 @@ function readiness(d) {
   const bb = bbWake(d), rhr = gv(x, 'rhr'), base = rhrBase(d), sl = gv(x, 'sleep_min');
   const diff = rhr && base ? Math.round(rhr - base) : null;
   if (bb == null && diff == null) return null;
+  if (rhrAlert(d)) return { lv: 'rest', head: 'วันนี้พักดีกว่า', tip: 'ชีพจรพักสูงกว่าปกติ 3 วันติด ร่างกายอาจล้าสะสมหรือกำลังจะป่วย เดินเบา ๆ พอ', why: ['ชีพจรพัก ' + rhr + ' (ปกติ ' + rhrAlert(d).base + ')'], bb, rhr, base, diff, sl };
   const why = [];
   if (bb != null) why.push('Body Battery ตอนตื่น ' + bb);
   if (rhr) why.push('ชีพจรพัก ' + rhr + (diff != null ? (diff >= 5 ? ' (สูงกว่าปกติ +' + diff + ')' : ' (ปกติ)') : ''));
@@ -842,6 +863,77 @@ function bodyCardToday(td) {
       <div><div class="k">ความเครียดเมื่อวาน</div><b>${st == null ? '–' : st}</b> <small class="t2">/ 100</small><div class="s" style="color:${st != null && st > 50 ? 'var(--warn)' : 'var(--ok)'}">${stS}</div></div></div>`;
   const tip = r ? `<div class="rdy ${r.lv}">${r.lv === 'ok' ? '✓ ' : ''}${esc(r.tip)}</div>` : '';
   return `<div class="bodyc">${ring}${slp}${two}${tip}</div>`;
+}
+// ----- รอบ 2: เตือนจากข้อมูลร่างกาย (ไม่ใช้ AI) -----
+// วันพักที่ผู้ใช้กดเอง (จากการ์ดชีพจรสูง) — แท็บฝึกขึ้นวันพัก แผนไม่เลื่อน
+const restToday = d => lsGet('lp_rest') === d;
+// ชีพจรพักสูงกว่าปกติ +5 ติดกัน 3 วัน (ปกติ = เฉลี่ย 7 วันก่อนช่วง 3 วันนี้) · Radin 2020, Mishra 2020
+function rhrAlert(td) {
+  const days = [addDays(td, -2), addDays(td, -1), td], v = days.map(d => gv(dailyOf(d), 'rhr'));
+  if (v.some(x => !x)) return null;
+  const b = []; for (let i = 3; i <= 9; i++) { const r = gv(dailyOf(addDays(td, -i)), 'rhr'); if (r) b.push(r); }
+  if (b.length < 4) return null;
+  const base = b.reduce((s, x) => s + x, 0) / b.length;
+  if (!v.every(x => x - base >= 5)) return null;
+  const st = gv(dailyOf(addDays(td, -1)), 'stress');
+  return { days, v, base: Math.round(base), stress: st };
+}
+function rhrAlertCard(td) {
+  const a = rhrAlert(td); if (!a) return '';
+  if (lsGet('lp_rhr_ack') === td) return `<div class="alert red" style="display:flex;gap:8px;align-items:center"><span style="flex:1">❤️ ชีพจรพักยังสูงกว่าปกติ (${a.v[2]} · ปกติ ${a.base}) — พักให้พอ${restToday(td) ? ' · วันนี้เป็นวันพัก' : ''}</span></div>`;
+  const hi = Math.max(...a.v, a.base) + 2, lo = Math.min(a.base, ...a.v) - 8, h = v => Math.round(16 + (v - lo) / (hi - lo) * 44);
+  const dn = d => ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'][new Date(d + 'T12:00:00').getDay()];
+  const bars = [[a.base, 'ปกติ ' + a.base, '#E1E3DD']].concat(a.days.map((d, i) => [a.v[i], (d === td ? 'วันนี้ ' : dn(d) + ' ') + a.v[i], ['#E8857D', '#D8574D', '#B3261E'][i]]));
+  return `<div class="rhrc"><div class="rh"><div class="ri">❤️</div><div class="grow"><b>ชีพจรพักสูงกว่าปกติ 3 วันติด</b><div>ร่างกายอาจล้าสะสม หรือกำลังจะป่วย${a.stress != null && a.stress > 50 ? ' · ความเครียดเมื่อวานก็สูง (' + a.stress + ')' : ''}</div></div></div>
+    <div class="rbars">${bars.map(b => `<div><i style="height:${h(b[0])}px;background:${b[2]}"></i><span>${b[1]}</span></div>`).join('')}</div>
+    <div class="rtxt">วันนี้พัก หรือเดินเบา ๆ 20–30 นาทีพอ<br>ดื่มน้ำให้พอ และเข้านอนเร็วกว่าปกติ<br><span style="color:var(--red)">มีไข้ เจ็บคอ หรือเหนื่อยผิดปกติ ไปพบแพทย์</span></div>
+    <div class="rbtn">${restToday(td) ? `<div class="t2" style="flex:1;padding:12px 0">✓ วันนี้เป็นวันพักแล้ว</div>` : `<button class="btn pri" style="flex:1" onclick="lsSet('lp_rest','${td}');lsSet('lp_rhr_ack','${td}');keepScroll()">วันนี้เป็นวันพัก</button>`}<button class="btn" style="flex:1" onclick="lsSet('lp_rhr_ack','${td}');keepScroll()">รับทราบ</button></div>
+    <div class="ref">Radin 2020 · Lancet Digital Health · Mishra 2020 · Nature Biomed Eng</div></div>`;
+}
+// นอนน้อย → วันนี้หิวง่าย · Al Khatib 2017 (นอนน้อยกินเพิ่ม ~385 แคล/วัน)
+function hungerCard(td) {
+  const sl = gv(dailyOf(td), 'sleep_min'); if (!sl || sl >= 360) return '';
+  return `<div class="hungc"><div class="hh"><div class="hi">🍳</div><div class="grow"><b>วันนี้มักหิวง่ายกว่าปกติ</b><div>นอน ${sleepTxt(sl)} · งานวิจัยพบคนนอนน้อยกินเพิ่มราว 385 แคล/วัน</div></div></div>
+    <ol><li>มื้อแรกเน้นโปรตีน 30 ก. ขึ้นไป (ไข่ 3 ฟอง + อกไก่ / นมโปรตีน) อิ่มนานกว่า</li><li>หิวช่วงบ่าย ดื่มน้ำ 1 แก้ว รอ 10 นาทีก่อนตัดสินใจ</li><li>วันนี้ไม่ซื้อขนมติดมือจากร้านสะดวกซื้อ</li></ol>
+    <div class="hf"><span class="ref">Al Khatib 2017 · Eur J Clin Nutr</span><a class="lnk" onclick="go('coach');sendChat('นอนน้อย วันนี้กินอะไรดีให้อิ่มนาน')">ถามโค้ช: วันนี้กินอะไรดี ›</a></div></div>`;
+}
+// น้ำหนักเด้งขึ้น ≥ 0.3 กก. → ไขมันจริงเพิ่มได้ราว ส่วนเกิน ÷ 7,700 ที่เหลือน่าจะเป็นน้ำ
+function weightBounce(tg, td) {
+  const dw = dailyWeights(), n = dw.length; if (n < 2) return '';
+  const cur = dw[n - 1], prev = dw[n - 2];
+  if (cur.date !== td || dayDiff(prev.date, td) > 4) return '';
+  const up = r1(cur.w - prev.w); if (up < 0.3) return '';
+  const yd = addDays(td, -1), t = dayT(yd), budget = tg.kcal + exAll(t) / 2, part = !t.n || partialDay(yd, tg), surplus = Math.round(t.kcal - budget);
+  const causes = [];
+  if ((D.sets || []).some(x => x.date === yd) || dayLogs(yd).some(l => l.kind === 'exercise' && /เวท|weight|strength/i.test(l.name))) causes.push('ฝึกเวทเมื่อวาน');
+  const sl = gv(dailyOf(td), 'sleep_min'); if (sl && sl < 360) causes.push('นอน ' + sleepTxt(sl));
+  if (!part && tg.carb && t.carb > tg.carb + 30) causes.push('คาร์บเกินเป้า ' + fmt(t.carb - tg.carb) + ' ก.');
+  const st = gv(dailyOf(yd), 'stress'); if (st != null && st > 50) causes.push('ความเครียดสูง (' + st + ')');
+  let head, body;
+  if (!part && surplus > 200) {
+    const fat = r1(surplus / 7700);
+    head = 'ส่วนใหญ่ยังเป็นน้ำ';
+    body = `เมื่อวานกินเกินเป้า ${fmt(surplus)} แคล ≈ ไขมันจริงราว ${fat < 0.1 ? 'ไม่ถึง 0.1' : fat} กก. ที่เหลือคือน้ำและอาหารในท้อง จะลงเองใน 1–3 วัน`;
+  } else {
+    head = 'น่าจะเป็นน้ำ ไม่ใช่ไขมัน';
+    body = `ไขมัน ${up} กก. ต้องกินเกินราว ${fmt(Math.round(up * 7700 / 100) * 100)} แคล` + (part ? ' · เมื่อวานจดไม่ครบ เลยเทียบแคลไม่ได้' : ` แต่เมื่อวานกิน ${fmt(t.kcal)} อยู่ในเป้า ${fmt(Math.round(budget))}`);
+  }
+  // เฉลี่ย 7 วัน เทียบสัปดาห์ก่อน + กราฟเล็ก 14 วัน
+  const av = (a, b) => { const x = dw.filter(w => w.date > a && w.date <= b); return x.length ? x.reduce((s, w) => s + w.w, 0) / x.length : null; };
+  const a1 = av(addDays(td, -7), td), a0 = av(addDays(td, -14), addDays(td, -7));
+  const trend = a1 != null && a0 != null ? (a1 <= a0 ? `<span style="color:var(--ok);font-weight:600">${r1(a1)} · ลง ${r1(a0 - a1)} จากสัปดาห์ก่อน</span>` : `<span style="color:var(--warn);font-weight:600">${r1(a1)} · ขึ้น ${r1(a1 - a0)} จากสัปดาห์ก่อน</span>`) : (a1 != null ? r1(a1) : '');
+  const pts = dw.filter(w => w.date > addDays(td, -14));
+  let svg = '';
+  if (pts.length >= 3) {
+    const W = 326, H = 60, lo = Math.min(...pts.map(p => p.w)) - 0.2, hi = Math.max(...pts.map(p => p.w)) + 0.2;
+    const X = d => 6 + (13 - dayDiff(d, td)) / 13 * (W - 12), Y = v => 6 + (hi - v) / (hi - lo) * (H - 12);
+    const avg = pts.map(p => { const x = pts.filter(q => q.date > addDays(p.date, -7) && q.date <= p.date); return x.reduce((s, q) => s + q.w, 0) / x.length; });
+    svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;margin-top:6px">${pts.map((p, i) => `<circle cx="${X(p.date).toFixed(1)}" cy="${Y(p.w).toFixed(1)}" r="${i === pts.length - 1 ? 4.5 : 3}" fill="${i === pts.length - 1 ? '#A85E00' : '#7FB3DD'}"/>`).join('')}
+      <polyline points="${pts.map((p, i) => X(p.date).toFixed(1) + ',' + Y(avg[i]).toFixed(1)).join(' ')}" fill="none" stroke="#1f5f91" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  }
+  return `<div class="wbc"><div class="wtop2"><div><div class="t2">น้ำหนักเช้านี้</div><b>${cur.w}</b> <small class="t2">กก.</small></div><div style="text-align:right"><div style="color:var(--warn);font-weight:700">+${up}</div><div class="t2">จาก${dayDiff(prev.date, td) === 1 ? 'เมื่อวาน' : 'ครั้งก่อน'}</div></div></div>
+    <div class="wbox"><b>${head}</b><div>${body}</div>${causes.length ? `<div style="margin-top:8px">สิ่งที่เจอ</div><div class="wchips">${causes.map(c => `<span>${esc(c)}</span>`).join('')}</div><div style="font-size:12px;margin-top:8px;opacity:.85">อย่างนี้ทำให้ร่างกายเก็บน้ำได้ชั่วคราว 1–3 วัน</div>` : `<div style="font-size:12px;margin-top:6px;opacity:.85">น้ำหนักแกว่งวันละ 0.5–1 กก. เป็นปกติ (เกลือ แป้ง ขับถ่าย เวลาชั่ง)</div>`}</div>
+    ${trend ? `<div class="wavg"><div class="t2" style="display:flex;justify-content:space-between"><span>ดูเฉลี่ย 7 วันแทน</span>${trend}</div>${svg}${a1 != null && a0 != null && a1 <= a0 ? '<div style="font-size:13px;color:var(--brand);font-weight:600;margin-top:6px">ทิศทางยังลง ทำตามแผนต่อได้เลย</div>' : ''}</div>` : ''}</div>`;
 }
 // แถวเล็กในไดอารี่ / ในการ์ดก้าว
 function gmRow(d) {
@@ -928,10 +1020,12 @@ function todayHtml() {
     </div></div>
     <div class="wrap">
       ${coachCard(tg)}
+      ${hasGarmin() ? rhrAlertCard(td) : ''}
       ${alertsHtml(tg)}
+      ${weightBounce(tg, td)}
       <div class="sec"><h3>🥗 แมโครวันนี้</h3><a class="lnk" onclick="go('diary')">ไดอารี่ ›</a></div>
       ${macroBars(t, tg)}
-      ${hasGarmin() ? `<div class="sec"><h3>⌚ ร่างกายวันนี้</h3><a class="lnk" onclick="go('sum');setTimeout(()=>{const e=document.getElementById('c_rhr');if(e)e.scrollIntoView()},50)">กราฟ ›</a></div>${bodyCardToday(td)}` : ''}
+      ${hasGarmin() ? `<div class="sec"><h3>⌚ ร่างกายวันนี้</h3><a class="lnk" onclick="go('sum');setTimeout(()=>{const e=document.getElementById('c_rhr');if(e)e.scrollIntoView()},50)">กราฟ ›</a></div>${bodyCardToday(td)}${hungerCard(td)}` : ''}
       <div class="sec"><h3>👣 ก้าวเดิน${hasGarmin() ? '' : ' · การนอน'}</h3>${(D.daily || []).length ? `<a class="lnk" onclick="go('sum');setTimeout(()=>{const e=document.getElementById('c_steps');if(e)e.scrollIntoView()},50)">กราฟ ›</a>` : ''}</div>
       ${stepCard(td)}
       <div class="sec"><h3>⏱️ IF อดอาหาร</h3><a class="lnk" onclick="go('ifh')">ประวัติ ›</a></div>
@@ -2268,7 +2362,7 @@ function nextDayIdx() {
   const last = (D.sets || []).filter(x => x.day_idx !== '' && x.day_idx != null).sort((a, b) => String(a.created_at) < String(b.created_at) ? 1 : -1)[0];
   return last ? (Number(last.day_idx) + 1) % p.days.length : 0;
 }
-const isTrainDay = d => (S().train_days || [1, 3, 5]).indexOf(new Date(d + 'T12:00:00').getDay()) >= 0;
+const isTrainDay = d => !restToday(d) && (S().train_days || [1, 3, 5]).indexOf(new Date(d + 'T12:00:00').getDay()) >= 0;
 let pickDay = -1, trOpen = '', trSw = false;
 // ---------- แก้ท่าในแผนเอง (แตะแถวในการ์ดวันนี้) ----------
 // ง่ายไป/ยากไป = ขั้นเดียวตามบันได: ดัมเบลขยับน้ำหนัก → ท่าถัดไป/ก่อนหน้า → ครั้ง ±2 (วินาที ±10)
