@@ -9,9 +9,12 @@ const SH_ = {
   TIP: { name: 'Tips', head: ['date', 'text', 'created_at'] },
   BODY: { name: 'BodyPhotos', head: ['photo_id', 'date', 'pose', 'file_id', 'thumb', 'created_at'] },
   SETS: { name: 'Sets', head: ['set_id', 'date', 'session_id', 'day_idx', 'ex_id', 'ex_name', 'set_no', 'reps', 'kg', 'feel', 'msg_id', 'created_at'] },
-  DAILY: { name: 'Daily', head: ['date', 'steps', 'steps_at', 'sleep_min', 'sleep_from', 'sleep_to', 'updated_at'] }
+  DAILY: { name: 'Daily', head: ['date', 'steps', 'steps_at', 'sleep_min', 'sleep_from', 'sleep_to', 'updated_at',
+    'sleep_score', 'sleep_deep', 'sleep_rem', 'sleep_light', 'sleep_awake', 'rhr', 'hrv', 'hrv_week', 'hrv_status',
+    'bb_high', 'bb_low', 'bb_wake', 'stress', 'stress_max', 'readiness', 'vo2max', 'kcal_active', 'kcal_total',
+    'int_min', 'floors', 'spo2', 'resp', 'garmin_at'] }
 };
-const TXT_COLS_ = ['date', 'time', 'at', 'key', 'value', 'qty', 'steps_at', 'sleep_from', 'sleep_to'];
+const TXT_COLS_ = ['date', 'time', 'at', 'key', 'value', 'qty', 'steps_at', 'sleep_from', 'sleep_to', 'hrv_status', 'garmin_at'];
 const KINDS_ = ['food', 'exercise', 'water', 'weight', 'fast'];
 const MEALS_ = ['breakfast', 'lunch', 'dinner', 'snack'];
 
@@ -168,7 +171,7 @@ function saveSettings(obj) {
   return withLock_(() => {
     const sh = sheet_(SH_.SET);
     Object.keys(obj || {}).forEach(k => {
-      if (!/^[a-z_]+$/.test(k) || k === 'hk_last') return;
+      if (!/^[a-z_]+$/.test(k) || k === 'hk_last' || k === 'gm_last') return;
       const o = { key: k, value: JSON.stringify(obj[k]) };
       upsert_(SH_.SET, o);
     });

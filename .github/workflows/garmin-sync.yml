@@ -1,0 +1,41 @@
+# ดึงข้อมูลจาก Garmin Connect เข้าชีตลดพุง ทุกเช้า 07:17 (เวลาไทย)
+# ต้องมี GitHub Secrets: GARMIN_EMAIL, GARMIN_PASSWORD, LP_KEY (รหัสแอปลดพุง)
+# repo สาธารณะ: log เปิดดูได้ทุกคน → สคริปต์พิมพ์แค่จำนวน ไม่พิมพ์ค่าสุขภาพ
+name: Garmin sync
+
+on:
+  schedule:
+    - cron: "17 0 * * *"   # 00:17 UTC = 07:17 ไทย
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "ดึงย้อนหลังกี่วัน (ครั้งแรกใส่ 30 ได้ สูงสุด 60)"
+        required: false
+        default: "3"
+
+concurrency:
+  group: "garmin"
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install -q "garminconnect>=0.3.20" requests
+
+      - name: Sync
+        env:
+          GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+          LP_KEY: ${{ secrets.LP_KEY }}
+          LP_API: https://script.google.com/macros/s/AKfycbzh7rtLdGZsLiAxsb4vaAZrMLoRUB5jLt27X9tYF2GRJSmtFwJe61v-JlTqsIXpMc6y/exec
+          DAYS: ${{ github.event.inputs.days || '3' }}
+        run: python garmin/sync.py

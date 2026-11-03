@@ -179,6 +179,17 @@
   แซนด์แบ็ก: Settings.sand_kg (เว้นได้) ใช้เป็น kg ของท่า sand · ท่า sand_rlunge (ลันจ์ถอยหลัง → next sand_wlunge ลันจ์เดิน) · prog เปลี่ยน กก. เฉพาะท่าดัมเบล
   itemOf น้ำหนักเริ่ม: ท่าเล็ก ~5 ท่าใหญ่ ~8 ฟาร์มเมอร์ ~16 ปัดเข้าขั้น · EZ/กระสอบไม่รู้น้ำหนัก kg 0 (โปรเกรสด้วยครั้ง/วินาที) · aiPlan บอกให้ใส่ท่าแบกเดินถ้ามีกระสอบ
 
+== ดึงตรงจาก Garmin Connect (ทำแล้ว 4 พ.ย. 01:00) ==
+- ผู้ใช้อยากลดขั้นตอน (ไม่ต้องเปิด Connect / Health / ทางลัด) และได้ค่าที่ Health ไม่มี → ดึงจากคลาวด์ Garmin ทุกเช้า วันละรอบพอ (ผู้ใช้ตกลง: แอป Connect = ดูตอนนี้, ชีต = ประวัติ/แนวโน้ม)
+- garmin/sync.py (ไลบรารี garminconnect ≥0.3.20 ไม่เป็นทางการ ไม่ใช้ garth แล้ว) รันใน .github/workflows/garmin-sync.yml cron 00:17 UTC = 07:17 ไทย + Run workflow (ใส่ days ย้อนหลังได้ถึง 60)
+  ดึงย้อน 3 วันทุกรอบ (นาฬิกาซิงก์ช้าก็เติมเองวันถัดไป) → POST importGarmin เหมือนหน้าเว็บ
+- Secrets: GARMIN_EMAIL, GARMIN_PASSWORD, LP_KEY (= API_KEY แอป) · token Garmin เก็บ Script Properties GARMIN_TOKENS (garminTokens/importGarmin รับ token ใหม่ทุกรอบ) — ไม่เก็บใน repo/cache เพราะ repo สาธารณะ log เปิดดูได้ → สคริปต์พิมพ์แค่จำนวน
+  รหัส 2 ชั้น: ถ้าเปิดอยู่ ล็อกอินครั้งแรกล้ม → ให้ปิดชั่วคราว รันครั้งแรก แล้วเปิดคืน (ใช้ token ต่อ)
+- gas/Garmin.gs importGarmin → Daily คอลัมน์ใหม่ sleep_score, sleep_deep/rem/light/awake (นาที), rhr, hrv, hrv_week, hrv_status, bb_high/low/wake, stress, stress_max, readiness, vo2max, kcal_active, kcal_total, int_min (ปานกลาง + 2×หนัก), floors, spo2, resp, garmin_at · steps/sleep_* เขียนทับของทางลัด (ที่มาเดียวกัน)
+  ออกกำลัง → importWorkouts_ (รหัส H+เวลาเริ่ม ไม่ซ้ำกับทางลัด) · Settings.gm_last {at, days, acts, added, fields}
+- บริบทโค้ชเห็น คะแนนนอน, ชีพจรพัก, HRV, Body Battery, ความเครียด, Training Readiness (8 วัน)
+- ยังไม่ได้ทำ: โชว์ค่าใหม่ในหน้าเว็บ (การ์ดวันนี้/สรุป) · gm_last ในตั้งค่า · ถ้าใช้ได้ดี ตัดก้าว/นอนออกจากทางลัด (เหลือน้ำหนัก Xiaomi)
+
 == สถานะล่าสุด (4 พ.ย. 2569 00:10) ==
 ✅ ทำแล้ว (แชต 3 พ.ย. เย็น–ดึก, ขึ้นแล้วทุกอย่าง deploy สำเร็จ):
    - ไล่ปัญหานอน: Settings.hk_last สรุปรอบล่าสุดของทางลัด โชว์ท้ายกล่อง "ข้อมูลล่าสุดที่เข้าแอป" (ตั้งค่า → ทางลัด Apple Health)

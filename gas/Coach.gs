@@ -93,10 +93,17 @@ function coachContext_(s, log, today) {
     const d = addDays_(today, -i), x = daily[d]; if (!x) continue;
     const p = [];
     if (x.steps !== '') p.push(`ก้าว ${x.steps}${i === 0 && x.steps_at ? ' (ถึง ' + x.steps_at + ' ยังไม่จบวัน)' : ''}`);
-    if (x.sleep_min !== '' && num_(x.sleep_min) > 0) p.push(`นอน ${(num_(x.sleep_min) / 60).toFixed(1)} ชม. (${x.sleep_from}–${x.sleep_to})`);
+    if (x.sleep_min !== '' && num_(x.sleep_min) > 0) p.push(`นอน ${(num_(x.sleep_min) / 60).toFixed(1)} ชม. (${x.sleep_from}–${x.sleep_to})${x.sleep_score ? ' คะแนน ' + x.sleep_score : ''}`);
+    const g = [];
+    if (x.rhr) g.push('ชีพจรพัก ' + x.rhr);
+    if (x.hrv) g.push('HRV ' + x.hrv + (x.hrv_week ? ' (เฉลี่ย 7 วัน ' + x.hrv_week + ')' : '') + (x.hrv_status ? ' ' + x.hrv_status : ''));
+    if (x.bb_wake || x.bb_high) g.push('Body Battery ' + (x.bb_wake ? 'ตื่น ' + x.bb_wake : '') + (x.bb_high ? ' สูงสุด ' + x.bb_high : '') + (x.bb_low !== '' && x.bb_low != null ? ' ต่ำสุด ' + x.bb_low : ''));
+    if (x.stress) g.push('ความเครียดเฉลี่ย ' + x.stress);
+    if (x.readiness) g.push('Training Readiness ' + x.readiness);
+    if (g.length) p.push(g.join(', '));
     if (p.length) dl.push(`- ${d}: ${p.join(' · ')}`);
   }
-  if (dl.length) { lines.push('ก้าวเดิน / การนอน (จากนาฬิกา Garmin ผ่าน Apple Health, นอน = คืนก่อนวันนั้น):'); dl.forEach(x => lines.push(x)); }
+  if (dl.length) { lines.push('ก้าวเดิน / การนอน / ร่างกาย (จากนาฬิกา Garmin, นอนและ HRV = คืนก่อนวันนั้น · Body Battery 0–100 · ความเครียด 0–100 ยิ่งต่ำยิ่งดี):'); dl.forEach(x => lines.push(x)); }
   lines.push('14 วันก่อนหน้า (วันที่: กิน/โปรตีน/ออกกำลัง แคล):');
   // วันที่จดอาหารน้อยมาก (มื้อเดียว หรือต่ำกว่าครึ่งเป้า) = จดไม่ครบ ไม่ใช่กินน้อย
   const partial = d => { const f = day(d).filter(l => l.kind === 'food'), meals = {}; f.forEach(l => meals[l.meal || l.time] = 1); return f.length > 0 && (Object.keys(meals).length < 2 || tot(f).kcal < tg.kcal * 0.5); };
