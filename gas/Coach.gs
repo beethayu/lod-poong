@@ -137,6 +137,12 @@ function coachSend(text, images, mime) {
   const today = today_(), now = nowTime_();
   const log = rows_(SH_.LOG);
   const chat = rows_(SH_.CHAT);
+  // ส่งข้อความเดิมซ้ำภายใน 15 นาที (เน็ตหลุดแต่เซิร์ฟเวอร์จดไปแล้ว) → ไม่จดเบิ้ล
+  const prevU = chat.filter(c => c.role === 'user' && !isTrue_(c.undone)).pop();
+  if (prevU && !pages.length && String(prevU.text).trim() === text &&
+      Date.now() - new Date(String(prevU.at).replace(' ', 'T') + '+07:00').getTime() < 15 * 60000) {
+    const all = getAll(); all.sent = { msg_id: prevU.msg_id, entries: 0, dup: true }; return all;
+  }
   const ctx = coachContext_(s, log, today);
   const msgId = newId_('M');
 
@@ -191,6 +197,7 @@ ${text || '(ส่งรูปอย่างเดียว)'}${pages.length ? 
 - น้ำหนัก: fat_pct ใส่ถ้าบอก ไม่งั้น null
 - ท่าเวท/บอดี้เวทที่บอกเซ็ต/ครั้ง (เช่น "วิดพื้นครบ 4 เซ็ต", "สควอท 3x12 ดัมเบล 8") → kind "workout" 1 entry ต่อท่า, sets ตามจำนวนเซ็ต (ไม่บอกครั้ง ใช้ช่วงในแผน) · ชื่อท่าใช้ชื่อในแผนถ้าตรง: ${(ctx.planNames || []).join(', ') || '-'}
 - คำถามเรื่องฝึก: ตอบจากอุปกรณ์/แผน/ประวัติฝึกด้านบน · เน้นท่าไม่กระแทกเข่า · เจ็บ/ปวดผิดปกติ → หยุดท่านั้น หาหมอ
+- replace_last = true ใช้เฉพาะเมื่อผู้ใช้แก้ของข้อความก่อนหน้าชัด ๆ · มื้อใหม่/อาหารคนละมื้อ/ส่งข้อความเดิมซ้ำ = false เสมอ (ข้อความเดิมซ้ำ entries = [])
 - ถ้าผู้ใช้แก้รายการที่เพิ่งจด (เช่น "ไม่ใช่ 2 จาน 1 จาน", "ผิด ลบ") → replace_last = true แล้วใส่ entries ชุดใหม่ที่ถูกต้องทั้งหมดของข้อความนั้น (ลบทิ้งอย่างเดียว entries = [])
 reply:
 - ถ้าจด: ยืนยันสั้น ๆ (ชื่อ + แคลรวมของที่เพิ่งจด) + คำแนะนำ 1 ประโยคถ้ามีประโยชน์ · ห้ามบอกยอดกินรวมวันนี้/เหลือกินได้/โปรตีนขาด เป็นตัวเลข (ระบบต่อท้ายตัวเลขที่ถูกต้องให้เอง)
@@ -211,6 +218,15 @@ reply:
 
   return withLock_(() => {
     let replaced = 0;
+    // กัน AI สั่งลบของข้อความก่อนผิด ๆ (3 พ.ย.: จดมื้อเย็น แล้วข้าวกลางวันหายไป) — ยอมแทนที่เฉพาะเมื่อ
+    // ของใหม่เป็นชนิด/มื้อ/วันเดียวกับของเดิม หรือผู้ใช้สั่งลบชัด ๆ
+    if (data.replace_last && lastUser) {
+      const sig = e => [e.kind === 'workout' ? 'exercise' : e.kind, e.kind === 'food' ? (e.meal || '') : '', /^\d{4}-\d{2}-\d{2}$/.test(e.date || '') ? e.date : today].join('|');
+      const oldSig = lastEntries.map(l => [l.kind, l.kind === 'food' ? l.meal : '', l.date].join('|'));
+      const ne = data.entries || [];
+      const ok = ne.length ? ne.some(e => oldSig.indexOf(sig(e)) >= 0) : /ลบ|ผิด|ยกเลิก|ไม่ได้กิน|ไม่ได้ทำ/.test(text);
+      if (!ok) data.replace_last = false;
+    }
     if (data.replace_last && lastUser) {
       replaced = deleteWhere_(SH_.LOG, l => l.msg_id === lastUser.msg_id);
     }

@@ -1468,9 +1468,17 @@ function sendChat(q) {
   if (!q) { ta.value = ''; growTa(ta); }
   photos = []; renderThumbs(); ta.blur();
   render(); scrollChat();
+  const t0 = Date.now();
   api('coachSend', [text, imgs, 'image/jpeg']).then(d => {
     pending = null; setData(d); scrollChat();
+    if (d && d.sent && d.sent.dup) toast('ข้อความนี้จดไปแล้ว ไม่จดซ้ำ');
   }).catch(e => {
+    // เน็ตหลุดระหว่างรอ แต่เซิร์ฟเวอร์อาจจดไปแล้ว → เช็กก่อนบอกว่าไม่สำเร็จ (กันส่งซ้ำแล้วจดเบิ้ล)
+    if (e.net) return new Promise(r => setTimeout(r, 8000)).then(() => api('getAll')).then(d => {
+      const hit = (d.chat || []).some(c => c.role === 'user' && String(c.text).trim() === text && new Date(String(c.at).replace(' ', 'T') + '+07:00').getTime() >= t0 - 60000);
+      if (hit) { pending = null; setData(d); scrollChat(); toast('โค้ชตอบแล้ว (สัญญาณหลุดระหว่างรอ)'); return; }
+      throw e;
+    }).catch(() => { pending = null; render(); if (!q) { ta.value = text; growTa(ta); } alert('ส่งไม่ถึงโค้ช สัญญาณหลุด ลองส่งใหม่ได้เลย (ไม่จดซ้ำ)'); });
     pending = null; render();
     if (e.auth || e.setup) return handleErr(e);
     if (!q) { ta.value = text; growTa(ta); }
