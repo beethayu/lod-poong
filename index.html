@@ -1205,7 +1205,6 @@ function alertsHtml(tg) {
   let low = 0, seen = 0;
   for (let i = 1; i <= 4; i++) { const t = totals(dayLogs(addDays(td, -i))); if (t.n && !partialDay(addDays(td, -i), tg)) { seen++; if (t.kcal < tg.kcal - 500) low++; } }
   if (seen >= 3 && low >= 3) out.push(`<div class="alert red">🍽️ ${low} วันล่าสุดกินต่ำกว่าเป้าเกิน 500 แคล — กินให้พอเป้า ไม่งั้นกล้ามหายและเผาผลาญลดลง</div>`);
-  if (tg.low) out.push(`<div class="alert warn">ความเร็วที่ตั้งไว้ทำให้เป้าต่ำกว่า BMR → ใช้ ${fmt(tg.kcal)} แคลแทน (ตั้งค่า ⚙️)</div>`);
   return out.join('');
 }
 function water(ml) {
@@ -2535,13 +2534,14 @@ function setHtml() {
   const s = SS, tg = calcTarget(s), lw = latestW();
   const fr = (label, key, sfx, ph) => `<label class="frow"><span>${label}</span><input type="text" inputmode="decimal" value="${esc(s[key])}" placeholder="${ph || ''}" onchange="SS.${key}=this.value;render()">${sfx ? `<span class="sfx">${sfx}</span>` : ''}</label>`;
   const eta = tg.days ? thDate(addDays(todayIso(), tg.days)) : '-';
+  const maxRate = Math.max(0, (tg.tdee - tg.bmr) * 30 / 7700);  // กินเท่า BMR พอดี = ลดได้เร็วสุดเท่านี้
   return `<div class="hd"><div class="hd-in"><div class="hd-top"><button class="hd-btn" onclick="SS=null;go('today')">‹</button><div class="hd-title">ตั้งค่า</div></div></div></div>
     <div class="wrap">
       <div class="flbl">เป้าหมาย</div>
       <div class="card fcard">${fr('น้ำหนักเป้า', 'goal_weight', 'กก.')}
-        <div class="frow"><span>ลดเดือนละ</span><div class="chips" style="flex:1;justify-content:flex-end">${[1, 2, 3, 4].map(r => `<button class="chip ${num(s.rate) === r ? 'on' : ''}" style="padding:0 12px" onclick="SS.rate=${r};render()">${r}</button>`).join('')}</div><span class="sfx">กก.</span></div>
+        <div class="frow"><span>ลดเดือนละ</span><div class="chips" style="flex:1;justify-content:flex-end">${[1, 2, 3, 4].map(r => `<button class="chip ${num(s.rate) === r ? 'on' : ''}" style="padding:0 12px${r > maxRate + 0.05 && num(s.rate) !== r ? ';opacity:.4' : ''}" onclick="SS.rate=${r};render()">${r}</button>`).join('')}</div><span class="sfx">กก.</span></div>
         <div class="preview ${tg.low ? 'bad' : ''}">กินวันละ ~<b>${fmt(tg.kcal)}</b> แคล · ถึงเป้าประมาณ <b>${eta}</b>${tg.days ? ` (${Math.round(tg.days / 30.4 * 10) / 10} เดือน)` : ''}
-          ${tg.low ? `<br>⚠️ เร็วไป: เป้าต่ำกว่า BMR (${fmt(tg.bmr)}) ใช้ BMR แทน ลดได้จริง ~${r1(tg.deficit * 30 / 7700)} กก./เดือน` : ''}
+          ${tg.low ? `<br>⚠️ กินต่ำกว่า BMR (${fmt(tg.bmr)}) ไม่ได้ เลยลดจากการกินได้สูงสุด ~${r1(maxRate)} กก./เดือน — เลือก ${[1, 2, 3, 4].filter(r => r > maxRate).join('/')} ได้ผลเท่ากัน · อยากเร็วกว่านี้ = เดิน/ออกกำลังเพิ่ม` : ''}
           <br><span style="opacity:.8">จากน้ำหนักล่าสุด ${lw ? lw.weight + ' กก.' : '-'}${tg.fat_pct ? ' ไขมัน ' + tg.fat_pct + '%' : ''} · BMR ${fmt(tg.bmr)} × ${s.activity} = ${fmt(tg.tdee)}</span></div></div>
       <div class="flbl">ชีวิตประจำวัน (ไม่นับออกกำลัง)</div>
       <div class="card">${ACT.map(([v, n, d]) => `<button class="row" onclick="SS.activity=${v};render()"><div class="grow"><div class="t1">${n}</div><div class="t2">${d}</div></div><div class="amt" style="color:var(--brand)">${num(s.activity) === v ? '✓' : ''}</div></button>`).join('')}</div>
