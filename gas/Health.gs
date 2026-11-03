@@ -29,6 +29,18 @@ function importHealth(text) {
     });
     const r = importWeight_(wf);
     const ns = importSteps_(st), nn = importSleep_(sl), no = importWorkouts_(wo);
+    // เก็บสรุปรอบล่าสุดไว้ดูในแอป (ตั้งค่า → ทางลัด Apple Health) — ไว้ไล่ปัญหาว่านาฬิกาส่งอะไรมา
+    try {
+      const vals = {};
+      sl.forEach(line => {
+        ISO_RE_.lastIndex = 0;
+        const a = ISO_RE_.exec(line), b = a && ISO_RE_.exec(line);
+        const v = (b ? line.slice(b.index + b[0].length) : '').trim() || '(ไม่มีค่า)';
+        vals[v] = (vals[v] || 0) + 1;
+      });
+      upsert_(SH_.SET, { key: 'hk_last', value: JSON.stringify({ at: today_() + ' ' + nowTime_(),
+        w: wf.length, s: st.length, n: sl.length, o: wo.length, vals: vals, ex: sl.slice(0, 2).map(x => String(x).slice(0, 80)) }) });
+    } catch (e) {}
     const msg = [];
     if (wf.length) msg.push('น้ำหนัก +' + r.added + (r.updated ? ' (เติมไขมัน ' + r.updated + ')' : ''));
     if (st.length) msg.push('ก้าว ' + ns + ' วัน');

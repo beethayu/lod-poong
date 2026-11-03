@@ -2581,7 +2581,15 @@ function hkStatus() {
     ${r('⚖️', 'น้ำหนัก', ws ? thDate(ws.date) + ' · ' + num(ws.weight) + ' กก.' : '')}
     ${r('👣', 'ก้าว', st ? dayLabel(st.date) + (st.steps_at ? ' ' + st.steps_at : '') + ' · ' + fmt(num(st.steps)) : '')}
     ${r('😴', 'การนอน', sl ? dayLabel(sl.date) + ' · ' + sleepTxt(sl.sleep_min) : '')}
-    ${r('⌚', 'ออกกำลังจากนาฬิกา', wo ? dayLabel(wo.date) + ' · ' + esc(wo.name.replace('นาฬิกา: ', '')) : '')}</div>`;
+    ${r('⌚', 'ออกกำลังจากนาฬิกา', wo ? dayLabel(wo.date) + ' · ' + esc(wo.name.replace('นาฬิกา: ', '')) : '')}
+    ${hkLast()}</div>`;
+}
+function hkLast() {
+  const h = (D.settings || {}).hk_last; if (!h || !h.at) return '';
+  const vals = Object.keys(h.vals || {}).map(k => esc(k) + ' ' + h.vals[k]).join(' · ');
+  return `<div class="hkst" style="display:block;font-size:12.5px;color:var(--t2,#6B7375)">ทางลัดส่งมาล่าสุด ${esc(String(h.at).slice(5))} · น้ำหนัก ${h.w || 0} · ก้าว ${h.s || 0} · นอน ${h.n || 0} · ออกกำลัง ${h.o || 0} บรรทัด
+    ${h.n ? '<br>ค่าการนอน: ' + vals : (h.s ? '<br>⚠️ ไม่มีบรรทัดการนอนเลย — Garmin ยังไม่ส่งเข้าแอปสุขภาพ หรือทางลัดส่วนนอนไม่ทำงาน' : '')}
+    ${h.n && (h.ex || [])[0] ? '<br><span style="word-break:break-all">' + esc(h.ex[0]) + '</span>' : ''}</div>`;
 }
 function openShortcut() {
   const k = lsGet(KEY_STORE) || '';

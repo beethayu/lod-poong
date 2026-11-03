@@ -168,7 +168,7 @@ function saveSettings(obj) {
   return withLock_(() => {
     const sh = sheet_(SH_.SET);
     Object.keys(obj || {}).forEach(k => {
-      if (!/^[a-z_]+$/.test(k)) return;
+      if (!/^[a-z_]+$/.test(k) || k === 'hk_last') return;
       const o = { key: k, value: JSON.stringify(obj[k]) };
       upsert_(SH_.SET, o);
     });
