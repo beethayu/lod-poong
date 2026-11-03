@@ -188,6 +188,9 @@
 - gas/Garmin.gs importGarmin → Daily คอลัมน์ใหม่ sleep_score, sleep_deep/rem/light/awake (นาที), rhr, hrv, hrv_week, hrv_status, bb_high/low/wake, stress, stress_max, readiness, vo2max, kcal_active, kcal_total, int_min (ปานกลาง + 2×หนัก), floors, spo2, resp, garmin_at · steps/sleep_* เขียนทับของทางลัด (ที่มาเดียวกัน)
   ออกกำลัง → importWorkouts_ (รหัส H+เวลาเริ่ม ไม่ซ้ำกับทางลัด) · Settings.gm_last {at, days, acts, added, fields}
 - บริบทโค้ชเห็น คะแนนนอน, ชีพจรพัก, HRV, Body Battery, ความเครียด, Training Readiness (8 วัน)
+- รันจริง 4 พ.ย. 01:13 ✅ (ผู้ใช้ใส่ Secrets เอง, รอบสองใช้ token เดิมได้) · ได้ 30 วัน: steps, rhr, bb_high/low, stress, stress_max, kcal_active/total, int_min, floors
+  นาฬิกา Instinct 1 (รุ่นแรก): ไม่มี HRV / Training Readiness / คะแนนนอน / REM · นอนว่างเพราะผู้ใช้ไม่เคยใส่นอน (จะเริ่มใส่คืน 4 พ.ย.) · ไม่มีกิจกรรมกดเริ่มบนนาฬิกา (เวทที่บ้านจดในแอป) จึงไม่มี VO2max
+  log Actions มีสรุปต่อ endpoint (ok/empty/error) ไว้ไล่ปัญหา · สั่งรันเองได้: gh api -X POST repos/beethayu/lod-poong/actions/workflows/garmin-sync.yml/dispatches -f ref=main -f 'inputs[days]=3' (gh workflow run ใช้ไม่ได้ GraphQL ถูกบล็อก)
 - ยังไม่ได้ทำ: โชว์ค่าใหม่ในหน้าเว็บ (การ์ดวันนี้/สรุป) · gm_last ในตั้งค่า · ถ้าใช้ได้ดี ตัดก้าว/นอนออกจากทางลัด (เหลือน้ำหนัก Xiaomi)
 
 == สถานะล่าสุด (4 พ.ย. 2569 00:10) ==
