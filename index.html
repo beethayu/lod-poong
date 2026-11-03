@@ -289,6 +289,7 @@
   .ted .sw { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 0 14px; } .ted .sw::-webkit-scrollbar { display: none; }
   .ted .sw button { flex: none; border: 1px solid #E0D8F7; background: #fff; border-radius: 99px; padding: 6px 12px; font-size: 13.5px; }
   .ted .row2 { display: flex; justify-content: space-between; font-size: 13.5px; } .ted .row2 button { color: var(--muted); }
+  .refs { margin: 10px 2px 0; font-size: 13px; color: var(--muted); } .refs summary { font-weight: 600; color: var(--brand); padding: 4px 0; } .refs p { margin: 6px 0; line-height: 1.5; }
   .hint.up { background: #E3F5EC; color: #17694D; } .hint.down { background: #FFF1E6; color: #9A4A12; }
   .startbtn { margin-top: 12px; height: 52px; font-size: 17px; background: linear-gradient(135deg,#6B4FD0,#9C6ADE); border: 0; }
   .basecard { margin-top: 10px; }
@@ -724,10 +725,17 @@ function dailyWeights() {
   weights().forEach(w => { m[w.date] = { date: w.date, w: num(w.weight), f: num(w.fat_pct) || 0 }; });
   return Object.values(m).sort((a, b) => a.date < b.date ? -1 : 1);
 }
+// น้ำหนักใหม่ไม่มี % ไขมัน → ถือว่ามวลไม่รวมไขมันเท่าครั้งล่าสุดที่วัด (ลดแต่ไขมัน — เวท + โปรตีนพอ) แล้วคิด % ใหม่ (ตรงกับ fatCarry_ ใน GAS)
+function fatCarry(w, fw, ff) {
+  if (!(ff > 0)) return 0;
+  if (!(fw > 0) || fw === w) return ff;
+  const lbm = fw * (1 - ff / 100), f = (1 - lbm / w) * 100;
+  return f > 5 && f < 60 ? Math.round(f * 10) / 10 : ff;
+}
 function latestW() {
   const ws = weights(); if (!ws.length) return null;
   const last = ws[ws.length - 1], lf = ws.filter(w => num(w.fat_pct) > 0).pop();
-  return { date: last.date, weight: num(last.weight), fat_pct: lf ? num(lf.fat_pct) : 0, muscle: num(last.muscle) };
+  return { date: last.date, weight: num(last.weight), fat_pct: fatCarry(num(last.weight), lf && num(lf.weight), lf && num(lf.fat_pct)), muscle: num(last.muscle) };
 }
 
 // ===== ก้าวเดิน / การนอน (ทางลัด Apple Health ← Garmin) =====
@@ -760,8 +768,11 @@ function calcTarget(s, lw) {
   const tdee = bmr * (num(s.activity) || 1.2);
   const rate = num(s.rate) || 2;
   let kcal = tdee - rate * 7700 / 30;
-  const low = kcal < bmr;
-  if (low) kcal = bmr;
+  // ขั้นต่ำ: ขาดไม่เกิน 25% ของ TDEE และไม่ต่ำกว่า 1,500 (ชาย) / 1,200 (หญิง)
+  // อิง Jensen et al. 2013 AHA/ACC/TOS Guideline (ขาดวันละ 500–750 · ชาย 1,500–1,800) — เดิมใช้ BMR เป็นขั้นต่ำ ซึ่งไม่มีหลักฐานรองรับ
+  const floor = Math.round(Math.max(s.sex === 'female' ? 1200 : 1500, tdee * 0.75) / 10) * 10;
+  const low = kcal < floor;
+  if (low) kcal = floor;
   kcal = Math.round(kcal / 10) * 10;
   const lbm = f > 0 ? w * (1 - f / 100) : num(s.goal_weight || w) * 0.75;
   let protein = Math.round(lbm * 2), fat = Math.round(kcal * splitOf(s)[2] / 9);
@@ -771,7 +782,7 @@ function calcTarget(s, lw) {
   // ถึงเป้าเมื่อไร (คิดจากที่ขาดจริงต่อวัน)
   const deficit = tdee - kcal, toLose = w - num(s.goal_weight);
   const days = deficit > 0 && toLose > 0 ? Math.round(toLose * 7700 / deficit) : 0;
-  return { kcal, protein, carb, fat, auto, bmr: Math.round(bmr), tdee: Math.round(tdee), low, weight: w, fat_pct: f, deficit: Math.round(deficit), days, toLose: r1(toLose) };
+  return { kcal, protein, carb, fat, auto, floor, bmr: Math.round(bmr), tdee: Math.round(tdee), low, weight: w, fat_pct: f, deficit: Math.round(deficit), days, toLose: r1(toLose) };
 }
 
 // ===== หน้าจอ =====
@@ -2591,14 +2602,14 @@ function setHtml() {
   const s = SS, tg = calcTarget(s), lw = latestW();
   const fr = (label, key, sfx, ph) => `<label class="frow"><span>${label}</span><input type="text" inputmode="decimal" value="${esc(s[key])}" placeholder="${ph || ''}" onchange="SS.${key}=this.value;render()">${sfx ? `<span class="sfx">${sfx}</span>` : ''}</label>`;
   const eta = tg.days ? thDate(addDays(todayIso(), tg.days)) : '-';
-  const maxRate = Math.max(0, (tg.tdee - tg.bmr) * 30 / 7700);  // กินเท่า BMR พอดี = ลดได้เร็วสุดเท่านี้
+  const maxRate = Math.max(0, (tg.tdee - tg.floor) * 30 / 7700);  // กินเท่าขั้นต่ำพอดี = ลดได้เร็วสุดเท่านี้
   return `<div class="hd"><div class="hd-in"><div class="hd-top"><button class="hd-btn" onclick="SS=null;go('today')">‹</button><div class="hd-title">ตั้งค่า</div></div></div></div>
     <div class="wrap">
       <div class="flbl">เป้าหมาย</div>
       <div class="card fcard">${fr('น้ำหนักเป้า', 'goal_weight', 'กก.')}
         <div class="frow"><span>ลดเดือนละ</span><div class="chips" style="flex:1;justify-content:flex-end">${[1, 2, 3, 4].map(r => `<button class="chip ${num(s.rate) === r ? 'on' : ''}" style="padding:0 12px${r > maxRate + 0.05 && num(s.rate) !== r ? ';opacity:.4' : ''}" onclick="SS.rate=${r};render()">${r}</button>`).join('')}</div><span class="sfx">กก.</span></div>
         <div class="preview ${tg.low ? 'bad' : ''}">กินวันละ ~<b>${fmt(tg.kcal)}</b> แคล · ถึงเป้าประมาณ <b>${eta}</b>${tg.days ? ` (${Math.round(tg.days / 30.4 * 10) / 10} เดือน)` : ''}
-          ${tg.low ? `<br>⚠️ กินต่ำกว่า BMR (${fmt(tg.bmr)}) ไม่ได้ เลยลดจากการกินได้สูงสุด ~${r1(maxRate)} กก./เดือน — เลือก ${[1, 2, 3, 4].filter(r => r > maxRate).join('/')} ได้ผลเท่ากัน · อยากเร็วกว่านี้ = เดิน/ออกกำลังเพิ่ม` : ''}
+          ${tg.low ? `<br>⚠️ เร็วเกินหลัก: ขั้นต่ำ ${fmt(tg.floor)} แคล (ขาดไม่เกิน 25%) เลยลดจากการกินได้สูงสุด ~${r1(maxRate)} กก./เดือน — เลือก ${[1, 2, 3, 4].filter(r => r > maxRate).join('/')} ได้ผลเท่ากัน · อยากเร็วกว่านี้ = เดิน/ออกกำลังเพิ่ม` : ''}
           <br><span style="opacity:.8">จากน้ำหนักล่าสุด ${lw ? lw.weight + ' กก.' : '-'}${tg.fat_pct ? ' ไขมัน ' + tg.fat_pct + '%' : ''} · BMR ${fmt(tg.bmr)} × ${s.activity} = ${fmt(tg.tdee)}</span></div></div>
       <div class="flbl">ชีวิตประจำวัน (ไม่นับออกกำลัง)</div>
       <div class="card">${ACT.map(([v, n, d]) => `<button class="row" onclick="SS.activity=${v};render()"><div class="grow"><div class="t1">${n}</div><div class="t2">${d}</div></div><div class="amt" style="text-align:right;${num(s.activity) === v ? 'color:var(--brand);font-weight:700' : 'color:var(--muted);font-weight:500'}">${fmt(Math.round(tg.bmr * v))} <small>แคล</small>${num(s.activity) === v ? ' ✓' : ''}</div></button>`).join('')}</div>
@@ -2612,6 +2623,13 @@ function setHtml() {
         ${isTrue(s.macro_auto) ? `<div class="preview">แคล ${fmt(tg.kcal)} · โปรตีน ${tg.protein} · คาร์บ ${tg.carb} · ไขมัน ${tg.fat} ก.</div>` :
           fr('แคลอรี่', 'kcal', 'แคล', tg.auto.kcal) + fr('โปรตีน', 'protein', 'ก.', tg.auto.protein) + fr('คาร์บ', 'carb', 'ก.', tg.auto.carb) + fr('ไขมัน', 'fat', 'ก.', tg.auto.fat)}
         ${fr('น้ำดื่มต่อวัน', 'water_goal', 'มล.')}${fr('เป้าก้าวต่อวัน', 'step_goal', 'ก้าว', '8000')}</div>
+      <details class="refs"><summary>📚 ตัวเลขพวกนี้อิงงานวิจัยไหน</summary>
+        <p><b>พลังงาน (BMR)</b> — สูตร Katch-McArdle คิดจากมวลไม่รวมไขมัน (ใช้ % ไขมันจากเครื่องชั่ง)</p>
+        <p><b>ความเร็วลด / ขั้นต่ำ</b> — Jensen MD et al. 2013 AHA/ACC/TOS Guideline for the Management of Overweight and Obesity (Circulation 2014): ขาดวันละ 500–750 แคล · ผู้ชายราว 1,500–1,800 แคล → แอปให้ขาดได้ไม่เกิน 25% และไม่ต่ำกว่า 1,500<br>
+          Helms ER, Aragon AA, Fitschen PJ. J Int Soc Sports Nutr 2014: ลด 0.5–1% ของน้ำหนักต่อสัปดาห์ เก็บกล้ามได้ดี</p>
+        <p><b>โปรตีน 2 ก./กก. มวลไม่รวมไขมัน</b> — Morton RW et al. Br J Sports Med 2018 (meta-analysis 49 งาน): ประโยชน์ต่อกล้ามคงที่ราว 1.6 ก./กก./วัน (สูงสุด ~2.2) · Jäger R et al. ISSN Position Stand: Protein and Exercise 2017: 1.4–2.0 ก./กก. ช่วงลดแคลเอนไปทางสูง · คนน้ำหนักเยอะคิดจากมวลไม่รวมไขมันแทนน้ำหนักเต็ม</p>
+        <p><b>ไขมัน vs คาร์บ</b> — Gardner CD et al. JAMA 2018 (DIETFITS, 609 คน 12 เดือน): ไขมันต่ำกับคาร์บต่ำลดได้ไม่ต่างกัน · Hall KD, Guo J. Gastroenterology 2017: แคลเท่ากัน ไขมันในตัวลดใกล้เคียงกัน → เลือกแบบที่กินต่อเนื่องได้ · ช่วงไขมัน 20–35% ของแคล ตาม IOM Acceptable Macronutrient Distribution Range (2005)</p>
+        <p class="t2" style="white-space:normal">เป็นภาพรวมงานวิจัย ไม่ใช่คำแนะนำทางการแพทย์ · มีโรคประจำตัว/กินยา ถามหมอก่อนลดแคล</p></details>
       <div class="flbl">โค้ชเน้นเรื่อง</div>
       <div class="card fcard"><label class="frow tall"><textarea onchange="SS.focus=this.value">${esc(s.focus)}</textarea></label></div>
       <button class="btn pri full" style="margin-top:14px" onclick="saveSet()">บันทึกการตั้งค่า</button>

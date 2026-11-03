@@ -339,7 +339,14 @@ function latestWeight_(log) {
     .sort((a, b) => (a.date + a.time) < (b.date + b.time) ? -1 : 1);
   const last = w[w.length - 1] || null;
   const lastFat = w.filter(l => l.fat_pct !== '' && num_(l.fat_pct) > 0).pop();
-  return last ? { date: last.date, weight: num_(last.weight), fat_pct: lastFat ? num_(lastFat.fat_pct) : 0 } : null;
+  return last ? { date: last.date, weight: num_(last.weight), fat_pct: fatCarry_(num_(last.weight), lastFat && num_(lastFat.weight), lastFat && num_(lastFat.fat_pct)) } : null;
+}
+// น้ำหนักใหม่ไม่มี % ไขมัน → มวลไม่รวมไขมันเท่าครั้งล่าสุดที่วัด แล้วคิด % ใหม่ (ตรงกับ fatCarry ในหน้าเว็บ)
+function fatCarry_(w, fw, ff) {
+  if (!(ff > 0)) return 0;
+  if (!(fw > 0) || fw === w) return ff;
+  const lbm = fw * (1 - ff / 100), f = (1 - lbm / w) * 100;
+  return f > 5 && f < 60 ? Math.round(f * 10) / 10 : ff;
 }
 
 // สัดส่วนแมโคร (ตรงกับ SPLIT ในหน้าเว็บ): % ไขมัน
@@ -359,8 +366,10 @@ function calcTarget_(s, log) {
   const tdee = bmr * (num_(s.activity) || 1.2);
   const rate = num_(s.rate) || 2;
   let kcal = tdee - rate * 7700 / 30;
-  const low = kcal < bmr;
-  if (low) kcal = bmr;
+  // ขั้นต่ำ: ขาดไม่เกิน 25% ของ TDEE และไม่ต่ำกว่า 1,500 ชาย / 1,200 หญิง (Jensen 2013 AHA/ACC/TOS) — ตรงกับหน้าเว็บ
+  const floor = Math.round(Math.max(s.sex === 'female' ? 1200 : 1500, tdee * 0.75) / 10) * 10;
+  const low = kcal < floor;
+  if (low) kcal = floor;
   kcal = Math.round(kcal / 10) * 10;
   const lbm = f > 0 ? w * (1 - f / 100) : num_(s.goal_weight || w) * 0.75;
   let protein = Math.round(lbm * 2), fat = Math.round(kcal * ((SPLIT_.find(x => x[0] === s.macro_split) || SPLIT_[0])[1]) / 9);
