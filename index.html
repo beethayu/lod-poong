@@ -489,6 +489,10 @@
   .hungc .hh b { font-size: 16px; display: block; } .hungc .hi { width: 36px; height: 36px; border-radius: 12px; background: #FBE3BC; display: grid; place-items: center; font-size: 18px; flex: none; }
   .hungc ol { margin: 6px 0 0; padding: 0 14px 0 34px; font-size: 14px; line-height: 1.55; } .hungc li { margin-bottom: 4px; } .hungc li::marker { color: #C98A00; font-weight: 700; }
   .hungc .hf { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 14px 12px; flex-wrap: wrap; }
+  .hungc.calm { background: linear-gradient(180deg,#EEF0FD,#fff 75%); border-color: #DCDFF6; } .hungc.calm .hh { color: #353A99; } .hungc.calm .hi { background: #DFE2FA; }
+  .hungc.calm .hf { padding-top: 2px; }
+  .rhrc.calm { border-color: var(--line); } .rhrc.calm .rh { background: linear-gradient(90deg,#FDE7EC,#FFF4F6); color: #8A2238; } .rhrc.calm .rh b { font-size: 15px; }
+  .wbox.idle { background: #F1F3EF; color: var(--ink); }
   .wbc { background: #fff; border: 1px solid var(--line); border-radius: 16px; margin-top: 12px; overflow: hidden; }
   .wtop2 { display: flex; justify-content: space-between; align-items: flex-end; padding: 12px 14px 10px; } .wtop2 b { font-size: 26px; }
   .wbox { margin: 0 12px; padding: 12px; border-radius: 14px; background: #E3F0FB; color: #1f4f78; font-size: 13px; line-height: 1.5; } .wbox > b { font-size: 16px; display: block; }
@@ -806,8 +810,9 @@ const hasGarmin = () => (D.daily || []).some(x => x.garmin_at);
 const hmClock = m => Math.floor(m / 60) + ':' + String(Math.round(m % 60)).padStart(2, '0');
 // Body Battery ตอนตื่น (Instinct 1 บางวันไม่มี → ใช้ค่าสูงสุดของวันนี้ ณ ตอนดึงเช้า ซึ่งใกล้ค่าตอนตื่น)
 function bbWake(d) { const x = dailyOf(d); return gv(x, 'bb_wake') ?? (d === todayIso() ? gv(x, 'bb_high') : null); }
-// ชีพจรขณะพักเฉลี่ย 7 วันก่อนหน้า (ไม่รวมวันนั้น)
-function rhrBase(d) {
+// ค่าปกติชีพจรขณะพัก — ใช้มัธยฐาน 2 สัปดาห์ (rhrMedian) ให้ทุกการ์ดเลขเดียวกัน · ข้อมูลน้อยใช้เฉลี่ย 7 วันก่อนหน้า
+function rhrBase(d) { const m = rhrMedian(d); return m != null ? m : rhrBase7(d); }
+function rhrBase7(d) {
   const v = []; for (let i = 1; i <= 7; i++) { const r = gv(dailyOf(addDays(d, -i)), 'rhr'); if (r) v.push(r); }
   return v.length >= 3 ? v.reduce((s, x) => s + x, 0) / v.length : null;
 }
@@ -857,7 +862,7 @@ function bodyCardToday(td) {
       ${parts.length ? `<div class="slbar">${parts.map(p => `<i style="flex:${p[0]};background:${p[1]}"></i>`).join('')}</div><div class="lg">${parts.map(p => `<span>${p[2]} ${hmClock(p[0])}</span>`).join('')}</div>` : ''}</div>`;
   } else slp = `<div class="slp"><div class="hd2"><span>นอนเมื่อคืน</span></div><div class="t2" style="color:#5A5E9E">ไม่มีข้อมูล · ใส่นาฬิกาตอนนอนเพื่อดูการนอน</div></div>`;
   const rhr = gv(x, 'rhr'), base = r && r.base, st = gv(y, 'stress');
-  const rhrS = rhr && base ? (rhr - base >= 5 ? `<span style="color:var(--warn)">สูงกว่าปกติ +${Math.round(rhr - base)}</span>` : `<span style="color:var(--ok)">ปกติ · เฉลี่ย 7 วัน ${Math.round(base)}</span>`) : '<span class="t2">ยังเก็บค่าปกติไม่ครบ</span>';
+  const rhrS = rhr && base ? (rhr - base >= 5 ? `<span style="color:var(--warn)">สูงกว่าปกติ +${Math.round(rhr - base)}</span>` : `<span style="color:var(--ok)">ปกติ · ค่าปกติ ${Math.round(base)}</span>`) : '<span class="t2">ยังเก็บค่าปกติไม่ครบ</span>';
   const stS = st == null ? '' : st <= 25 ? 'ผ่อนคลาย' : st <= 50 ? 'ต่ำ' : st <= 75 ? 'ปานกลาง' : 'สูง';
   const two = `<div class="two"><div><div class="k">ชีพจรขณะพัก</div><b>${rhr || '–'}</b> <small class="t2">ครั้ง/นาที</small><div class="s">${rhr ? rhrS : ''}</div></div>
       <div><div class="k">ความเครียดเมื่อวาน</div><b>${st == null ? '–' : st}</b> <small class="t2">/ 100</small><div class="s" style="color:${st != null && st > 50 ? 'var(--warn)' : 'var(--ok)'}">${stS}</div></div></div>`;
@@ -895,19 +900,38 @@ function rhrAlertCard(td) {
     <div class="rbtn">${restToday(td) ? `<div class="t2" style="flex:1;padding:12px 0">✓ วันนี้เป็นวันพักแล้ว</div>` : `<button class="btn pri" style="flex:1" onclick="lsSet('lp_rest','${td}');lsSet('lp_rhr_ack','${td}');keepScroll()">วันนี้เป็นวันพัก</button>`}<button class="btn" style="flex:1" onclick="lsSet('lp_rhr_ack','${td}');keepScroll()">รับทราบ</button></div>
     <div class="ref">Radin 2020 · Lancet Digital Health · Mishra 2020 · Nature Biomed Eng</div></div>`;
 }
+// การ์ดชีพจรตอนปกติ (ผู้ใช้ชอบอ่าน ให้ขึ้นทุกวัน) — สถานะ 3 วันล่าสุดเทียบค่าปกติ
+function rhrCalmCard(td) {
+  if (rhrAlert(td)) return '';
+  const base = rhrMedian(td), days = [addDays(td, -2), addDays(td, -1), td], v = days.map(d => gv(dailyOf(d), 'rhr'));
+  if (base == null || !v[2]) return '';
+  const dn = d => ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'][new Date(d + 'T12:00:00').getDay()];
+  const all = [base].concat(v.filter(Boolean)), hi = Math.max(...all) + 2, lo = Math.min(...all) - 8, h = x => Math.round(16 + (x - lo) / (hi - lo) * 40);
+  const col = x => x - base >= 5 ? '#D8574D' : x - base >= 3 ? '#E3A33B' : '#5DA88A';
+  const bars = [[base, 'ปกติ ' + Math.round(base), '#E1E3DD']].concat(days.map((d, i) => v[i] ? [v[i], (d === td ? 'วันนี้ ' : dn(d) + ' ') + v[i], col(v[i])] : null).filter(Boolean));
+  const up = v.filter(x => x && x - base >= 5).length, mid = v.some(x => x && x - base >= 3);
+  const head = up ? `สูงกว่าปกติ ${up} วัน · เฝ้าดูต่อ` : mid ? 'สูงขึ้นเล็กน้อย ยังไม่น่าห่วง' : 'ปกติ ไม่มีสัญญาณล้าสะสม';
+  return `<div class="rhrc calm"><div class="rh"><div class="ri">❤️</div><div class="grow"><b>ชีพจรขณะพัก · ${head}</b><div>ถ้าสูงกว่าปกติ 5 ครั้ง/นาที ติดกัน 3 วัน มักเป็นสัญญาณล้าสะสมหรือกำลังจะป่วย แอปจะเตือนทันที</div></div></div>
+    <div class="rbars">${bars.map(b => `<div><i style="height:${h(b[0])}px;background:${b[2]}"></i><span>${b[1]}</span></div>`).join('')}</div>
+    <div class="ref" style="padding-top:10px">ค่าปกติ = มัธยฐาน 2 สัปดาห์ก่อนหน้า · Radin 2020 · Lancet Digital Health</div></div>`;
+}
 // นอนน้อย → วันนี้หิวง่าย · Al Khatib 2017 (นอนน้อยกินเพิ่ม ~385 แคล/วัน)
 function hungerCard(td) {
-  const sl = gv(dailyOf(td), 'sleep_min'); if (!sl || sl >= 360 || rhrAlert(td)) return '';
+  const sl = gv(dailyOf(td), 'sleep_min'); if (rhrAlert(td)) return '';
+  if (!sl) return `<div class="hungc calm"><div class="hh"><div class="hi">😴</div><div class="grow"><b>วันนี้จะหิวง่ายไหม</b><div>ยังไม่มีข้อมูลการนอนเมื่อคืน · ใส่นาฬิกานอน แล้วแอปจะบอกทุกเช้า</div></div></div>
+    <div class="hf"><span class="ref">นอนน้อยกว่า 6 ชม. คนมักกินเพิ่มราว 385 แคล/วัน · Al Khatib 2017</span></div></div>`;
+  if (sl >= 360) return `<div class="hungc calm"><div class="hh"><div class="hi">😴</div><div class="grow"><b>${sl >= 420 ? 'นอนพอ ความหิววันนี้น่าจะปกติ' : 'นอนพอใช้ ความหิวไม่น่าเพิ่มมาก'}</b><div>นอน ${sleepTxt(sl)} · คนที่นอนน้อยกว่า 6 ชม. มักกินเพิ่มราว 385 แคล/วัน${sl < 420 ? ' · คืนนี้ลองให้ถึง 7 ชม.' : ''}</div></div></div>
+    <div class="hf"><span class="ref">Al Khatib 2017 · Eur J Clin Nutr</span></div></div>`;
   return `<div class="hungc"><div class="hh"><div class="hi">🍳</div><div class="grow"><b>วันนี้มักหิวง่ายกว่าปกติ</b><div>นอน ${sleepTxt(sl)} · งานวิจัยพบคนนอนน้อยกินเพิ่มราว 385 แคล/วัน</div></div></div>
     <ol><li>มื้อแรกเน้นโปรตีน 30 ก. ขึ้นไป (ไข่ 3 ฟอง + อกไก่ / นมโปรตีน) อิ่มนานกว่า</li><li>หิวช่วงบ่าย ดื่มน้ำ 1 แก้ว รอ 10 นาทีก่อนตัดสินใจ</li><li>วันนี้ไม่ซื้อขนมติดมือจากร้านสะดวกซื้อ</li></ol>
     <div class="hf"><span class="ref">Al Khatib 2017 · Eur J Clin Nutr</span><a class="lnk" onclick="go('coach');sendChat('นอนน้อย วันนี้กินอะไรดีให้อิ่มนาน')">ถามโค้ช: วันนี้กินอะไรดี ›</a></div></div>`;
 }
 // น้ำหนักเด้งขึ้น ≥ 0.3 กก. → ไขมันจริงเพิ่มได้ราว ส่วนเกิน ÷ 7,700 ที่เหลือน่าจะเป็นน้ำ
 function weightBounce(tg, td) {
-  const dw = dailyWeights(), n = dw.length; if (n < 2) return '';
-  const cur = dw[n - 1], prev = dw[n - 2];
-  if (cur.date !== td || dayDiff(prev.date, td) > 4) return '';
-  const up = r1(cur.w - prev.w); if (up < 0.3) return '';
+  const dw = dailyWeights(), n = dw.length; if (!n) return '';
+  const cur = dw[n - 1], prev = n > 1 ? dw[n - 2] : null;
+  const up = prev ? r1(cur.w - prev.w) : 0;
+  if (cur.date !== td || !prev || dayDiff(prev.date, td) > 4 || up < 0.3) return weightCalm(tg, td, dw, cur, prev);
   const yd = addDays(td, -1), t = dayT(yd), budget = tg.kcal + exAll(t) / 2, part = !t.n || partialDay(yd, tg), surplus = Math.round(t.kcal - budget);
   const causes = [];
   if ((D.sets || []).some(x => x.date === yd) || dayLogs(yd).some(l => l.kind === 'exercise' && /เวท|weight|strength/i.test(l.name))) causes.push('ฝึกเวทเมื่อวาน');
@@ -923,7 +947,32 @@ function weightBounce(tg, td) {
     head = 'น่าจะเป็นน้ำ ไม่ใช่ไขมัน';
     body = `ไขมัน ${up} กก. ต้องกินเกินราว ${fmt(Math.round(up * 7700 / 100) * 100)} แคล` + (part ? ' · เมื่อวานจดไม่ครบ เลยเทียบแคลไม่ได้' : ` แต่เมื่อวานกิน ${fmt(t.kcal)} อยู่ในเป้า ${fmt(Math.round(budget))}`);
   }
-  // เฉลี่ย 7 วัน เทียบสัปดาห์ก่อน + กราฟเล็ก 14 วัน
+  return `<div class="wbc"><div class="wtop2"><div><div class="t2">น้ำหนักเช้านี้</div><b>${cur.w}</b> <small class="t2">กก.</small></div><div style="text-align:right"><div style="color:var(--warn);font-weight:700">+${up}</div><div class="t2">จาก${dayDiff(prev.date, td) === 1 ? 'เมื่อวาน' : 'ครั้งก่อน'}</div></div></div>
+    <div class="wbox"><b>${head}</b><div>${body}</div>${causes.length ? `<div style="margin-top:8px">สิ่งที่เจอ</div><div class="wchips">${causes.map(c => `<span>${esc(c)}</span>`).join('')}</div><div style="font-size:12px;margin-top:8px;opacity:.85">อย่างนี้ทำให้ร่างกายเก็บน้ำได้ชั่วคราว 1–3 วัน</div>` : `<div style="font-size:12px;margin-top:6px;opacity:.85">น้ำหนักแกว่งวันละ 0.5–1 กก. เป็นปกติ (เกลือ แป้ง ขับถ่าย เวลาชั่ง)</div>`}</div>
+    ${wTrend(dw, td)}</div>`;
+}
+// น้ำหนักวันปกติ: ลง / นิ่ง / ยังไม่ได้ชั่งวันนี้ — คิดด้วยเลขเดียวกัน (ไขมัน 1 กก. ≈ 7,700 แคล)
+function weightCalm(tg, td, dw, cur, prev) {
+  const ago = dayDiff(cur.date, td), d = prev ? r1(cur.w - prev.w) : 0, perDay = tg.deficit > 0 ? tg.deficit / 7700 : 0;
+  let head, body, right = '';
+  if (ago > 0) {
+    head = ago >= 7 ? `ไม่ได้ชั่ง ${ago} วันแล้ว` : 'วันนี้ยังไม่ได้ชั่ง';
+    body = `ชั่งทุกเช้าหลังเข้าห้องน้ำ ก่อนกินดื่ม ให้เทียบกันได้ แอปจะดูเฉลี่ย 7 วันให้ ไม่ต้องกังวลตัวเลขรายวัน${perDay ? ` · ตามเป้า ไขมันลดได้ราว ${r1(perDay * 7)} กก./สัปดาห์` : ''}`;
+  } else if (d <= -0.3) {
+    right = `<div style="color:var(--ok);font-weight:700">${d}</div><div class="t2">จาก${dayDiff(prev.date, td) === 1 ? 'เมื่อวาน' : 'ครั้งก่อน'}</div>`;
+    head = 'ลงดี แต่ส่วนใหญ่เป็นน้ำ';
+    body = `ไขมันจริงลดได้ราววันละ ${perDay ? Math.round(perDay * 100) / 100 : '0.05–0.1'} กก.${tg.deficit > 0 ? ` (ขาดวันละ ${fmt(tg.deficit)} แคล ÷ 7,700)` : ''} ที่ลงมากกว่านั้นคือน้ำ อาจเด้งกลับได้ ดูเฉลี่ย 7 วันจะเห็นของจริง`;
+  } else {
+    right = prev ? `<div style="font-weight:700">${d > 0 ? '+' : ''}${d}</div><div class="t2">จาก${dayDiff(prev.date, td) === 1 ? 'เมื่อวาน' : 'ครั้งก่อน'}</div>` : '';
+    head = 'นิ่ง แกว่งไม่ถึง 0.3 กก.';
+    body = `ปกติมาก น้ำหนักรายวันแกว่ง 0.5–1 กก. จากเกลือ แป้ง ขับถ่าย เวลาชั่ง${perDay ? ` · ไขมันลดจริงวันละราว ${Math.round(perDay * 100) / 100} กก. เล็กกว่าการแกว่ง เลยต้องดูเฉลี่ย 7 วัน` : ''}`;
+  }
+  return `<div class="wbc"><div class="wtop2"><div><div class="t2">${ago ? 'น้ำหนักล่าสุด · ' + dayLabel(cur.date) : 'น้ำหนักเช้านี้'}</div><b>${cur.w}</b> <small class="t2">กก.</small></div><div style="text-align:right">${right}</div></div>
+    <div class="wbox ${ago ? 'idle' : ''}"><b>${head}</b><div>${body}</div></div>
+    ${wTrend(dw, td)}</div>`;
+}
+// เฉลี่ย 7 วัน เทียบสัปดาห์ก่อน + กราฟเล็ก 14 วัน
+function wTrend(dw, td) {
   const av = (a, b) => { const x = dw.filter(w => w.date > a && w.date <= b); return x.length ? x.reduce((s, w) => s + w.w, 0) / x.length : null; };
   const a1 = av(addDays(td, -7), td), a0 = av(addDays(td, -14), addDays(td, -7));
   const trend = a1 != null && a0 != null ? (a1 <= a0 ? `<span style="color:var(--ok);font-weight:600">${r1(a1)} · ลง ${r1(a0 - a1)} จากสัปดาห์ก่อน</span>` : `<span style="color:var(--warn);font-weight:600">${r1(a1)} · ขึ้น ${r1(a1 - a0)} จากสัปดาห์ก่อน</span>`) : (a1 != null ? r1(a1) : '');
@@ -936,9 +985,7 @@ function weightBounce(tg, td) {
     svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;margin-top:6px">${pts.map((p, i) => `<circle cx="${X(p.date).toFixed(1)}" cy="${Y(p.w).toFixed(1)}" r="${i === pts.length - 1 ? 4.5 : 3}" fill="${i === pts.length - 1 ? '#A85E00' : '#7FB3DD'}"/>`).join('')}
       <polyline points="${pts.map((p, i) => X(p.date).toFixed(1) + ',' + Y(avg[i]).toFixed(1)).join(' ')}" fill="none" stroke="#1f5f91" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
   }
-  return `<div class="wbc"><div class="wtop2"><div><div class="t2">น้ำหนักเช้านี้</div><b>${cur.w}</b> <small class="t2">กก.</small></div><div style="text-align:right"><div style="color:var(--warn);font-weight:700">+${up}</div><div class="t2">จาก${dayDiff(prev.date, td) === 1 ? 'เมื่อวาน' : 'ครั้งก่อน'}</div></div></div>
-    <div class="wbox"><b>${head}</b><div>${body}</div>${causes.length ? `<div style="margin-top:8px">สิ่งที่เจอ</div><div class="wchips">${causes.map(c => `<span>${esc(c)}</span>`).join('')}</div><div style="font-size:12px;margin-top:8px;opacity:.85">อย่างนี้ทำให้ร่างกายเก็บน้ำได้ชั่วคราว 1–3 วัน</div>` : `<div style="font-size:12px;margin-top:6px;opacity:.85">น้ำหนักแกว่งวันละ 0.5–1 กก. เป็นปกติ (เกลือ แป้ง ขับถ่าย เวลาชั่ง)</div>`}</div>
-    ${trend ? `<div class="wavg"><div class="t2" style="display:flex;justify-content:space-between"><span>ดูเฉลี่ย 7 วันแทน</span>${trend}</div>${svg}${a1 != null && a0 != null && a1 <= a0 ? '<div style="font-size:13px;color:var(--brand);font-weight:600;margin-top:6px">ทิศทางยังลง ทำตามแผนต่อได้เลย</div>' : ''}</div>` : ''}</div>`;
+  return `${trend ? `<div class="wavg"><div class="t2" style="display:flex;justify-content:space-between"><span>ดูเฉลี่ย 7 วันแทน</span>${trend}</div>${svg}${a1 != null && a0 != null && a1 <= a0 ? '<div style="font-size:13px;color:var(--brand);font-weight:600;margin-top:6px">ทิศทางยังลง ทำตามแผนต่อได้เลย</div>' : ''}</div>` : ''}`;
 }
 // เมื่อวานนอน < 6 ชม. แต่จดครบและกินไม่เกินเป้า (+100) → ชมในการ์ดโค้ช (ตรงกับบรรทัด ⭐ ใน Coach.gs)
 function toughDay(tg) {
@@ -1044,7 +1091,7 @@ function todayHtml() {
       ${weightBounce(tg, td)}
       <div class="sec"><h3>🥗 แมโครวันนี้</h3><a class="lnk" onclick="go('diary')">ไดอารี่ ›</a></div>
       ${macroBars(t, tg)}
-      ${hasGarmin() ? `<div class="sec"><h3>⌚ ร่างกายวันนี้</h3><a class="lnk" onclick="go('sum');setTimeout(()=>{const e=document.getElementById('c_rhr');if(e)e.scrollIntoView()},50)">กราฟ ›</a></div>${bodyCardToday(td)}${hungerCard(td)}` : ''}
+      ${hasGarmin() ? `<div class="sec"><h3>⌚ ร่างกายวันนี้</h3><a class="lnk" onclick="go('sum');setTimeout(()=>{const e=document.getElementById('c_rhr');if(e)e.scrollIntoView()},50)">กราฟ ›</a></div>${bodyCardToday(td)}${hungerCard(td)}${rhrCalmCard(td)}` : ''}
       <div class="sec"><h3>👣 ก้าวเดิน${hasGarmin() ? '' : ' · การนอน'}</h3>${(D.daily || []).length ? `<a class="lnk" onclick="go('sum');setTimeout(()=>{const e=document.getElementById('c_steps');if(e)e.scrollIntoView()},50)">กราฟ ›</a>` : ''}</div>
       ${stepCard(td)}
       <div class="sec"><h3>⏱️ IF อดอาหาร</h3><a class="lnk" onclick="go('ifh')">ประวัติ ›</a></div>
