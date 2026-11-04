@@ -850,8 +850,13 @@ const hmClock = m => Math.floor(m / 60) + ':' + String(Math.round(m % 60)).padSt
 function bbWake(d) { const x = dailyOf(d); return gv(x, 'bb_wake') ?? (d === todayIso() ? gv(x, 'bb_high') : null); }
 // ค่าปกติชีพจรขณะพัก — ใช้มัธยฐาน 2 สัปดาห์ (rhrMedian) ให้ทุกการ์ดเลขเดียวกัน · ข้อมูลน้อยใช้เฉลี่ย 7 วันก่อนหน้า
 function rhrBase(d) { const m = rhrMedian(d); return m != null ? m : rhrBase7(d); }
+// ค่าปกตินับเฉพาะวันที่ใส่นาฬิกานอน (มีข้อมูลนอน) — วันที่ไม่ได้ใส่นอน Garmin คิดชีพจรพักสูงกว่าจริง ทำให้ค่าปกติเพี้ยน
+// (4 พ.ย.: ค่าปกติ 73 มาจากช่วงไม่ใส่นอน ทั้งที่ล่าสุด 60–68)
+const rhrSl = d => { const x = dailyOf(d); return gv(x, 'sleep_min') > 0 ? gv(x, 'rhr') : null; };
+// จำนวนวันที่ใช้คิดค่าปกติได้ในช่วงวัน −3 ถึง −16 (ต้องครบ 4 วันถึงจะแสดงค่าปกติ)
+function rhrCount(td) { let n = 0; for (let i = 3; i <= 16; i++) if (rhrSl(addDays(td, -i))) n++; return n; }
 function rhrBase7(d) {
-  const v = []; for (let i = 1; i <= 7; i++) { const r = gv(dailyOf(addDays(d, -i)), 'rhr'); if (r) v.push(r); }
+  const v = []; for (let i = 1; i <= 7; i++) { const r = rhrSl(addDays(d, -i)); if (r) v.push(r); }
   return v.length >= 3 ? v.reduce((s, x) => s + x, 0) / v.length : null;
 }
 // ความพร้อมฝึก: Instinct 1 ไม่มี Training Readiness → ใช้ BB ตอนตื่น + ชีพจรพักเทียบปกติ + ชั่วโมงนอน
@@ -870,12 +875,19 @@ function readiness(d) {
   if ((bb != null && bb < 30) || (diff != null && diff >= 8)) lv = 'rest';
   else if ((bb != null && bb < 60) || (diff != null && diff >= 5) || (sl && sl < 360)) lv = 'light';
   const head = { ok: 'พร้อมฝึกตามแผน', light: 'วันนี้ฝึกเบาลง', rest: 'วันนี้พักดีกว่า' }[lv];
-  const tip = {
+  // สาเหตุที่ดึงระดับลง — บอกตรง ๆ ทั้งสองฝั่ง ไม่ให้วง BB บอกดีแต่กล่องล่างบอกไม่ดี (ผู้ใช้: การ์ดเดียวห้ามพูดขัดกัน)
+  const slShort = !!(sl && sl < 360), rhrHi = diff != null && diff >= 5;
+  const low = [];
+  if (bb != null && bb < 60) low.push('แบตตอนตื่นแค่ ' + bb);
+  if (slShort) low.push('นอนแค่ ' + sleepTxt(sl));
+  if (rhrHi) low.push('ชีพจรพักสูงกว่าปกติ +' + diff);
+  const cause = lv === 'ok' ? '' : (bb != null && bb >= 60 ? 'แบตฟื้นดี (' + bb + ') แต่' + low.join(' และ ') : low.join(' · '));
+  const act = {
     ok: sl && sl >= 420 ? 'นอนพอ ฟื้นตัวดี วันนี้ฝึกตามแผนได้เลย' : 'ร่างกายฟื้นตัวดี วันนี้ฝึกตามแผนได้เลย',
-    light: (sl && sl < 360 ? 'นอนน้อย ' : '') + 'ร่างกายยังฟื้นไม่เต็มที่ ลดลงท่าละ 1 เซ็ต น้ำหนักเท่าเดิม' + (sl && sl < 360 ? ' · ระวังหิวง่ายวันนี้' : ''),
-    rest: 'ร่างกายล้า เดินเบา ๆ 20–30 นาทีพอ ถ้ารู้สึกไหวจะฝึกแบบเบาก็ได้'
+    light: 'ลดลงท่าละ 1 เซ็ต น้ำหนักเท่าเดิม' + (slShort ? ' · ระวังหิวง่ายวันนี้' : ''),
+    rest: 'เดินเบา ๆ 20–30 นาทีพอ ถ้ารู้สึกไหวจะฝึกแบบเบาก็ได้'
   }[lv];
-  return { lv, head, tip, why, bb, rhr, base, diff, sl };
+  return { lv, head, cause, act, tip: cause ? cause + ' · ' + act : act, why, bb, rhr, base, diff, sl };
 }
 function bodyCardToday(td) {
   if (!hasGarmin()) return '';
@@ -885,7 +897,7 @@ function bodyCardToday(td) {
     return `<div class="bodyc"><div class="row"><div class="ico">⌚</div><div class="grow"><div class="t1">ยังไม่มีข้อมูล Garmin วันนี้</div><div class="t2">ดึงเองทุกเช้า 07:17${last ? ' · ล่าสุด ' + esc(String(last.garmin_at).slice(5).replace('-', '/')) : ''}</div></div></div></div>`;
   }
   const bb = bbWake(td), col = bb == null ? '#C9CDC5' : bb >= 60 ? '#1E7B4D' : bb >= 30 ? '#C98A00' : '#5A5FD0';
-  const bbTxt = bb == null ? '' : bb >= 60 ? 'ฟื้นตัวดี' : bb >= 30 ? 'ฟื้นตัวพอใช้' : 'ยังล้าอยู่';
+  const bbTxt = bb == null ? '' : bb >= 60 ? 'แบตฟื้นดี' : bb >= 30 ? 'แบตฟื้นพอใช้' : 'แบตยังต่ำ';
   const yh = gv(y, 'bb_high'), yl = gv(y, 'bb_low');
   const ring = bb == null ? '' : `<div class="bbrow"><div class="bbring" style="background:conic-gradient(${col} 0 ${bb}%,#EEF0EC ${bb}% 100%)"><div><b>${bb}</b><small>ตอนตื่น</small></div></div>
       <div class="grow"><div class="t2">Body Battery</div><div class="t1" style="color:${col}">${bbTxt}</div>${yh != null ? `<div class="t2">เมื่อวาน สูงสุด ${yh}${yl != null ? ' · ต่ำสุด ' + yl : ''}</div>` : ''}</div>
@@ -900,19 +912,19 @@ function bodyCardToday(td) {
       ${parts.length ? `<div class="slbar">${parts.map(p => `<i style="flex:${p[0]};background:${p[1]}"></i>`).join('')}</div><div class="lg">${parts.map(p => `<span>${p[2]} ${hmClock(p[0])}</span>`).join('')}</div>` : ''}</div>`;
   } else slp = `<div class="slp"><div class="hd2"><span>นอนเมื่อคืน</span></div><div class="t2" style="color:#5A5E9E">ไม่มีข้อมูล · ใส่นาฬิกาตอนนอนเพื่อดูการนอน</div></div>`;
   const rhr = gv(x, 'rhr'), base = r && r.base, st = gv(y, 'stress');
-  const rhrS = rhr && base ? (rhr - base >= 5 ? `<span style="color:var(--warn)">สูงกว่าปกติ +${Math.round(rhr - base)}</span>` : `<span style="color:var(--ok)">ปกติ · ค่าปกติ ${Math.round(base)}</span>`) : '<span class="t2">ยังเก็บค่าปกติไม่ครบ</span>';
+  const rhrS = rhr && base ? (rhr - base >= 5 ? `<span style="color:var(--warn)">สูงกว่าปกติ +${Math.round(rhr - base)}</span>` : `<span style="color:var(--ok)">ปกติ · ค่าปกติ ${Math.round(base)}</span>`) : `<span class="t2">กำลังเก็บค่าปกติ ${rhrCount(td)}/4 วัน</span>`;
   const stS = st == null ? '' : st <= 25 ? 'ผ่อนคลาย' : st <= 50 ? 'ต่ำ' : st <= 75 ? 'ปานกลาง' : 'สูง';
   const two = `<div class="two"><div><div class="k">ชีพจรขณะพัก</div><b>${rhr || '–'}</b> <small class="t2">ครั้ง/นาที</small><div class="s">${rhr ? rhrS : ''}</div></div>
       <div><div class="k">ความเครียดเมื่อวาน</div><b>${st == null ? '–' : st}</b> <small class="t2">/ 100</small><div class="s" style="color:${st != null && st > 50 ? 'var(--warn)' : 'var(--ok)'}">${stS}</div></div></div>`;
-  const tip = r ? `<div class="rdy ${r.lv}">${r.lv === 'ok' ? '✓ ' : ''}${esc(r.tip)}</div>` : '';
+  const tip = r ? `<div class="rdy ${r.lv}">${r.cause ? `<b>${esc(r.cause)}</b><br>` : '✓ '}${esc(r.act)}</div>` : '';
   return `<div class="bodyc">${ring}${slp}${two}${tip}</div>`;
 }
 // ----- รอบ 2: เตือนจากข้อมูลร่างกาย (ไม่ใช้ AI) -----
 // วันพักที่ผู้ใช้กดเอง (จากการ์ดชีพจรสูง) — แท็บฝึกขึ้นวันพัก แผนไม่เลื่อน
 const restToday = d => lsGet('lp_rest') === d;
-// ค่าปกติ = มัธยฐานชีพจรพักวัน −3 ถึง −16 (ไม่รวม 3 วันล่าสุด · มัธยฐานไม่โดนดึงขึ้นถ้าสูงต่อเนื่องเกิน 3 วัน)
+// ค่าปกติ = มัธยฐานชีพจรพักวัน −3 ถึง −16 เฉพาะวันที่มีข้อมูลนอน (ไม่รวม 3 วันล่าสุด · มัธยฐานไม่โดนดึงขึ้นถ้าสูงต่อเนื่องเกิน 3 วัน)
 function rhrMedian(td) {
-  const b = []; for (let i = 3; i <= 16; i++) { const r = gv(dailyOf(addDays(td, -i)), 'rhr'); if (r) b.push(r); }
+  const b = []; for (let i = 3; i <= 16; i++) { const r = rhrSl(addDays(td, -i)); if (r) b.push(r); }
   if (b.length < 4) return null;
   b.sort((x, y) => x - y); const m = b.length >> 1;
   return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2;
@@ -942,7 +954,9 @@ function rhrAlertCard(td) {
 function rhrCalmCard(td) {
   if (rhrAlert(td)) return '';
   const base = rhrMedian(td), days = [addDays(td, -2), addDays(td, -1), td], v = days.map(d => gv(dailyOf(d), 'rhr'));
-  if (base == null || !v[2]) return '';
+  if (!v[2]) return '';
+  if (base == null) return `<div class="rhrc calm"><div class="rh"><div class="ri">❤️</div><div class="grow"><div class="kick">ชีพจรขณะพัก</div><b style="color:var(--muted)">กำลังเก็บค่าปกติ ${rhrCount(td)}/4 วัน</b><div class="fact">วันนี้ ${v[2]} ครั้ง/นาที<br>ค่าปกตินับเฉพาะวันที่ใส่นาฬิกานอน ครบแล้วแอปจะเทียบและเตือนให้เอง</div></div></div>
+    <div class="note2">วันที่ไม่ได้ใส่นาฬิกานอน ชีพจรพักที่นาฬิกาคิดมักสูงกว่าจริง จึงไม่เอามาเป็นค่าปกติ</div></div>`;
   const dn = d => ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'][new Date(d + 'T12:00:00').getDay()];
   const all = [base].concat(v.filter(Boolean)), hi = Math.max(...all) + 2, lo = Math.min(...all) - 8, h = x => Math.round(16 + (x - lo) / (hi - lo) * 40);
   const col = x => x - base >= 5 ? '#D8574D' : x - base >= 3 ? '#E3A33B' : '#5DA88A';
@@ -1038,7 +1052,7 @@ function neatHint(td, si, goal) {
   if (!si || si.steps >= goal || rhrAlert(td)) return '';
   const lite = logs().some(l => l.date === td && l.kind === 'exercise' && /\(เบา\)/.test(l.name)), rd = readiness(td);
   if (!lite && !(rd && rd.lv === 'light')) return '';
-  return `<div class="t2" style="padding:0 14px 12px;color:#A5400F">${lite ? 'วันนี้ฝึกเวทแบบเบา' : 'วันนี้ร่างกายยังฟื้นไม่เต็มที่'} · เดินเพิ่มให้ถึง ${fmt(goal)} ก้าวช่วยเผาผลาญแทน โดยไม่ล้าเพิ่ม</div>`;
+  return `<div class="t2" style="padding:0 14px 12px;color:#A5400F">${lite ? 'วันนี้ฝึกเวทแบบเบา' : esc(rd.cause)} · เดินเพิ่มให้ถึง ${fmt(goal)} ก้าวช่วยเผาผลาญแทน โดยไม่ล้าเพิ่ม</div>`;
 }
 // แถวเล็กในไดอารี่ / ในการ์ดก้าว
 function gmRow(d) {
@@ -1255,6 +1269,15 @@ function qPick(tg) {
   const m = c.tag && !qOff ? pool.filter(q => (q.tags || []).includes(c.tag)) : [];
   const q = m.length ? m[n % m.length] : list[((n % list.length) + list.length) % list.length];
   return { q, c, hit: !!m.length };
+}
+// คำคมที่แสดงอยู่ในการ์ดโค้ชตอนนี้ (รวมที่แตะเปลี่ยนแล้ว) → ส่งให้โค้ชเห็น คุยต่อจากคำคมได้ · ไม่มี/ผิดพลาด = null
+function quoteCtx() {
+  try {
+    if (!QUOTES) return null;
+    const p = qPick(calcTarget(S())); if (!p) return null;
+    const q = p.q, act = p.hit ? p.c.act : q.do;
+    return { th: q.th, en: q.en || '', who: q.who || '', src: q.src || '', year: q.year || '', easy: q.easy || '', act: act || '', why: p.hit ? p.c.why : '' };
+  } catch (e) { return null; }
 }
 const qWho = q => esc(q.who || '') + (q.src ? ' · ' + esc(q.src) : '') + (q.year ? ' (' + esc(String(q.year)) + ')' : '');
 function quoteBox(tg) {
@@ -1610,7 +1633,7 @@ let tipState = '';
 function maybeTip(force) {
   if (!D || !D.gemini || (D.tip && !force) || tipState === 'loading' || (tipState === 'err' && !force)) return;
   tipState = 'loading';
-  api('getTip', [!!force]).then(t => { tipState = ''; D.tip = t; lsSet(DATA_STORE, JSON.stringify(D)); if (tab === 'today') render(); })
+  api('getTip', [!!force, quoteCtx()]).then(t => { tipState = ''; D.tip = t; lsSet(DATA_STORE, JSON.stringify(D)); if (tab === 'today') render(); })
     .catch(() => { tipState = 'err'; if (tab === 'today') render(); });
 }
 
@@ -1890,7 +1913,7 @@ function sendChat(q) {
   photos = []; renderThumbs(); ta.blur();
   render(); scrollChat();
   const t0 = Date.now();
-  api('coachSend', [text, imgs, 'image/jpeg']).then(d => {
+  api('coachSend', [text, imgs, 'image/jpeg', quoteCtx()]).then(d => {
     pending = null; setData(d); scrollChat();
     if (d && d.sent && d.sent.dup) toast('ข้อความนี้จดไปแล้ว ไม่จดซ้ำ');
   }).catch(e => {
@@ -2751,7 +2774,7 @@ function trainToday() {
   const rd = train && !doneToday ? readiness(td) : null, lite = rd && rd.lv !== 'ok';
   return `<div class="tcard today-w ${train && !doneToday ? 'go' : ''}">
       <div class="tch">${doneToday ? '✅ วันนี้ฝึกแล้ว เก่งมาก' : train ? '💪 วันนี้วันฝึก' : '😴 วันนี้วันพัก — เดิน 20–30 นาทีพอ'}</div>
-      ${rd ? `<div class="rdybox ${rd.lv}"><b>${{ ok: '✓', light: '↓', rest: '☾' }[rd.lv]} ${rd.head}</b><div class="t2">${esc(rd.why.join(' · '))}</div>${rd.lv !== 'ok' ? `<div class="t2" style="margin-top:4px">${esc(rd.tip)}</div>` : ''}</div>` : ''}
+      ${rd ? `<div class="rdybox ${rd.lv}"><b>${{ ok: '✓', light: '↓', rest: '☾' }[rd.lv]} ${rd.head}</b><div class="t2">${esc(rd.lv === 'ok' ? rd.why.join(' · ') : rd.cause)}</div>${rd.lv !== 'ok' ? `<div class="t2" style="margin-top:4px">${esc(rd.act)}</div>` : ''}</div>` : ''}
       <div class="hscroll" style="margin:8px -14px 10px">${p.days.map((d, i) => `<button class="chip ${i === di ? 'on' : ''}" onclick="pickDay=${i};keepScroll()">${esc(d.name)}${i === nextDayIdx() ? ' · ถัดไป' : ''}</button>`).join('')}</div>
       ${day.items.map((it, ii) => { const x = exOf(it.id) || {}, pr = prog(it);
         const op = trOpen === di + '-' + ii;

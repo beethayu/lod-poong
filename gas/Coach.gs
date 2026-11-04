@@ -57,8 +57,21 @@ function geminiCall_(parts, json) {
   throw new Error('โค้ชตอบไม่ได้ตอนนี้ (Gemini ' + last + ')');
 }
 
-// สรุปข้อมูลจริงให้ AI เห็น
-function coachContext_(s, log, today) {
+// คำคมที่ผู้ใช้เห็นในการ์ดโค้ชวันนี้ (หน้าเว็บเลือกจากคลัง quotes.json แล้วส่งมา) → บรรทัดบริบท
+// ข้อมูลล้วน: ตัดความยาว ไม่ใช้เป็นคำสั่ง · ห้าม AI แต่งคำคม/ที่มาเพิ่มเอง (ชื่อคนพูดผิดบ่อย)
+function quoteLines_(q) {
+  if (!q || typeof q !== 'object' || !q.th) return [];
+  const c = (k, n) => String(q[k] == null ? '' : q[k]).replace(/\s+/g, ' ').trim().slice(0, n);
+  const who = [c('who', 80), c('src', 100)].filter(Boolean).join(' · ') + (c('year', 8) ? ' (' + c('year', 8) + ')' : '');
+  const out = [`คำคมวันนี้ที่ผู้ใช้เห็นในการ์ดโค้ช: “${c('th', 300)}”${c('en', 300) ? ' / “' + c('en', 300) + '”' : ''} — ${who || 'ไม่ระบุที่มา'}`];
+  if (c('easy', 300)) out.push('  พูดง่าย ๆ: ' + c('easy', 300));
+  if (c('act', 200)) out.push('  วันนี้ (ที่การ์ดแนะ): ' + c('act', 200) + (c('why', 120) ? ' · เหตุผลที่เลือกคำคมนี้: ' + c('why', 120) : ''));
+  out.push('  กติกา: ถ้าผู้ใช้พูดถึง/ถามเรื่องคำคมนี้ ให้คุยต่อจากข้อความข้างบนได้เลย อธิบายให้เข้าใจง่าย แล้วโยงกับตัวเลขจริงของเขา · ใช้ชื่อคน/ที่มา/ปีตามที่ให้ไว้เท่านั้น ห้ามแต่งคำคมหรือเพิ่มที่มาเอง ถ้าถูกถามที่มาลึกกว่านี้ให้บอกว่าการ์ดมีแค่นี้ · ถ้าผู้ใช้ไม่ได้พูดถึง ไม่ต้องยกคำคมมาเอง');
+  return out;
+}
+
+// สรุปข้อมูลจริงให้ AI เห็น (quote = คำคมวันนี้จากการ์ด ไม่ส่งก็ได้)
+function coachContext_(s, log, today, quote) {
   const tg = calcTarget_(s, log);
   const day = d => log.filter(l => l.date === d);
   const tot = list => {
@@ -114,7 +127,9 @@ function coachContext_(s, log, today) {
       lines.push('⭐ เมื่อวานนอนไม่ถึง 6 ชม. แต่ยังคุมอาหารอยู่ในเป้า (วันที่ยาก) → ชมเรื่องนี้สั้น ๆ ได้');
   }
   const rr = [2, 1, 0].map(i => num_((daily[addDays_(today, -i)] || {}).rhr));
-  const rb = []; for (let i = 3; i <= 16; i++) { const v = num_((daily[addDays_(today, -i)] || {}).rhr); if (v) rb.push(v); }
+  // ค่าปกตินับเฉพาะวันที่มีข้อมูลนอน (ตรงกับ rhrSl ในหน้าเว็บ) — วันไม่ใส่นอน Garmin คิดชีพจรพักสูงเพี้ยน
+  const rb = []; for (let i = 3; i <= 16; i++) { const dx = daily[addDays_(today, -i)] || {}, v = num_(dx.rhr); if (v && num_(dx.sleep_min) > 0) rb.push(v); }
+  if (rb.length < 4 && num_(tx.rhr) > 0) lines.push(`ℹ️ ค่าปกติชีพจรพักยังเก็บไม่ครบ (มีวันที่ใส่นอน ${rb.length}/4 วัน) → ห้ามเทียบชีพจรพักกับ "ปกติ" หรือสรุปว่าสูง/ต่ำกว่าปกติ · ชีพจรพักช่วงที่ไม่ได้ใส่นาฬิกานอนมักสูงกว่าจริง ตัวเลขที่ลดลงหลังเริ่มใส่นอนไม่ได้แปลว่าร่างกายดีขึ้น`);
   if (rb.length >= 4 && rr.every(v => v > 0)) {
     rb.sort((a, b) => a - b);   // มัธยฐาน (ตรงกับ rhrMedian ในหน้าเว็บ)
     const base = rb.length % 2 ? rb[rb.length >> 1] : (rb[(rb.length >> 1) - 1] + rb[rb.length >> 1]) / 2;
@@ -138,6 +153,7 @@ function coachContext_(s, log, today) {
   }
   const ws = log.filter(l => l.kind === 'weight').sort((a, b) => a.date < b.date ? -1 : 1).slice(-12);
   lines.push('น้ำหนักล่าสุด: ' + (ws.map(w => `${w.date} ${w.weight}${w.fat_pct ? '/' + w.fat_pct + '%' : ''}`).join(', ') || '-'));
+  quoteLines_(quote).forEach(l => lines.push(l));
   // การฝึก
   const eq = { none: 'ตัวเปล่า', db: 'ดัมเบล', band: 'ยางยืด', bar: 'บาร์โหนประตู', bench: 'ม้านั่ง/เก้าอี้', ez: 'EZ bar', sand: 'แซนด์แบ็ก (ชอบแบกเดิน/ลันจ์)', gym: 'ยิม' };
   const plan = s.plan && s.plan.days ? s.plan : null;
@@ -151,7 +167,7 @@ function coachContext_(s, log, today) {
 }
 
 // ส่งข้อความ (+รูป) ให้โค้ช → AI แยกสิ่งที่ต้องจด → จดทันที → คืนคำตอบ
-function coachSend(text, images, mime) {
+function coachSend(text, images, mime, quote) {
   text = String(text || '').trim().slice(0, 2000);
   const pages = (Array.isArray(images) ? images : [images]).filter(Boolean).slice(0, 4);
   if (!text && !pages.length) throw new Error('พิมพ์ข้อความหรือแนบรูป');
@@ -166,7 +182,7 @@ function coachSend(text, images, mime) {
       Date.now() - new Date(String(prevU.at).replace(' ', 'T') + '+07:00').getTime() < 15 * 60000) {
     const all = getAll(); all.sent = { msg_id: prevU.msg_id, entries: 0, dup: true }; return all;
   }
-  const ctx = coachContext_(s, log, today);
+  const ctx = coachContext_(s, log, today, quote);
   const msgId = newId_('M');
 
   // รูปเก็บ Drive
@@ -324,18 +340,19 @@ function clearChat() {
 }
 
 // การ์ดคำแนะนำวันละครั้ง (สร้างครั้งแรกของวัน แคชในชีต Tips)
-function getTip(force) {
+function getTip(force, quote) {
   const today = today_();
   const have = rows_(SH_.TIP).filter(t => t.date === today).pop();
   if (have && !force) return have.text;
   const s = settings_();
-  const ctx = coachContext_(s, rows_(SH_.LOG), today);
+  const ctx = coachContext_(s, rows_(SH_.LOG), today, quote);
   const sunday = new Date(today + 'T12:00:00+07:00').getDay() === 0;
   const prompt = `คุณคือ "โค้ชลดพุง" เขียนการ์ดโค้ชประจำวันนี้ (${today})${sunday ? ' — วันนี้วันอาทิตย์: ทำเป็น "สรุปสัปดาห์" head = ผลสัปดาห์นี้ (น้ำหนักเฉลี่ยเปลี่ยนเท่าไร/วันที่คุมได้/ฝึกกี่ครั้ง) body = 1–2 เป้าสัปดาห์หน้า' : ''} ให้ผู้ชายไทยที่กำลังลดน้ำหนัก ภาษาไทย ตอบ JSON อย่างเดียว:
 {"head":"หัวข้อ 1 ประโยค ไม่เกิน 55 ตัวอักษร","body":"คำแนะนำ 1–2 ประโยค ไม่เกิน 170 ตัวอักษร"}
 head = เรื่องที่สำคัญหรือน่าดีใจที่สุดจากข้อมูลจริง (เช่น น้ำหนักลงกี่ กก., จดครบกี่วัน, โปรตีนถึงเป้า) ให้มีกำลังใจ ใส่อีโมจิได้ 1 ตัวท้าย
 body = 1 อย่างที่ทำได้วันนี้ เจาะจง (เมนูไทย/เซเว่นที่เหมาะ, เดินหลังมื้อ, เติมโปรตีนกี่กรัม) ถ้าเมื่อวานเกินเป้าบอกตรง ๆ แบบไม่ดุ · ถ้าเมื่อวาน "จดไม่ครบ" ห้ามบอกว่ากินน้อย ให้ชวนจดทุกมื้อแทน
 เน้นของผู้ใช้: ${s.focus || '-'} · สไตล์ ตรง มีเหตุผล ไม่อวยเกิน ไม่ใช้ markdown ไม่ขึ้นต้นด้วยคำทักทาย
+ถ้ามี "คำคมวันนี้" ในข้อมูล: คำคมแสดงอยู่ในการ์ดเดียวกันแล้ว ห้ามยกคำคมซ้ำใน head/body และ body ต้องไม่ขัดกับบรรทัด "วันนี้" ของคำคม
 ${ctx.text}`;
   let text;
   try {
