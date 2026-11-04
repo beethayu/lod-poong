@@ -382,6 +382,29 @@
 
 
   .hd.tall { padding-bottom: 54px; }
+    /* คำคม (การ์ดโค้ช + คลังคำคม) */
+    .qbox { margin: 0 12px 12px; border-radius: 14px; background: #F6EFE2; padding: 12px 14px; display: flex; gap: 10px; cursor: pointer; }
+    .qmk { font-size: 40px; line-height: 34px; font-weight: 700; color: #C98A00; flex: none; }
+    .qbig { font-size: 24px; font-weight: 700; color: #8A5300; flex: none; line-height: 1.15; max-width: 92px; }
+    .qbig.sm { font-size: 19px; margin-right: 4px; }
+    .qth { font-size: 16px; font-weight: 700; color: #5A3A00; line-height: 1.45; }
+    .qen { font-size: 12.5px; font-style: italic; color: #6E5E44; margin-top: 4px; line-height: 1.45; }
+    .qwho { font-size: 12px; color: #6E5E44; margin-top: 4px; }
+    .qeasy, .qdo { font-size: 14px; color: #2A2418; line-height: 1.55; margin-top: 4px; }
+    .qeasy { margin-top: 10px; padding-top: 8px; border-top: 1px solid #E8DCC4; }
+    .qeasy b, .qdo b { color: #8A5300; }
+    .qft { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; color: #6E5E44; }
+    .qfull { background: #FBF8F2; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+    .qtop { display: flex; gap: 8px; align-items: flex-start; }
+    .qstar { border: 0; background: none; font-size: 22px; line-height: 1; padding: 2px; color: #B9BDB5; flex: none; }
+    .qstar.on { color: #C98A00; }
+    .qsrc { font-size: 12px; color: #6E5E44; margin-top: 8px; line-height: 1.5; }
+    .qact { display: flex; gap: 8px; margin-top: 10px; }
+    .qrow .t1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .qchips { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; scrollbar-width: none; }
+    .qchips::-webkit-scrollbar { display: none; }
+    .qchips .chip { flex: none; }
+    .qin { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; margin-top: 6px; background: #fff; color: inherit; }
   .coach { position: relative; margin: -42px 0 0; background: #fff; border-radius: 18px; box-shadow: 0 6px 22px rgba(20,54,48,.16); overflow: hidden; }
   .coach .top { display: flex; gap: 12px; padding: 14px 14px 10px; }
   .coach .av { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg,#2f7a6b,#1E4D45); color: #fff; display: grid; place-items: center; font-size: 24px; flex: none; }
@@ -1058,7 +1081,7 @@ function calcTarget(s, lw) {
 }
 
 // ===== หน้าจอ =====
-const PARENT = { add: 'diary', set: 'today', pick: 'diary', body: 'today', ifh: 'today' };
+const PARENT = { add: 'diary', set: 'today', pick: 'diary', body: 'today', ifh: 'today', quotes: 'today' };
 function go(t) { tab = t; openRow = ''; lsSet(UI_STORE, JSON.stringify({ tab: PARENT[t] || t, at: Date.now() })); render(); document.getElementById('app').scrollTop = 0; if (t === 'coach') scrollChat(); }
 function render() {
   const app = document.getElementById('app');
@@ -1068,7 +1091,7 @@ function render() {
   if (!D) { app.innerHTML = '<div class="hd"><div class="hd-in"><div class="hd-top"><div class="hd-title">ลดพุง</div></div></div></div><div class="empty">กำลังโหลด…</div>'; return; }
   if (D.needsSetup) { app.innerHTML = '<div class="hd"><div class="hd-in"><div class="hd-top"><div class="hd-title">ลดพุง</div></div></div></div><div class="wrap"><div class="empty">ตั้งค่าครั้งแรกก่อนใช้</div><button class="btn pri full" onclick="showSetup()">เริ่มตั้งค่า</button></div>'; return; }
   const net = netErr ? `<div class="netbar"><span>⚠️ ${esc(netErr)} (ข้อมูลล่าสุดที่จำไว้)</span><button class="lnk" onclick="load(true)">ลองใหม่</button></div>` : '';
-  const f = { ifh: ifhHtml, body: bodyHtml, pick: pickHtml, today: todayHtml, diary: diaryHtml, coach: coachHtml, train: trainHtml, sum: sumHtml, add: addHtml, set: setHtml }[tab] || todayHtml;
+  const f = { ifh: ifhHtml, quotes: qHtml, body: bodyHtml, pick: pickHtml, today: todayHtml, diary: diaryHtml, coach: coachHtml, train: trainHtml, sum: sumHtml, add: addHtml, set: setHtml }[tab] || todayHtml;
   app.innerHTML = net + f();
   if (tab === 'today') maybeTip();
   if (D && D.settings && D.settings.if_on && !syncQ.length) setTimeout(ifAutoEnd, 0);
@@ -1192,8 +1215,101 @@ function coachCard(tg) {
         <div class="who">โค้ชวันนี้${D.gemini && tip ? ` · <a class="lnk" style="font-size:12.5px" onclick="maybeTip(true)">↻</a>` : ''}</div>
         ${head ? `<div class="head">${esc(head)}</div>` : ''}<div class="body">${tip ? esc(body) : body}</div></div></div>
       ${badges.length ? `<div class="chipsrow">${badges.join('')}</div>` : ''}
+      ${quoteBox(tg)}
       ${goal}
       <div class="ask"><button onclick="go('coach')">💬 ถามโค้ช</button><button onclick="go('coach');sendChat('${q}')">🍽️ ${q}</button></div>
+    </div>`;
+}
+
+// ===== คำคม (quotes.json ใน repo · งานรายสัปดาห์เติมของใหม่ added=วันที่ → รอผู้ใช้กด ✓/✗) =====
+// Settings: q_fav [id] ติดดาว (ขึ้นบ่อยขึ้น) · q_ok [id] เก็บของใหม่ · q_no [id] ไม่เอา · my_q [{id, th, who, src}] เพิ่มเอง
+let QUOTES = null, qOff = 0, qOpen = '', qCat = 'all', qAdd = false;
+try { QUOTES = JSON.parse(lsGet('lp_quotes') || 'null'); } catch (e) { QUOTES = null; }
+function loadQuotes() {
+  fetch('quotes.json?v=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).then(q => {
+    if (!Array.isArray(q)) return; QUOTES = q; lsSet('lp_quotes', JSON.stringify(q));
+    if (D && !D.needsSetup && (tab === 'today' || tab === 'quotes')) keepScroll();
+  }).catch(() => {});
+}
+const Q_CAT = { habit: 'นิสัย', eat: 'การกิน', grit: 'ความอดทน', sleep: 'การนอน', move: 'ออกกำลัง', num: 'ตัวเลขจากงานวิจัย', mine: 'ของฉัน' };
+const qh = id => [...String(id)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7);
+function qAll() { return (QUOTES || []).concat((S().my_q || []).map(q => Object.assign({ cat: 'mine' }, q))); }
+function qPending(q) { const s = S(); return !!q.added && !(s.q_ok || []).includes(q.id) && !(s.q_no || []).includes(q.id); }
+function qPool() { const no = S().q_no || []; return qAll().filter(q => !no.includes(q.id) && !qPending(q)).sort((a, b) => qh(a.id) - qh(b.id)); }
+// เหตุผลที่เลือกให้วันนี้ (ใช้ตัวเลขจริง) — นอนน้อย > โปรตีนขาด > เดินน้อย > จดติดกัน
+function qCtx(tg) {
+  const td = todayIso(), yd = addDays(td, -1), sl = gv(dailyOf(td), 'sleep_min');
+  if (sl && sl < 360) return { tag: 'sleep_short', why: 'เมื่อคืนนอน ' + sleepTxt(sl), act: 'คืนนี้ปิดจอก่อนนอน 30 นาที ให้ได้ 7 ชม.' };
+  const t = dayT(yd);
+  if (t.n && !partialDay(yd, tg) && tg.protein && t.protein < tg.protein * 0.9) return { tag: 'protein_low', why: `เมื่อวานโปรตีน ${fmt(t.protein)} จากเป้า ${fmt(tg.protein)} ก.`, act: 'มื้อแรกวันนี้เน้นโปรตีน 30 ก. ขึ้นไป' };
+  const ys = gv(dailyOf(yd), 'steps');
+  if (ys != null && ys < 5000) return { tag: 'steps_low', why: `เมื่อวานเดิน ${fmt(ys)} ก้าว`, act: 'เดินหลังมื้อเที่ยง 10 นาที' };
+  const st = streak(); if (st >= 2) return { tag: 'streak', why: `คุณจดติดกัน ${st} วันแล้ว`, act: `จดให้ครบทุกมื้อ เป็นวันที่ ${st + 1} ติดกัน` };
+  return { tag: '' };
+}
+// เปลี่ยนเองทุกวัน: วนตามลำดับคงที่ (ครบทุกอันก่อนซ้ำ) · ที่ติดดาวแทรกอีกรอบ · วันที่เข้าเงื่อนไขเลือกจากหมวดนั้นก่อน · แตะ = อันถัดไป
+function qPick(tg) {
+  const pool = qPool(); if (!pool.length) return null;
+  const fav = S().q_fav || [], c = qCtx(tg), n = Math.round(Date.parse(todayIso() + 'T12:00:00') / 864e5) + qOff;
+  const list = pool.concat(pool.filter(q => fav.includes(q.id)));
+  const m = c.tag && !qOff ? pool.filter(q => (q.tags || []).includes(c.tag)) : [];
+  const q = m.length ? m[n % m.length] : list[((n % list.length) + list.length) % list.length];
+  return { q, c, hit: !!m.length };
+}
+const qWho = q => esc(q.who || '') + (q.src ? ' · ' + esc(q.src) : '') + (q.year ? ' (' + esc(String(q.year)) + ')' : '');
+function quoteBox(tg) {
+  const p = qPick(tg); if (!p) return '';
+  const q = p.q, act = p.hit ? p.c.act : q.do, nw = qAll().filter(qPending).length;
+  return `<div class="qbox" onclick="qOff++;keepScroll()">
+      ${q.big ? `<div class="qbig">${esc(q.big)}</div>` : '<div class="qmk">“</div>'}
+      <div class="grow"><div class="qth">${esc(q.th)}</div>${q.en ? `<div class="qen">“${esc(q.en)}”</div>` : ''}<div class="qwho">— ${qWho(q)}</div>
+        ${q.easy ? `<div class="qeasy"><b>พูดง่าย ๆ</b> ${esc(q.easy)}</div>` : ''}${act ? `<div class="qdo"><b>วันนี้</b> ${esc(act)}</div>` : ''}
+        <div class="qft"><span>แตะ = อันถัดไป</span><a class="lnk" onclick="event.stopPropagation();go('quotes')">${nw ? `ใหม่ ${nw} · ` : ''}ดูทั้งหมด ›</a></div></div></div>`;
+}
+function qSet(k, id, on) {
+  const l = (S()[k] || []).filter(x => x !== id).concat(on ? [id] : []);
+  sync('saveSettings', [{ [k]: l }], () => { D.settings[k] = l; }); keepScroll();
+}
+function qJudge(id, ok) { qSet(ok ? 'q_ok' : 'q_no', id, true); toast(ok ? '✓ เก็บไว้ในคลังแล้ว' : 'ตัดออกแล้ว'); }
+function qDelMine(id) { if (!confirm('ลบคำคมนี้?')) return; const l = (S().my_q || []).filter(q => q.id !== id); sync('saveSettings', [{ my_q: l }], () => { D.settings.my_q = l; }); qOpen = ''; keepScroll(); }
+function qSave() {
+  const g = id => (document.getElementById(id).value || '').trim(), th = g('qa_th');
+  if (!th) return toast('ใส่ข้อความคำคมก่อน');
+  const l = (S().my_q || []).concat([{ id: 'm' + Date.now(), th, who: g('qa_who') || 'ไม่ระบุ', src: g('qa_src') }]);
+  sync('saveSettings', [{ my_q: l }], () => { D.settings.my_q = l; }); qAdd = false; qCat = 'mine'; keepScroll();
+}
+function qFull(q, extra) {
+  const fav = (S().q_fav || []).includes(q.id);
+  return `<div class="qfull"><div class="qtop">${q.big ? `<span class="qbig sm">${esc(q.big)}</span>` : ''}<div class="grow qth">${esc(q.th)}</div>
+      <button class="qstar ${fav ? 'on' : ''}" aria-label="ติดดาว" onclick="qSet('q_fav','${q.id}',${!fav})">${fav ? '★' : '☆'}</button></div>
+    ${q.en ? `<div class="qen">“${esc(q.en)}”</div>` : ''}${q.easy ? `<div class="qeasy"><b>พูดง่าย ๆ</b> ${esc(q.easy)}</div>` : ''}${extra || ''}
+    <div class="qsrc">${qWho(q)}${q.about ? '<br>' + esc(q.about) : ''}</div></div>`;
+}
+function qHtml() {
+  const s = S(), all = qAll(), fav = s.q_fav || [], no = s.q_no || [], pend = all.filter(qPending), pool = qPool();
+  const tg = calcTarget(S()), p = qPick(tg);
+  const cats = [['all', 'ทั้งหมด'], ['fav', '⭐ ที่ชอบ']].concat(Object.keys(Q_CAT).filter(k => pool.some(q => q.cat === k)).map(k => [k, Q_CAT[k]]));
+  const row = q => {
+    const on = qOpen === q.id;
+    return `<button class="row qrow" onclick="qOpen=qOpen==='${q.id}'?'':'${q.id}';keepScroll()"><div class="grow" style="min-width:0"><div class="t1">${q.big ? '<b style="color:#8A5300">' + esc(q.big) + '</b> ' : ''}${esc(q.th)}</div><div class="t2">${esc(q.who || '')}${q.year ? ' · ' + q.year : ''}</div></div>
+      ${fav.includes(q.id) ? '<span style="color:#C98A00">★</span>' : ''}<span class="t2">${on ? '▴' : '›'}</span></button>
+      ${on ? qFull(q, `<div class="qact">${q.cat === 'mine' ? `<button class="btn sm red" onclick="qDelMine('${q.id}')">ลบ</button>` : `<button class="btn sm" onclick="qSet('q_no','${q.id}',true)">ไม่เอาอันนี้</button>`}</div>`) : ''}`;
+  };
+  const shown = qCat === 'all' ? pool : qCat === 'fav' ? pool.filter(q => fav.includes(q.id)) : pool.filter(q => q.cat === qCat);
+  const groups = Object.keys(Q_CAT).map(k => [k, shown.filter(q => q.cat === k)]).filter(g => g[1].length);
+  return `<div class="hd"><div class="hd-in"><div class="hd-top"><button class="hd-btn" onclick="go('today')">‹</button><div class="grow"><div class="hd-title">คลังคำคม</div><div class="hd-sub">${pool.length} คำคม · ติดดาว ${fav.filter(id => pool.some(q => q.id === id)).length}</div></div><button class="hd-btn" onclick="qAdd=!qAdd;keepScroll()" aria-label="เพิ่มคำคม">＋</button></div>
+      <div class="qchips">${cats.map(c => `<button class="chip ${qCat === c[0] ? 'on' : ''}" onclick="qCat='${c[0]}';qOpen='';keepScroll()">${c[1]}</button>`).join('')}</div></div></div>
+    <div class="wrap">
+      ${qAdd ? `<div class="sec"><h3>➕ เพิ่มคำคมของฉัน</h3></div><div class="card pad">
+        <label class="t2">ข้อความ</label><textarea id="qa_th" class="qin" rows="3" placeholder="คำคมที่ชอบ"></textarea>
+        <label class="t2" style="display:block;margin-top:10px">ใครพูด</label><input id="qa_who" class="qin" placeholder="เช่น ชื่อคน">
+        <label class="t2" style="display:block;margin-top:10px">ที่มา (ถ้ามี)</label><input id="qa_src" class="qin" placeholder="หนังสือ / คลิป / ปี">
+        <div class="qact"><button class="btn" style="flex:1" onclick="qAdd=false;keepScroll()">ยกเลิก</button><button class="btn pri" style="flex:1" onclick="qSave()">บันทึก</button></div></div>` : ''}
+      ${pend.length ? `<div class="sec"><h3>✨ ใหม่สัปดาห์นี้ · ${pend.length}</h3><span class="sm">เก็บอันที่ชอบ</span></div><div class="card">${pend.map(q => qFull(q, `<div class="qact"><button class="btn sm" style="flex:1" onclick="qJudge('${q.id}',false)">✗ ไม่เอา</button><button class="btn sm pri" style="flex:1" onclick="qJudge('${q.id}',true)">✓ เก็บ</button></div>`)).join('')}</div>` : ''}
+      ${p && qCat === 'all' ? `<div class="sec"><h3>วันนี้</h3></div><div class="card">${qFull(p.q, `${p.hit ? `<div class="qdo"><b>ทำไมเลือกให้วันนี้</b> ${esc(p.c.why)}</div>` : ''}${(p.hit ? p.c.act : p.q.do) ? `<div class="qdo"><b>วันนี้</b> ${esc(p.hit ? p.c.act : p.q.do)}</div>` : ''}`)}</div>` : ''}
+      ${groups.map(g => `<div class="sec"><h3>${Q_CAT[g[0]]} · ${g[1].length}</h3></div><div class="card">${g[1].map(row).join('')}</div>`).join('') || `<div class="empty">${qCat === 'fav' ? 'ยังไม่ได้ติดดาว — แตะคำคมแล้วกด ☆' : 'ยังไม่มีคำคม'}</div>`}
+      ${no.length ? `<div class="t2" style="text-align:center;margin:14px 0">ตัดออกไว้ ${no.length} อัน · <a class="lnk" onclick="sync('saveSettings',[{q_no:[]}],()=>{D.settings.q_no=[]});keepScroll()">เอากลับมาทั้งหมด</a></div>` : ''}
+      <div class="t2" style="text-align:center;margin:10px 0 24px">คำคมจากหนังสือ/งานวิจัยต้นฉบับ เช็กที่มาแล้วทุกอัน · ของใหม่มาทุกวันอาทิตย์</div>
     </div>`;
 }
 
@@ -3126,6 +3242,7 @@ function changeKey() {
 
 // ===== เริ่ม =====
 function load(force) {
+  loadQuotes();
   netErr = '';
   return api('getAll').then(d => { setData(d); }).catch(e => {
     if (e.auth) { render(); return showKeyBox(); }
