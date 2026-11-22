@@ -1162,7 +1162,11 @@ function planCard(tg, t, td, budget) {
   const left = Math.round(budget - t.kcal);
   const foods = dayLogs(td).filter(l => l.kind === 'food').sort((a, b) => num(b.kcal) - num(a.kcal));
   const heavy = foods.slice(0, 2).filter(l => num(l.kcal) >= 300).map(l => esc(l.name) + ' ' + fmt(num(l.kcal))).join(' · ');
-  if (left < 0) { G.red.push(['แคลอรี่', 'เกิน ' + fmt(-left), heavy ? 'หนักสุด: ' + heavy : '']); dont.push('<b>งดกินเพิ่ม</b> ถ้าหิวเลือกผักลวก ไข่ต้ม น้ำเปล่า'); }
+  const pShort = Math.max(0, Math.round(tg.protein - t.protein)), night = new Date().getHours() >= 21;
+  // แคลเกินแต่โปรตีนยังขาด → ไม่สั่ง "งดกินเพิ่ม" เฉย ๆ (ขัดกับโปรตีนขาด) บอกมื้อต่อไปให้ชัด
+  if (left < 0) { G.red.push(['แคลอรี่', 'เกิน ' + fmt(-left), heavy ? 'หนักสุด: ' + heavy : '']);
+    dont.push(pShort >= 15 && !night ? '👉 <b>มื้อต่อไปกินแค่โปรตีนไม่ติดมัน + ผัก (~300 แคล)</b> เช่น อกไก่ย่าง ปลานึ่ง ไข่ต้ม ต้มจืด — เติมโปรตีนที่ขาด ' + pShort + ' ก.'
+      : pShort >= 15 ? '<b>งดกินเพิ่ม</b> ถ้าหิวจริง ไข่ต้มหรือนมจืด 1 กล่อง (ได้โปรตีนด้วย)' : '<b>งดกินเพิ่ม</b> ถ้าหิวเลือกผักลวก ไข่ต้ม น้ำเปล่า'); }
   else if (left < 200 && t.n) G.warn.push(['แคลอรี่', 'เหลือ ' + fmt(left), 'ใกล้เต็มแล้ว มื้อถัดไปเลือกเบา ๆ']);
   else G.ok.push(['แคลอรี่', 'เหลือ ' + fmt(left), '']);
   const cap = (name, v, goal, tip) => {
@@ -1175,18 +1179,18 @@ function planCard(tg, t, td, budget) {
   const need = (name, v, goal, unit, hint) => {
     if (!goal) return;
     if (v >= goal) G.ok.push([name, '✓ ' + fmt(v) + unit, '']);
-    else (late ? G.warn : G.wait).push([name, 'ขาด ' + fmt(goal - v) + unit, hint]);
+    else (late || (name === 'โปรตีน' && left < 0) ? G.warn : G.wait).push([name, 'ขาด ' + fmt(goal - v) + unit, hint]);
   };
-  need('โปรตีน', t.protein, tg.protein, ' ก.', 'ไข่ อกไก่ นมจืด เต้าหู้');
+  need('โปรตีน', t.protein, tg.protein, ' ก.', left < 0 ? 'เติมจากมื้อต่อไป แบบไม่ติดมัน ไม่มีข้าว' : 'ไข่ อกไก่ นมจืด เต้าหู้');
   need('น้ำดื่ม', t.water, num(s.water_goal) || 2500, ' มล.', '');
   const x = dailyOf(td); if (x && num(x.steps)) need('ก้าวเดิน', num(x.steps), num(s.step_goal) || 8000, ' ก้าว', '');
   if (s.if_on) G.ok.push(['IF', 'กำลังอดอยู่', '']); else if (ifDue()) G.warn.push(['IF', 'ถึงเวลาเริ่มแล้ว', 'เริ่มอด ' + ifAt() + ' ตามแผน']);
   const lv = G.red.length ? 'red' : G.warn.length ? 'warn' : 'ok';
   const head = { red: '⛔ มี ' + G.red.length + ' อย่างเกินแผน', warn: '⚠️ มี ' + G.warn.length + ' อย่างยังไม่ตามแผน', ok: '✅ วันนี้ตามแผน' }[lv];
   const row = r => `<div class="prow"><span class="n">${r[0]}${r[2] ? `<span class="d">${r[2]}</span>` : ''}</span><span class="v">${r[1]}</span></div>`;
-  const grp = (k, title) => G[k].length ? `<div class="pgrp ${k}"><div class="gt">${title}</div>${G[k].map(row).join('')}${k === 'red' && dont.length ? dont.map(x => `<div class="pdont">🚫 ${x}</div>`).join('') : ''}</div>` : '';
+  const grp = (k, title) => G[k].length ? `<div class="pgrp ${k}"><div class="gt">${title}</div>${G[k].map(row).join('')}${k === 'red' && dont.length ? dont.map(x => `<div class="pdont">${/^👉/.test(x) ? '' : '🚫 '}${x}</div>`).join('') : ''}</div>` : '';
   return `<div class="card pcard"><div class="kick">📋 วันนี้ตามแผนไหม</div><div class="ph ${lv}">${head}</div>
-    ${grp('red', '⛔ เกินแล้ว — ห้ามเพิ่ม')}${grp('warn', '⚠️ ไม่ตามแผน')}${grp('wait', '⏳ ระหว่างวัน (ยังมีเวลา)')}${grp('ok', '✅ ตามแผน')}</div>`;
+    ${grp('red', left < 0 && pShort >= 15 && !night ? '⛔ เกินแล้ว — มื้อต่อไปคุมเข้ม' : '⛔ เกินแล้ว — ห้ามเพิ่ม')}${grp('warn', '⚠️ ไม่ตามแผน')}${grp('wait', '⏳ ระหว่างวัน (ยังมีเวลา)')}${grp('ok', '✅ ตามแผน')}</div>`;
 }
 function todayHtml() {
   const s = S(), tg = calcTarget(s), td = todayIso(), t = dayT(td);
@@ -1692,10 +1696,19 @@ function ifhSave(id) {
 function ifhDel(id) { if (!confirm('ลบรายการนี้?')) return; sync('deleteLog', [id], () => { D.log = D.log.filter(x => x.log_id !== id); }); ifhEdit = ''; keepScroll(); }
 
 let tipState = '';
+// สถานะวันนี้ที่โค้ชควรรู้: o = แคลเกิน, n = เหลือ < 200 · p = โปรตีนขาด ≥ 15 ก.
+function tipKey() {
+  const tg = calcTarget(S()), td = todayIso(), t = dayT(td), left = tg.kcal + exAll(t) / 2 - t.kcal;
+  if (!t.n) return td;
+  return td + '|' + (left < 0 ? 'o' : left < 200 ? 'n' : 'k') + (tg.protein - t.protein >= 15 ? 'p' : '');
+}
 function maybeTip(force) {
-  if (!D || !D.gemini || (D.tip && !force) || tipState === 'loading' || (tipState === 'err' && !force)) return;
+  if (!D || !D.gemini || tipState === 'loading' || (tipState === 'err' && !force)) return;
+  const key = tipKey(), changed = D.tip && key !== lsGet('lp_tipkey') && /\|[on]/.test(key);
+  if (D.tip && !force && !changed) return;
+  if (!force && !changed) lsSet('lp_tipkey', key);
   tipState = 'loading';
-  api('getTip', [!!force, quoteCtx()]).then(t => { tipState = ''; D.tip = t; lsSet(DATA_STORE, JSON.stringify(D)); if (tab === 'today') render(); })
+  api('getTip', [!!(force || changed), quoteCtx()]).then(t => { tipState = ''; D.tip = t; lsSet('lp_tipkey', key); lsSet(DATA_STORE, JSON.stringify(D)); if (tab === 'today') render(); })
     .catch(() => { tipState = 'err'; if (tab === 'today') render(); });
 }
 
