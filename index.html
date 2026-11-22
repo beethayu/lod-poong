@@ -487,6 +487,13 @@
   .photo-btn { background: #E8763A; color: #fff; border-color: #E8763A; }
   .excard { background: linear-gradient(180deg,#F6F3FE,#fff 60%); border-color: #E0D8F7; }
   .stepcard { background: linear-gradient(180deg,#FFF1E6,#fff 62%); border-color: #F7D5BF; padding: 0; overflow: hidden; }
+  .mvcard { padding: 10px 14px 12px; border-top: 1px solid #F7D5BF; }
+  .mvt { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; } .mvt span:last-child { color: var(--warn); font-weight: 600; white-space: nowrap; } .mvt span.ok { color: var(--ok); }
+  .mvcard .sbar { height: 8px; border-radius: 99px; background: #FBE3D3; margin-top: 6px; overflow: hidden; position: relative; }
+  .mvcard .sbar i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: linear-gradient(90deg,#F7A26B,#E8662A); }
+  .mvd { display: flex; gap: 6px; margin-top: 8px; align-items: flex-end; } .mvd div { flex: 1; text-align: center; font-size: 11px; color: var(--muted); }
+  .mvd i { display: block; background: #eb6834; border-radius: 3px 3px 0 0; margin: 0 auto 2px; width: 70%; } .mvd i.f { background: none; }
+  .mvn { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.45; }
   .stepcard .stp { display: block; width: 100%; text-align: left; padding: 14px; }
   .stp .top { display: flex; align-items: flex-end; gap: 10px; }
   .stp .big { font-size: 30px; font-weight: 700; line-height: 1; color: #B4471A; letter-spacing: -.5px; }
@@ -1189,6 +1196,9 @@ function planCard(tg, t, td, budget) {
   need('โปรตีน', t.protein, tg.protein, ' ก.', left < 0 ? 'เติมจากมื้อต่อไป แบบไม่ติดมัน ไม่มีข้าว' : 'ไข่ อกไก่ นมจืด เต้าหู้');
   need('น้ำดื่ม', t.water, num(s.water_goal) || 2500, ' มล.', '');
   const x = dailyOf(td); if (x && num(x.steps)) need('ก้าวเดิน', num(x.steps), num(s.step_goal) || 8000, ' ก้าว', '');
+  { const mw = moveWeek(), nd = mw.goal - mw.min;
+    if (nd <= 0) G.ok.push(['ขยับสัปดาห์นี้', '✓ ' + fmt(mw.min) + ' นาที', '']);
+    else (mw.left <= 2 && nd / mw.left > 60 ? G.warn : G.wait).push(['ขยับสัปดาห์นี้', fmt(mw.min) + '/' + fmt(mw.goal) + ' นาที', 'อีกวันละ ~' + Math.ceil(nd / mw.left) + ' นาที']); }
   if (s.if_on) G.ok.push(['IF', 'กำลังอดอยู่', '']); else if (ifDue()) G.warn.push(['IF', 'ถึงเวลาเริ่มแล้ว', 'เริ่มอด ' + ifAt() + ' ตามแผน']);
   const lv = G.red.length ? 'red' : G.warn.length ? 'warn' : 'ok';
   const head = { red: '⛔ มี ' + G.red.length + ' อย่างเกินแผน', warn: '⚠️ มี ' + G.warn.length + ' อย่างยังไม่ตามแผน', ok: '✅ วันนี้ตามแผน' }[lv];
@@ -1231,8 +1241,33 @@ function todayHtml() {
 
 // ---------- การ์ดก้าว + การนอน ----------
 let stepOpen = false;
+// ===== นาทีขยับต่อสัปดาห์ (จันทร์–อาทิตย์) =====
+// วันละ max(Intensity Minutes จาก Garmin, นาทีออกกำลังที่จด) — ไม่บวกกันเพราะนาฬิกานับช่วงที่จดไปแล้ว
+// เป้าเริ่มต้น 250 นาที: ACSM 2009 — มากกว่า 250 นาที/สัปดาห์ สัมพันธ์กับการลดน้ำหนักที่ชัดเจน
+const moveGoal = () => num(S().move_goal) || 250;
+function moveWeek() {
+  const td = todayIso(), mon = addDays(td, -((new Date(td + 'T12:00:00').getDay() + 6) % 7)), days = [];
+  let min = 0;
+  for (let i = 0; i < 7; i++) { const d = addDays(mon, i); if (d > td) { days.push(null); continue; }
+    const x = dailyOf(d), m = Math.max(num(x && x.int_min), totals(dayLogs(d)).exMin); days.push(m); min += m; }
+  const left = days.filter(v => v === null).length + 1;  // รวมวันนี้
+  return { min: Math.round(min), days, left, goal: moveGoal() };
+}
+function moveCard() {
+  const w = moveWeek(), p = Math.min(100, w.min / w.goal * 100), need = Math.max(0, w.goal - w.min);
+  const TD = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'], mx = Math.max(60, ...w.days.map(v => v || 0));
+  return `<div class="mvcard"><div class="mvt"><span>🚶 สัปดาห์นี้ขยับ <b>${fmt(w.min)}</b> / ${fmt(w.goal)} นาที</span><span class="${need ? '' : 'ok'}">${need ? 'อีก ' + fmt(need) + ' · วันละ ~' + Math.ceil(need / w.left) + ' นาที' : 'ถึงเป้าแล้ว 🎉'}</span></div>
+    <div class="sbar"><i style="width:${p}%;background:${need ? '' : '#1e7b4d'}"></i></div>
+    <div class="mvd">${w.days.map((v, i) => `<div><i style="height:${v ? Math.max(3, v / mx * 28) : 0}px" class="${v === null ? 'f' : ''}"></i><span>${TD[i]}</span></div>`).join('')}</div>
+    <div class="mvn">นับนาที Intensity จาก Garmin หรือที่จดออกกำลัง (วันละค่าที่มากกว่า) · เดินเร็วรอบละ 10–20 นาทีหลังมื้อก็นับ · มากกว่า 250 นาที/สัปดาห์ ลดได้ชัด (ACSM 2009)</div></div>`;
+}
+function setMove(v) {
+  if (!confirm('ตั้งเป้าขยับ ' + v + ' นาที/สัปดาห์? (≈ วันละ ' + Math.round(v / 7) + ' นาที)')) return;
+  sync('saveSettings', [{ move_goal: v }], () => { D.settings.move_goal = v; });
+  toast('✅ เป้าขยับ ' + v + ' นาที/สัปดาห์ · ดูที่หน้าวันนี้'); render();
+}
 function stepCard(td) {
-  if (!(D.daily || []).length) return `<div class="card stepcard"><button class="row" onclick="openShortcut()"><div class="ico">⌚</div><div class="grow"><div class="t1">ดึงก้าว + การนอนจากนาฬิกา</div><div class="t2">ตั้งทางลัดครั้งเดียว ข้อมูลไหลเข้าเอง</div></div><span>›</span></button></div>`;
+  if (!(D.daily || []).length) return `<div class="card stepcard"><button class="row" onclick="openShortcut()"><div class="ico">⌚</div><div class="grow"><div class="t1">ดึงก้าว + การนอนจากนาฬิกา</div><div class="t2">ตั้งทางลัดครั้งเดียว ข้อมูลไหลเข้าเอง</div></div><span>›</span></button>${moveCard()}</div>`;
   const goal = num(S().step_goal) || 8000, si = stepInfo(td), x = dailyOf(td);
   const last = (D.daily || []).filter(r => hasSteps(r)).sort((a, b) => a.date < b.date ? -1 : 1).pop();
   let top;
@@ -1251,7 +1286,7 @@ function stepCard(td) {
   }
   const sl = x && num(x.sleep_min) > 0 && !x.garmin_at ? x : null;   // มีการ์ดร่างกายวันนี้แล้ว ไม่ซ้ำการนอน
   const slr = sl ? `<div class="slrow"><div class="ico">😴</div><div class="grow"><b>${sleepTxt(sl.sleep_min)}</b><div class="t2">เมื่อคืน ${esc(sl.sleep_from)}–${esc(sl.sleep_to)}${num(sl.sleep_min) < 360 ? ' · นอนน้อย หิวง่ายขึ้น ระวังมื้อดึก' : ''}</div></div></div>` : '';
-  return `<div class="card stepcard">${top}${si ? neatHint(td, si, goal) : ''}${slr}</div>`;
+  return `<div class="card stepcard">${top}${si ? neatHint(td, si, goal) : ''}${moveCard()}${slr}</div>`;
 }
 
 // ---------- การ์ดโค้ช ----------
@@ -2187,7 +2222,7 @@ function stallCard(tg) {
       const big = c.diff < -0.2 * tg.tdee, newAdj = Math.round((adj + Math.max(c.diff, -250)) / 10) * 10, ns = Object.assign({}, s, { tdee_adj: newAdj }), nt = calcTarget(ns);
       head = c.stall ? 'น้ำหนักนิ่ง · ร่างกายใช้น้อยกว่าที่แอปคิด' : 'ร่างกายใช้น้อยกว่าที่แอปคิด'; cls = 'warn';
       body = fact + `<div class="fact" style="margin-top:6px">ถ้าจดครบจริง เป้าใหม่ควรเป็น <b>${fmt(nt.kcal)}</b> แคล (เดิม ${fmt(tg.kcal)}) · โปรตีนเท่าเดิม ${nt.protein} ก.${nt.low ? ' · ชนขั้นต่ำปลอดภัยแล้ว อยากลดเร็วขึ้นให้เดินเพิ่มแทน' : ''}${big ? '<br>⚠️ ห่างจากสูตรมาก (เกิน 20%) มักเป็นเพราะมีของที่ไม่ได้จด เลยปรับแค่ 250 แคลก่อน แล้วลองจดละเอียดขึ้น' : ''}</div>
-        <div style="display:flex;gap:8px;margin-top:10px"><button class="btn pri" style="flex:1" onclick="setAdj(${newAdj})">ใช้เป้าใหม่ ${fmt(nt.kcal)}</button><button class="btn" style="flex:1" onclick="toast('ลองเดินเพิ่มวันละ 30 นาที (~150 แคล) แล้วเช็กใหม่อีก 2 สัปดาห์')">เดินเพิ่มแทน</button></div>` + why;
+        <div style="display:flex;gap:8px;margin-top:10px"><button class="btn pri" style="flex:1" onclick="setAdj(${newAdj})">ใช้เป้าใหม่ ${fmt(nt.kcal)}</button><button class="btn" style="flex:1" onclick="setMove(${moveGoal() < 300 ? 300 : moveGoal() + 60})">เดินเพิ่มแทน<br><small style="font-weight:400">${moveGoal() < 300 ? 300 : moveGoal() + 60} นาที/สัปดาห์</small></button></div>` + why;
     } else if (c.stall) {
       head = 'น้ำหนักนิ่ง แต่ตัวเลขที่จดดูตรงแผน'; cls = 'warn';
       body = fact + `<div class="fact" style="margin-top:6px">น่าจะมีของที่ไม่ได้จด หรือน้ำค้าง ลองจดละเอียดขึ้น 1 สัปดาห์ (น้ำมัน น้ำจิ้ม เครื่องดื่ม) ก่อนลดแคล</div>` + why;
@@ -3211,7 +3246,7 @@ function setHtml() {
         <div class="frow"><span>สัดส่วน</span><div class="seg" style="flex:1">${SPLIT.map(([v, n]) => `<button class="${splitOf(s)[0] === v ? 'on' : ''}" onclick="SS.macro_split='${v}';render()">${n}</button>`).join('')}</div></div>
         ${isTrue(s.macro_auto) ? `<div class="preview">แคล ${fmt(tg.kcal)} · โปรตีน ${tg.protein} · คาร์บ ${tg.carb} · ไขมัน ${tg.fat} ก.</div>` :
           fr('แคลอรี่', 'kcal', 'แคล', tg.auto.kcal) + fr('โปรตีน', 'protein', 'ก.', tg.auto.protein) + fr('คาร์บ', 'carb', 'ก.', tg.auto.carb) + fr('ไขมัน', 'fat', 'ก.', tg.auto.fat)}
-        ${fr('น้ำดื่มต่อวัน', 'water_goal', 'มล.')}${fr('เป้าก้าวต่อวัน', 'step_goal', 'ก้าว', '8000')}</div>
+        ${fr('น้ำดื่มต่อวัน', 'water_goal', 'มล.')}${fr('เป้าก้าวต่อวัน', 'step_goal', 'ก้าว', '8000')}${fr('เป้านาทีขยับต่อสัปดาห์', 'move_goal', 'นาที', '250')}</div>
       <details class="refs"><summary>📚 ตัวเลขพวกนี้อิงงานวิจัยไหน</summary>
         <p><b>พลังงาน (BMR)</b> — สูตร Katch-McArdle คิดจากมวลไม่รวมไขมัน (ใช้ % ไขมันจากเครื่องชั่ง)</p>
         <p><b>ความเร็วลด / ขั้นต่ำ</b> — Jensen MD et al. 2013 AHA/ACC/TOS Guideline for the Management of Overweight and Obesity (Circulation 2014): ขาดวันละ 500–750 แคล · ผู้ชายราว 1,500–1,800 แคล → แอปให้ขาดได้ไม่เกิน 25% และไม่ต่ำกว่า 1,500<br>
@@ -3279,7 +3314,7 @@ function bOk() {
 function saveSet() {
   document.querySelectorAll('#app input').forEach(el => el.blur());
   const o = Object.assign({}, SS);
-  ['goal_weight', 'height', 'age', 'water_goal', 'step_goal', 'kcal', 'protein', 'carb', 'fat'].forEach(k => o[k] = o[k] === '' ? '' : num(o[k]));
+  ['goal_weight', 'height', 'age', 'water_goal', 'step_goal', 'move_goal', 'kcal', 'protein', 'carb', 'fat'].forEach(k => o[k] = o[k] === '' ? '' : num(o[k]));
   o.rate = num(o.rate); o.activity = num(o.activity); o.macro_auto = isTrue(o.macro_auto);
   if (!o.goal_weight) return alert('ใส่น้ำหนักเป้า');
   sync('saveSettings', [o], () => { D.settings = Object.assign({}, D.settings, o); SS = null; tab = 'today'; });
