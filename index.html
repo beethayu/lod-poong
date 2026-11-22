@@ -452,6 +452,10 @@
   .coach { background: linear-gradient(160deg,#E2F5EB 0%,#F3FBF7 45%,#fff 75%); }
   .coach .av { box-shadow: 0 3px 10px rgba(30,77,69,.35); }
   .badge.pro { background: #E8F0FD; color: #1F4E8C; }
+  #c_stall { padding: 12px 14px; }
+  #c_stall .sck { font-size: 13px; color: var(--muted); font-weight: 600; }
+  #c_stall .sch { font-size: 17px; font-weight: 700; margin: 2px 0 6px; } #c_stall .sch.ok { color: var(--ok); } #c_stall .sch.warn { color: var(--warn); } #c_stall .sch.wait { color: var(--muted); }
+  #c_stall .fact { font-size: 14.5px; line-height: 1.55; } #c_stall .note2 { font-size: 12.5px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
   .maccard { background: linear-gradient(180deg,#F5FAF7,#fff 40%); border-color: #D7E9DF; }
   /* การ์ด "วันนี้ตามแผนไหม" — แยกสีตามสถานะ: แดง เกิน/งดเพิ่ม · ส้ม ไม่ตามแผน · เทา ระหว่างวัน · เขียว ตามแผน */
   .pcard { position: relative; margin: -42px 0 0; padding: 12px 14px 6px; border-radius: 18px; border: 0; box-shadow: 0 6px 22px rgba(20,54,48,.16); }
@@ -1098,7 +1102,8 @@ function calcTarget(s, lw) {
   lw = lw || latestW() || { weight: 100, fat_pct: 0 };
   const w = lw.weight, f = lw.fat_pct;
   const bmr = f > 0 ? 370 + 21.6 * w * (1 - f / 100) : 10 * w + 6.25 * num(s.height || 170) - 5 * (ageOf(s) || 40) + (s.sex === 'female' ? -161 : 5);
-  const tdee = bmr * (num(s.activity) || 1.2);
+  // tdee_adj = ค่าปรับจาก "เช็กแผน" (การเผาผลาญจริงจากน้ำหนัก + ที่จด) ตรงกับ calcTarget_ ใน GAS
+  const tdee = bmr * (num(s.activity) || 1.2) + num(s.tdee_adj);
   const rate = num(s.rate) || 2;
   let kcal = tdee - rate * 7700 / 30;
   // ขั้นต่ำ: ขาดไม่เกิน 25% ของ TDEE และไม่ต่ำกว่า 1,500 (ชาย) / 1,200 (หญิง)
@@ -1715,12 +1720,9 @@ function maybeTip(force) {
 // เตือนแบบไม่ใช้ AI
 function alertsHtml(tg) {
   const out = [], td = todayIso(), dw = dailyWeights();
-  // น้ำหนักนิ่ง 3 อาทิตย์: ค่าเฉลี่ย 7 วันล่าสุด เทียบ 21 วันก่อน
-  if (dw.length >= 4 && dayDiff(dw[0].date, td) >= 24) {
-    const avg = (a, b) => { const x = dw.filter(w => w.date > a && w.date <= b); return x.length ? x.reduce((s, w) => s + w.w, 0) / x.length : null; };
-    const now = avg(addDays(td, -7), td), then = avg(addDays(td, -28), addDays(td, -21));
-    if (now != null && then != null && then - now < 0.3) out.push(`<div class="alert warn">⚖️ น้ำหนักแทบไม่ลง 3 อาทิตย์ (${r1(then)} → ${r1(now)}) — ลองลดวันละ ~150 แคล หรือเดินเพิ่มวันละ 20–30 นาที</div>`);
-  }
+  // น้ำหนักนิ่ง: ใช้ผล "เช็กแผน" (แท็บสรุป) แทนเตือนแบบเดิม
+  const sc = stallCheck(tg);
+  if (sc.ok && sc.stall) out.push(`<div class="alert warn">⚖️ น้ำหนักแทบไม่ลง ${sc.span} วัน (${r1(sc.e)} → ${r1(sc.l)}) — <a class="lnk" onclick="go('sum');setTimeout(()=>{const e=document.getElementById('c_stall');if(e)e.scrollIntoView()},50)">ดูเช็กแผน ›</a></div>`);
   // กินต่ำกว่าเป้ามากหลายวัน
   let low = 0, seen = 0;
   for (let i = 1; i <= 4; i++) { const t = totals(dayLogs(addDays(td, -i))); if (t.n && !partialDay(addDays(td, -i), tg)) { seen++; if (t.kcal < tg.kcal - 500) low++; } }
@@ -2148,6 +2150,59 @@ function entryCard2(c, ids) {
 }
 
 // ---------- สรุป ----------
+// ===== เช็กแผน: การเผาผลาญจริง = แคลเฉลี่ยวันที่จดครบ + (น้ำหนักเฉลี่ยที่ลด × 7,700 ÷ จำนวนวัน) =====
+// ช่วง 21 วัน · ต้องชั่ง ≥ 3 ครั้งใน 7 วันแรก และ ≥ 3 ครั้งใน 7 วันล่าสุด · จดครบ ≥ 10 วัน (ไม่นับวันนี้ / วันจดไม่ครบ)
+// ไม่ได้ชั่ง (เช่น ไปต่างจังหวัด) = ข้ามไปเอง ไม่ต้องชั่งข้างนอก
+const SC_W = 21;
+function stallCheck(tg) {
+  const td = todayIso(), a0 = addDays(td, -SC_W + 1), dw = dailyWeights();
+  const early = dw.filter(w => w.date >= a0 && w.date < addDays(a0, 7)), late = dw.filter(w => w.date > addDays(td, -7));
+  const kc = [];
+  for (let i = 1; i < SC_W; i++) { const d = addDays(td, -i), f = dayLogs(d).filter(l => l.kind === 'food'); if (f.length && !partialDay(d, tg)) kc.push(totals(f).kcal); }
+  const need = { e: early.length, l: late.length, k: kc.length };
+  if (early.length < 3 || late.length < 3 || kc.length < 10) return { ok: false, need };
+  const avg = (a, k) => a.reduce((x, y) => x + y[k], 0) / a.length;
+  const off = w => dayDiff(a0, w.date);
+  const e = avg(early, 'w'), l = avg(late, 'w'), span = Math.round(avg(late.map(w => ({ o: off(w) })), 'o') - avg(early.map(w => ({ o: off(w) })), 'o'));
+  const intake = kc.reduce((x, y) => x + y, 0) / kc.length, loss = e - l;
+  const real = Math.round((intake + loss * 7700 / span) / 10) * 10;
+  const diff = real - tg.tdee, perWk = loss / span * 7;
+  return { ok: true, need, e, l, span, intake: Math.round(intake), loss, real, diff, perWk, stall: perWk < 0.15, cover: kc.length };
+}
+function stallCard(tg) {
+  const s = S(), c = stallCheck(tg), adj = num(s.tdee_adj);
+  const adjRow = adj ? `<div class="note2" style="margin-top:8px">ตอนนี้ปรับเป้าไว้ ${adj > 0 ? '+' : ''}${fmt(adj)} แคล/วัน จากเช็กครั้งก่อน · <a class="lnk" onclick="setAdj(0)">ยกเลิก</a></div>` : '';
+  let kick = '🔎 เช็กแผน (21 วันล่าสุด)', head, cls = 'ok', body;
+  if (!c.ok) {
+    head = 'กำลังเก็บข้อมูล'; cls = 'wait';
+    body = `<div class="fact">ต้องมี: ชั่งช่วงต้น <b>${Math.min(c.need.e, 3)}/3</b> · ชั่งสัปดาห์นี้ <b>${Math.min(c.need.l, 3)}/3</b> · วันที่จดครบ <b>${Math.min(c.need.k, 10)}/10</b></div>
+      ${c.need.l < 3 ? `<div class="fact" style="margin-top:4px">กลับมาชั่งที่บ้านอีก ${3 - c.need.l} เช้า ก็คิดได้</div>` : ''}
+      <div class="note2">ไม่ได้ชั่งบางวัน (เช่น ไปต่างจังหวัด) ไม่เป็นไร ข้ามไปเอง · อย่าชั่งข้างนอกแล้วจด (เสื้อผ้า กระเป๋า เวลาต่าง ทำให้เพี้ยน) · จดอาหารต่อทุกวัน</div>`;
+  } else {
+    const fact = `<div class="fact">เฉลี่ยกินวันละ <b>${fmt(c.intake)}</b> แคล (จดครบ ${c.cover} วัน) · น้ำหนักเฉลี่ย ${r1(c.e)} → ${r1(c.l)} ใน ${c.span} วัน (${Math.abs(c.perWk) < 0.1 ? 'แทบไม่เปลี่ยน' : (c.perWk > 0 ? 'ลง ' : 'ขึ้น ') + r1(Math.abs(c.perWk)) + ' กก./สัปดาห์'})<br>
+      → ร่างกายใช้จริงราว <b>${fmt(c.real)}</b> แคล/วัน · แอปคิดไว้ ${fmt(tg.tdee)}</div>`;
+    const why = `<div class="note2">น้ำหนักนิ่งได้จาก: จดต่ำกว่าจริง (น้ำมันผัด น้ำจิ้ม เครื่องดื่ม ของกินเล่น — คนเราจดขาดได้ถึงครึ่ง, Lichtman 1992 NEJM) · เพิ่งเริ่มออกกำลังใหม่ (กล้ามเก็บน้ำ 1–2 สัปดาห์) · กินเค็ม/แป้งมากช่วงท้าย · นอนน้อย</div>`;
+    if (c.diff < -150) {
+      // ปรับทีละไม่เกิน 250 แคล · ห่างจากสูตรเกิน 20% มักเป็นเพราะจดไม่ครบ ไม่ใช่เผาผลาญต่ำจริง
+      const big = c.diff < -0.2 * tg.tdee, newAdj = Math.round((adj + Math.max(c.diff, -250)) / 10) * 10, ns = Object.assign({}, s, { tdee_adj: newAdj }), nt = calcTarget(ns);
+      head = c.stall ? 'น้ำหนักนิ่ง · ร่างกายใช้น้อยกว่าที่แอปคิด' : 'ร่างกายใช้น้อยกว่าที่แอปคิด'; cls = 'warn';
+      body = fact + `<div class="fact" style="margin-top:6px">ถ้าจดครบจริง เป้าใหม่ควรเป็น <b>${fmt(nt.kcal)}</b> แคล (เดิม ${fmt(tg.kcal)}) · โปรตีนเท่าเดิม ${nt.protein} ก.${nt.low ? ' · ชนขั้นต่ำปลอดภัยแล้ว อยากลดเร็วขึ้นให้เดินเพิ่มแทน' : ''}${big ? '<br>⚠️ ห่างจากสูตรมาก (เกิน 20%) มักเป็นเพราะมีของที่ไม่ได้จด เลยปรับแค่ 250 แคลก่อน แล้วลองจดละเอียดขึ้น' : ''}</div>
+        <div style="display:flex;gap:8px;margin-top:10px"><button class="btn pri" style="flex:1" onclick="setAdj(${newAdj})">ใช้เป้าใหม่ ${fmt(nt.kcal)}</button><button class="btn" style="flex:1" onclick="toast('ลองเดินเพิ่มวันละ 30 นาที (~150 แคล) แล้วเช็กใหม่อีก 2 สัปดาห์')">เดินเพิ่มแทน</button></div>` + why;
+    } else if (c.stall) {
+      head = 'น้ำหนักนิ่ง แต่ตัวเลขที่จดดูตรงแผน'; cls = 'warn';
+      body = fact + `<div class="fact" style="margin-top:6px">น่าจะมีของที่ไม่ได้จด หรือน้ำค้าง ลองจดละเอียดขึ้น 1 สัปดาห์ (น้ำมัน น้ำจิ้ม เครื่องดื่ม) ก่อนลดแคล</div>` + why;
+    } else {
+      head = c.diff > 150 ? 'ลดได้ดีกว่าที่แอปคิด ไม่ต้องปรับ' : 'ตรงตามแผน ไม่ต้องปรับ';
+      body = fact;
+    }
+  }
+  return `<div class="ccard" id="c_stall"><div class="sck">${kick}</div><div class="sch ${cls}">${head}</div>${body}${adjRow}</div>`;
+}
+function setAdj(v) {
+  if (v && !confirm('ปรับเป้าแคลตามการเผาผลาญจริง? (ยกเลิกได้ภายหลัง)')) return;
+  sync('saveSettings', [{ tdee_adj: v }], () => { D.settings.tdee_adj = v; });
+  toast(v ? '✅ ปรับเป้าแล้ว เช็กใหม่อีก 2–3 สัปดาห์' : 'ยกเลิกการปรับแล้ว'); render();
+}
 function sumHtml() {
   const s = S(), tg = calcTarget(s), td = todayIso();
   const from = sumRange ? addDays(td, -sumRange + 1) : '0000';
@@ -2176,6 +2231,7 @@ function sumHtml() {
         <div class="chart">${dwr.filter(w => w.f).length ? lineChart('cf', dwr.filter(w => w.f), 'f', 'var(--c-f)', '#f4b596') + '<div class="ctip" id="cf_tip"></div>' : '<div class="empty">ยังไม่มีข้อมูล % ไขมัน</div>'}</div></div>
       <div class="ccard c-k"><div class="ch"><div class="mi">🍽️</div><b>แคลอรี่ 14 วัน</b><span>เป้า ${fmt(tg.kcal)}</span></div>
         <div class="chart">${kcalChart(days, tg)}<div class="ctip" id="ck_tip">แตะแท่งเพื่อดูตัวเลข</div></div></div>
+      ${stallCard(tg)}
       ${stepCharts(td)}
       ${gmCharts(td)}
       <div class="ccard c-t"><div class="ch"><div class="mi">📅</div><b>รายสัปดาห์</b><span>เฉลี่ยต่อวันที่จด</span></div>

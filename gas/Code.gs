@@ -366,7 +366,7 @@ function calcTarget_(s, log) {
   let bmr;
   if (f > 0) bmr = 370 + 21.6 * w * (1 - f / 100);
   else bmr = 10 * w + 6.25 * num_(s.height || 170) - 5 * (ageOf_(s) || 40) + (s.sex === 'female' ? -161 : 5);
-  const tdee = bmr * (num_(s.activity) || 1.2);
+  const tdee = bmr * (num_(s.activity) || 1.2) + num_(s.tdee_adj);  // ค่าปรับจาก "เช็กแผน" ในแท็บสรุป
   const rate = num_(s.rate) || 2;
   let kcal = tdee - rate * 7700 / 30;
   // ขั้นต่ำ: ขาดไม่เกิน 25% ของ TDEE และไม่ต่ำกว่า 1,500 ชาย / 1,200 หญิง (Jensen 2013 AHA/ACC/TOS) — ตรงกับหน้าเว็บ
