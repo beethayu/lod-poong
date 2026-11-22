@@ -453,6 +453,26 @@
   .coach .av { box-shadow: 0 3px 10px rgba(30,77,69,.35); }
   .badge.pro { background: #E8F0FD; color: #1F4E8C; }
   .maccard { background: linear-gradient(180deg,#F5FAF7,#fff 40%); border-color: #D7E9DF; }
+  /* การ์ด "วันนี้ตามแผนไหม" — แยกสีตามสถานะ: แดง เกิน/งดเพิ่ม · ส้ม ไม่ตามแผน · เทา ระหว่างวัน · เขียว ตามแผน */
+  .pcard { position: relative; margin: -42px 0 0; padding: 12px 14px 6px; border-radius: 18px; border: 0; box-shadow: 0 6px 22px rgba(20,54,48,.16); }
+  .after-p .coach { margin-top: 12px; }
+  .pcard .kick { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .pcard .ph { font-size: 17px; font-weight: 700; margin: 2px 0 8px; }
+  .pcard .ph.red { color: var(--red); } .pcard .ph.warn { color: var(--warn); } .pcard .ph.ok { color: var(--ok); }
+  .pgrp { border-radius: 12px; padding: 8px 10px; margin-bottom: 8px; }
+  .pgrp.red { background: var(--red-soft); } .pgrp.warn { background: var(--warn-soft); } .pgrp.ok { background: #E6F3EC; } .pgrp.wait { background: var(--ground); }
+  .pgrp .gt { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+  .pgrp.red .gt { color: var(--red); } .pgrp.warn .gt { color: var(--warn); } .pgrp.ok .gt { color: var(--ok); } .pgrp.wait .gt { color: var(--muted); }
+  .prow { display: flex; align-items: baseline; gap: 8px; padding: 5px 0; font-size: 14.5px; border-top: 1px solid rgba(0,0,0,.06); }
+  .prow:first-of-type { border-top: 0; }
+  .prow .n { flex: 1; color: var(--ink); } .prow .v { font-weight: 700; white-space: nowrap; }
+  .pgrp.red .v { color: var(--red); } .pgrp.warn .v { color: var(--warn); } .pgrp.ok .v { color: var(--ok); } .pgrp.wait .v { color: var(--muted); }
+  .prow .d { display: block; font-size: 13px; color: var(--muted); font-weight: 400; }
+  .pdont { margin-top: 4px; font-size: 13.5px; color: #7A1A14; line-height: 1.5; }
+  .pdont b { color: var(--red); }
+  .mbar.over { background: var(--red-soft); } .mbar.over .l b, .mbar.over .l span { color: var(--red); font-weight: 700; }
+  .mbar.done .l span { color: var(--ok); font-weight: 600; }
+  .mbar .bar { position: relative; } .mbar .bar s { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; }
   .wcardbox { background: linear-gradient(180deg,#F1F8FE,#fff 55%); border-color: #CFE3F3; }
   .bodycard { background: linear-gradient(180deg,#FFF5EE,#fff 60%); border-color: #F5D8C4; }
   .bodycard .pslot { background: #FCE7D8; border: 0; padding: 0; width: 100%; }
@@ -1119,12 +1139,50 @@ function ringSvg(used, total, over) {
       stroke-dasharray="${(c * p).toFixed(1)} ${c.toFixed(1)}"/></svg>`;
 }
 function macroBars(t, tg) {
-  const one = (name, v, goal, color) => {
+  // โปรตีน = ยิ่งถึงยิ่งดี (ครบ = เขียว) · คาร์บ/ไขมัน = เพดาน เกิน 10% = แดง "เกิน"
+  const one = (name, v, goal, color, cap) => {
+    const over = cap && goal && v > goal * 1.1, done = !cap && goal && v >= goal;
     const p = goal ? Math.min(100, v / goal * 100) : 0;
-    return `<div class="mbar"><div class="l"><b>${name}</b><span>${fmt(v)} / ${fmt(goal)} ก. · ${v >= goal ? 'ครบ' : 'ขาด ' + fmt(goal - v)}</span></div>
-      <div class="bar"><i style="width:${p}%;background:${color}"></i></div></div>`;
+    const txt = over ? '⛔ เกิน ' + fmt(v - goal) + ' ก.' : done ? '✓ ครบแล้ว' : cap ? (v >= goal ? 'เต็มพอดี' : 'เหลือ ' + fmt(goal - v)) : 'ขาด ' + fmt(goal - v);
+    const bar = over ? `<i style="width:100%;background:#d9473d"></i><s style="left:${(goal / v * 100).toFixed(1)}%"></s>` : `<i style="width:${p}%;background:${done ? 'linear-gradient(90deg,#5cc08f,#1e7b4d)' : color}"></i>`;
+    return `<div class="mbar${over ? ' over' : ''}${done ? ' done' : ''}"><div class="l"><b>${name}</b><span>${fmt(v)} / ${fmt(goal)} ก. · ${txt}</span></div>
+      <div class="bar">${bar}</div></div>`;
   };
-  return `<div class="card maccard">${one('💪 โปรตีน', t.protein, tg.protein, 'linear-gradient(90deg,#6aa8ea,#2a78d6)')}${one('🍚 คาร์บ', t.carb, tg.carb, 'linear-gradient(90deg,#f3c75a,#c98a00)')}${one('🥑 ไขมัน', t.fat, tg.fat, 'linear-gradient(90deg,#f6a07a,#eb6834)')}</div>`;
+  return `<div class="card maccard">${one('💪 โปรตีน', t.protein, tg.protein, 'linear-gradient(90deg,#6aa8ea,#2a78d6)')}${one('🍚 คาร์บ', t.carb, tg.carb, 'linear-gradient(90deg,#f3c75a,#c98a00)', 1)}${one('🥑 ไขมัน', t.fat, tg.fat, 'linear-gradient(90deg,#f6a07a,#eb6834)', 1)}</div>`;
+}
+// การ์ด "วันนี้ตามแผนไหม": รวมทุกเป้าไว้ที่เดียว แยกกลุ่มสี — เกิน (งดเพิ่ม) / ไม่ตามแผน / ระหว่างวัน / ตามแผน
+// ของที่ต้องสะสมทั้งวัน (โปรตีน น้ำ ก้าว) ก่อน 18:00 นับเป็น "ระหว่างวัน" ไม่ใช่ไม่ตามแผน
+function planCard(tg, t, td, budget) {
+  if (!t.n && !t.water) return '';
+  const s = S(), late = new Date().getHours() >= 18, G = { red: [], warn: [], wait: [], ok: [] }, dont = [];
+  const left = Math.round(budget - t.kcal);
+  const foods = dayLogs(td).filter(l => l.kind === 'food').sort((a, b) => num(b.kcal) - num(a.kcal));
+  const heavy = foods.slice(0, 2).filter(l => num(l.kcal) >= 300).map(l => esc(l.name) + ' ' + fmt(num(l.kcal))).join(' · ');
+  if (left < 0) { G.red.push(['แคลอรี่', 'เกิน ' + fmt(-left), heavy ? 'หนักสุด: ' + heavy : '']); dont.push('<b>งดกินเพิ่ม</b> ถ้าหิวเลือกผักลวก ไข่ต้ม น้ำเปล่า'); }
+  else if (left < 200 && t.n) G.warn.push(['แคลอรี่', 'เหลือ ' + fmt(left), 'ใกล้เต็มแล้ว มื้อถัดไปเลือกเบา ๆ']);
+  else G.ok.push(['แคลอรี่', 'เหลือ ' + fmt(left), '']);
+  const cap = (name, v, goal, tip) => {
+    if (!goal) return;
+    if (v > goal * 1.1) { G.red.push([name, 'เกิน ' + fmt(v - goal) + ' ก.', '']); dont.push(tip); }
+    else G.ok.push([name, fmt(v) + '/' + fmt(goal) + ' ก.', '']);
+  };
+  cap('คาร์บ (ข้าว แป้ง น้ำตาล)', t.carb, tg.carb, '<b>งดข้าว แป้ง ของหวาน</b> เพิ่มอีก');
+  cap('ไขมัน (ทอด มัน กะทิ)', t.fat, tg.fat, '<b>งดของทอด หมูสามชั้น กะทิ</b>');
+  const need = (name, v, goal, unit, hint) => {
+    if (!goal) return;
+    if (v >= goal) G.ok.push([name, '✓ ' + fmt(v) + unit, '']);
+    else (late ? G.warn : G.wait).push([name, 'ขาด ' + fmt(goal - v) + unit, hint]);
+  };
+  need('โปรตีน', t.protein, tg.protein, ' ก.', 'ไข่ อกไก่ นมจืด เต้าหู้');
+  need('น้ำดื่ม', t.water, num(s.water_goal) || 2500, ' มล.', '');
+  const x = dailyOf(td); if (x && num(x.steps)) need('ก้าวเดิน', num(x.steps), num(s.step_goal) || 8000, ' ก้าว', '');
+  if (s.if_on) G.ok.push(['IF', 'กำลังอดอยู่', '']); else if (ifDue()) G.warn.push(['IF', 'ถึงเวลาเริ่มแล้ว', 'เริ่มอด ' + ifAt() + ' ตามแผน']);
+  const lv = G.red.length ? 'red' : G.warn.length ? 'warn' : 'ok';
+  const head = { red: '⛔ มี ' + G.red.length + ' อย่างเกินแผน', warn: '⚠️ มี ' + G.warn.length + ' อย่างยังไม่ตามแผน', ok: '✅ วันนี้ตามแผน' }[lv];
+  const row = r => `<div class="prow"><span class="n">${r[0]}${r[2] ? `<span class="d">${r[2]}</span>` : ''}</span><span class="v">${r[1]}</span></div>`;
+  const grp = (k, title) => G[k].length ? `<div class="pgrp ${k}"><div class="gt">${title}</div>${G[k].map(row).join('')}${k === 'red' && dont.length ? dont.map(x => `<div class="pdont">🚫 ${x}</div>`).join('') : ''}</div>` : '';
+  return `<div class="card pcard"><div class="kick">📋 วันนี้ตามแผนไหม</div><div class="ph ${lv}">${head}</div>
+    ${grp('red', '⛔ เกินแล้ว — ห้ามเพิ่ม')}${grp('warn', '⚠️ ไม่ตามแผน')}${grp('wait', '⏳ ระหว่างวัน (ยังมีเวลา)')}${grp('ok', '✅ ตามแผน')}</div>`;
 }
 function todayHtml() {
   const s = S(), tg = calcTarget(s), td = todayIso(), t = dayT(td);
@@ -1138,7 +1196,7 @@ function todayHtml() {
           <div><span>${t.step ? 'ออกกำลัง+ก้าว' : 'ออกกำลัง'} ÷ 2</span><b>+ ${fmt(exAll(t) / 2)}</b></div><div><span>${over ? 'เกิน' : 'เหลือ'}</span><b>${fmt(Math.abs(left))}</b></div></div></div>
     </div></div>
     <div class="wrap">
-      ${coachCard(tg)}
+      ${(pc => pc ? pc + `<div class="after-p">${coachCard(tg)}</div>` : coachCard(tg))(planCard(tg, t, td, budget))}
       ${hasGarmin() ? rhrAlertCard(td) : ''}
       ${alertsHtml(tg)}
       ${weightBounce(tg, td)}
