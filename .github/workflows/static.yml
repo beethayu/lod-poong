@@ -31,6 +31,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Stamp app version
+        run: |
+          B="$(TZ=Asia/Bangkok date +%y%m%d%H%M)-${GITHUB_SHA::7}"
+          sed -i "s/const APP_BUILD = '__BUILD__'/const APP_BUILD = '$B'/" index.html
+          grep -q "const APP_BUILD = '$B'" index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

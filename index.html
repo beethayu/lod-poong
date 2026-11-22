@@ -652,6 +652,10 @@
 
     #toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom)); background: #1B2224; color: #fff;
       padding: 9px 18px; border-radius: 99px; font-size: 15px; z-index: 4000; display: none; max-width: 90%; text-align: center; }
+    #updbar { position: fixed; left: 12px; right: 12px; bottom: calc(70px + env(safe-area-inset-bottom)); z-index: 3900; background: #1E7B4D; color: #fff; border: 0; border-radius: 14px;
+      padding: 13px 14px; font: inherit; font-size: 15px; font-weight: 700; box-shadow: 0 6px 20px rgba(0,0,0,.2); }
+    .verrow { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-top: 12px; }
+    .verrow .t1 { font-weight: 600; } .verrow .t2 { font-size: 13px; color: var(--muted); } .verrow .btn { flex: none; }
     #busy { position: fixed; inset: 0; background: rgba(15,30,28,.55); z-index: 3500; display: none; place-items: center; }
     #busy div { background: #fff; border-radius: 16px; padding: 18px 22px; text-align: center; max-width: 280px; }
     .spin { width: 34px; height: 34px; border: 4px solid var(--brand-soft); border-top-color: var(--brand); border-radius: 50%; animation: sp 0.8s linear infinite; margin: 0 auto 10px; }
@@ -700,10 +704,10 @@ const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 
 // คำขอที่ส่งซ้ำได้ไม่เกิดข้อมูลเบิ้ล → เน็ตหลุดแล้วลองใหม่เองหนึ่งครั้ง
 const API_SAFE = ['getAll', 'getTip', 'aiPlan', 'estimateFood', 'getPhoto'];
-let apiLive = 0, updWait = false;
+let apiLive = 0;
 function api(fn, args, again) {
   apiLive++;
-  return api1(fn, args).finally(() => { apiLive--; if (!apiLive && updWait) setTimeout(checkUpdate, 300); })
+  return api1(fn, args).finally(() => { apiLive--;  })
     .catch(e => { if (e.net && !again && API_SAFE.indexOf(fn) >= 0) return new Promise(r => setTimeout(r, 1500)).then(() => api(fn, args, true)); throw e; });
 }
 function api1(fn, args) {
@@ -3120,6 +3124,7 @@ function setHtml() {
   const maxRate = Math.max(0, (tg.tdee - tg.floor) * 30 / 7700);  // กินเท่าขั้นต่ำพอดี = ลดได้เร็วสุดเท่านี้
   return `<div class="hd"><div class="hd-in"><div class="hd-top"><button class="hd-btn" onclick="SS=null;go('today')">‹</button><div class="hd-title">ตั้งค่า</div></div></div></div>
     <div class="wrap">
+      <div class="card verrow"><div class="grow"><div class="t1">เวอร์ชันแอป</div><div class="t2">อัปเดตล่าสุด ${buildTxt(APP_BUILD)}</div></div><button class="btn" onclick="checkUpdate(true)">เช็กอัปเดต</button></div>
       <div class="flbl">เป้าหมาย</div>
       <div class="card fcard">${fr('น้ำหนักเป้า', 'goal_weight', 'กก.')}
         <div class="frow"><span>ลดเดือนละ</span><div class="chips" style="flex:1;justify-content:flex-end">${[1, 2, 3, 4].map(r => `<button class="chip ${num(s.rate) === r ? 'on' : ''}" style="padding:0 12px${r > maxRate + 0.05 && num(s.rate) !== r ? ';opacity:.4' : ''}" onclick="SS.rate=${r};render()">${r}</button>`).join('')}</div><span class="sfx">กก.</span></div>
@@ -3331,20 +3336,45 @@ function load(force) {
     netErr = e.message; render();
   });
 }
-// เช็กเวอร์ชันใหม่: iPhone จำหน้าเก่าได้ ~10 นาที → ดึงหน้าจริงแบบไม่ใช้แคช ถ้าเนื้อหาเปลี่ยนให้โหลดใหม่ (รอให้ส่งข้อมูลค้างเสร็จก่อน)
-function checkUpdate() {
-  if (location.protocol === 'file:') return;
-  fetch(location.pathname + '?nc=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
-    if (!t) return;
-    let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0;
-    const old = lsGet('lp_build'); lsSet('lp_build', String(h));
-    if (old === String(h)) return;
-    if (pending || syncing || syncQ.length || apiLive || W || tab === 'add' || /INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '')) { lsSet('lp_build', old || ''); updWait = true; return; } // กำลังทำงานอยู่ → รอให้ว่างก่อนค่อยโหลดใหม่
-    updWait = false;
-    const q = new URLSearchParams(location.search); q.set('v', Date.now());
-    location.replace(location.pathname + '?' + q.toString());
-  }).catch(() => {});
+// ===== ตัวโหลดเวอร์ชันใหม่ (แบบเดียวกับไร่อ้อย) =====
+// APP_BUILD ถูกแทนตอน deploy (static.yml "Stamp app version") = YYMMDDHHMM-sha · ในเครื่อง/ทดสอบเป็น __BUILD__ = ไม่เช็ก
+const APP_BUILD = '__BUILD__';
+let updNew = '', updLast = 0, updRetry = null;
+const buildTxt = b => { const m = /^(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/.exec(b || ''); return m ? +m[3] + ' ' + TH_M[+m[2] - 1] + ' ' + m[4] + ':' + m[5] : (b === '__BUILD__' ? 'ทดสอบในเครื่อง' : '-'); };
+// ห้ามโหลดใหม่ระหว่าง: บันทึก/รอ AI · โค้ชกำลังตอบ · พิมพ์อยู่ · รูปรอส่ง · กำลังฝึก · ฟอร์มเพิ่ม
+function updBusy() {
+  return !!(pending || syncing || syncQ.length || apiLive || aiBusy || W || tab === 'add' || (typeof photos !== 'undefined' && photos.length) || /INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || ''));
 }
+function updBar(show) {
+  let b = document.getElementById('updbar');
+  if (!show) { if (b) b.remove(); return; }
+  if (!b) { b = document.createElement('button'); b.id = 'updbar'; b.onclick = () => updGo(true); document.body.appendChild(b); }
+  b.textContent = '✨ มีเวอร์ชันใหม่ (' + buildTxt(updNew) + ') · แตะเพื่อโหลด';
+}
+function updGo(force) {
+  if (!updNew) return;
+  if (!force && updBusy()) { updBar(true); clearTimeout(updRetry); updRetry = setTimeout(() => updGo(), 15000); return; }
+  try { sessionStorage.setItem('lp_upd_from', APP_BUILD); } catch (e) {}
+  location.replace(location.pathname + '?v=' + encodeURIComponent(updNew) + location.hash);
+}
+function checkUpdate(manual) {
+  if (APP_BUILD === '__BUILD__' || location.protocol === 'file:') { if (manual) toast('โหมดทดสอบ ไม่มีเวอร์ชันให้เช็ก'); return; }
+  if (!manual && Date.now() - updLast < 20000) return;
+  updLast = Date.now();
+  if (manual) toast('กำลังเช็กอัปเดต…');
+  fetch(location.pathname + '?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
+    const m = /const APP_BUILD = '([^']+)'/.exec(t || '');
+    if (!m || m[1] === '__BUILD__') { if (manual) toast('เช็กไม่สำเร็จ ลองใหม่'); return; }
+    if (m[1] === APP_BUILD) { if (manual) toast('✅ เป็นเวอร์ชันล่าสุดแล้ว · ' + buildTxt(APP_BUILD)); return; }
+    updNew = m[1]; updGo(manual === true);
+  }).catch(() => { if (manual) toast('เชื่อมต่อไม่ได้ ตรวจสอบเน็ต'); });
+}
+// หลังโหลดเวอร์ชันใหม่: แจ้ง + ลบ ?v= ออกจากลิงก์
+(function () {
+  let from = null; try { from = sessionStorage.getItem('lp_upd_from'); sessionStorage.removeItem('lp_upd_from'); } catch (e) {}
+  if (/[?&]v=/.test(location.search)) { const q = new URLSearchParams(location.search); q.delete('v'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
+  if (from && from !== APP_BUILD) setTimeout(() => toast('✅ อัปเดตแล้ว · ' + buildTxt(APP_BUILD)), 600);
+})();
 (function init() {
   try { const ui = JSON.parse(lsGet(UI_STORE) || '{}'); if (ui.tab && Date.now() - ui.at < 30 * 60e3) tab = ui.tab; } catch (e) {}
   try { const c = JSON.parse(lsGet(DATA_STORE) || 'null'); if (c && c.log) { D = c; dDate = c.today; } } catch (e) {}
@@ -3353,9 +3383,11 @@ function checkUpdate() {
   if (ifq) { tab = 'today'; ifMode = ifq; ifSel = selNow(); history.replaceState(null, '', location.pathname); setTimeout(() => { const el = document.getElementById('ifcard'); if (el) el.scrollIntoView({ block: 'center' }); }, 400); }
   render();
   load();
-  checkUpdate();
+  setTimeout(checkUpdate, 3000);
+  setInterval(checkUpdate, 10 * 60e3);
+  window.addEventListener('pageshow', e => { if (e.persisted) checkUpdate(); });
   if (tab === 'coach') scrollChat();
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && D && !pending && !syncing && !syncQ.length) { load(); checkUpdate(); } });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; if (D && !pending && !syncing && !syncQ.length) load(); checkUpdate(); });
 })();
 </script>
 </body>
