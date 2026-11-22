@@ -153,6 +153,15 @@ function coachContext_(s, log, today, quote) {
   }
   const ws = log.filter(l => l.kind === 'weight').sort((a, b) => a.date < b.date ? -1 : 1).slice(-12);
   lines.push('น้ำหนักล่าสุด: ' + (ws.map(w => `${w.date} ${w.weight}${w.fat_pct ? '/' + w.fat_pct + '%' : ''}`).join(', ') || '-'));
+  // รอบเอว
+  const wa = log.filter(l => l.kind === 'waist').sort((a, b) => a.date < b.date ? -1 : 1);
+  if (wa.length) lines.push('รอบเอว (ซม. วัดตรงสะดือ): ' + wa.slice(-6).map(w => w.date + ' ' + w.waist).join(', '));
+  // โหมดเดินทาง
+  const trip = s.trip && s.trip.to ? s.trip : null;
+  if (trip && today >= trip.from && today <= trip.to) lines.push(`🧳 ผู้ใช้กำลังเดินทางต่างจังหวัด (${trip.from} ถึง ${trip.to}) ไม่มีเครื่องชั่ง: ห้ามพูดเรื่องชั่งน้ำหนัก/น้ำหนักไม่อัปเดต · แนะนำเมนูร้านข้างทาง ร้านตามสั่ง 7-11 ที่หาได้จริงตอนเดินทาง · เป้าหลักช่วงนี้ = จดทุกมื้อ + โปรตีนถึงเป้า`);
+  else if (trip && today > trip.to && today <= addDays_(trip.to, 3)) lines.push(`ผู้ใช้เพิ่งกลับจากเดินทาง (${trip.to}) น้ำหนักอาจขึ้น 1–2 กก. จากน้ำ/เกลือ/แป้ง จะลงเองใน 3–5 วัน อย่าตกใจ`);
+  // เป้าสัปดาห์ที่ผู้ใช้เลือก
+  if (s.wk_goal && s.wk_goal.ids && s.wk_goal.ids.length) lines.push('เป้าสัปดาห์นี้ที่ผู้ใช้เลือกเอง (เริ่ม ' + s.wk_goal.week + ', ทำให้ได้ ' + (s.wk_goal.n || 5) + ' วัน): ' + s.wk_goal.ids.map(k => WK_NAMES_[k] || k).join(' · ') + ' — ชมเมื่อทำได้ ชวนทำต่อ ไม่ต้องตั้งเป้าใหม่ทับ');
   quoteLines_(quote).forEach(l => lines.push(l));
   // การฝึก
   const eq = { none: 'ตัวเปล่า', db: 'ดัมเบล', band: 'ยางยืด', bar: 'บาร์โหนประตู', bench: 'ม้านั่ง/เก้าอี้', ez: 'EZ bar', sand: 'แซนด์แบ็ก (ชอบแบกเดิน/ลันจ์)', gym: 'ยิม' };
@@ -459,4 +468,31 @@ ${(lib || []).map(x => `${x.id} | ${x.n} | ${x.g}`).join('\n')}
     items: (day.items || []).filter(x => ids.indexOf(x.id) >= 0).slice(0, 8).map(x => ({ id: x.id, sets: Math.max(1, Math.min(6, Math.round(num_(x.sets)) || 3)),
       lo: Math.max(1, Math.round(num_(x.lo)) || 8), hi: Math.max(1, Math.round(num_(x.hi)) || 12) }))
   })) };
+}
+
+const WK_NAMES_ = { log: 'จดครบทุกมื้อ', protein: 'โปรตีนถึงเป้า', kcal: 'ไม่เกินเป้าแคล', water: 'น้ำถึงเป้า', sleep: 'นอน ≥ 7 ชม.', move: 'ขยับครบเป้าสัปดาห์' };
+
+// ===== AI เทียบรูปหุ่น ก่อน/หลัง =====
+// info: { wA, wB, waistA, waistB } (หน้าเว็บส่งน้ำหนัก/รอบเอวของวันนั้น) · เก็บผลล่าสุด Settings.pc_last
+function comparePhotos(idA, idB, info) {
+  info = info || {};
+  const rows = rows_(SH_.BODY), a = rows.find(p => p.photo_id === idA), b = rows.find(p => p.photo_id === idB);
+  if (!a || !b) throw new Error('ไม่พบรูป');
+  const img = p => { const bl = DriveApp.getFileById(p.file_id).getBlob(); return { inlineData: { mimeType: bl.getContentType() || 'image/jpeg', data: Utilities.base64Encode(bl.getBytes()) } }; };
+  const pose = { front: 'ด้านหน้า', side: 'ด้านข้าง', back: 'ด้านหลัง' }[a.pose] || a.pose;
+  const days = Math.round((new Date(b.date + 'T12:00:00') - new Date(a.date + 'T12:00:00')) / 864e5);
+  const fact = (k, u) => info[k + 'A'] && info[k + 'B'] ? `${info[k + 'A']} → ${info[k + 'B']} ${u}` : 'ไม่มีข้อมูล';
+  const prompt = `คุณคือโค้ชลดน้ำหนัก ดูรูปหุ่นผู้ชายไทยคนเดียวกัน ท่า${pose} 2 รูป: รูปที่ 1 = ก่อน (${a.date}) รูปที่ 2 = ล่าสุด (${b.date}) ห่างกัน ${days} วัน
+ข้อมูลจริง: น้ำหนัก ${fact('w', 'กก.')} · รอบเอว ${fact('waist', 'ซม.')}
+ตอบ JSON อย่างเดียว: {"comparable":true,"head":"สรุป 1 ประโยค ไม่เกิน 60 ตัวอักษร","changes":["สิ่งที่เห็นเปลี่ยน ทีละจุด เช่น หน้าท้อง เอว หน้า แขน หลัง ไม่เกิน 4 ข้อ ข้อละไม่เกิน 70 ตัวอักษร"],"photo_tip":"คำแนะนำการถ่ายครั้งหน้าให้เทียบง่ายขึ้น ไม่เกิน 80 ตัวอักษร หรือ \"\""}
+กฎ: พูดเฉพาะสิ่งที่เห็นในรูปจริง ภาษาไทย ให้กำลังใจแบบไม่อวยเกิน · ห้ามเดา % ไขมัน ห้ามบอกกล้าม/ไขมันกี่กิโล · ถ้ายังไม่เห็นต่างชัดให้บอกตรง ๆ (ห่างกันไม่กี่สัปดาห์เป็นเรื่องปกติ) และชี้ตัวเลขจริงแทน
+ถ้าแสง มุม ระยะ ท่า หรือเสื้อผ้าต่างกันมากจนเทียบไม่ได้ → comparable=false, head บอกว่าเทียบไม่ได้เพราะอะไร, changes = []
+ห้ามพูดถึงใบหน้า/ตัวตน ไม่ใช้ markdown`;
+  const raw = geminiCall_([{ text: prompt }, img(a), img(b)], true).replace(/^```json\s*|```\s*$/g, '');
+  let d; try { d = JSON.parse(raw); } catch (e) { throw new Error('โค้ชตอบผิดรูปแบบ ลองใหม่'); }
+  const res = { a: idA, b: idB, pose: a.pose, dA: a.date, dB: b.date, comparable: d.comparable !== false,
+    head: String(d.head || '').replace(/\*\*/g, '').slice(0, 100), changes: (d.changes || []).slice(0, 4).map(x => String(x).replace(/\*\*/g, '').slice(0, 120)),
+    tip: String(d.photo_tip || '').slice(0, 120), at: nowStr_() };
+  withLock_(() => upsert_(SH_.SET, { key: 'pc_last', value: JSON.stringify(res) }));
+  return res;
 }

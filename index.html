@@ -456,6 +456,20 @@
   #c_stall .sck { font-size: 13px; color: var(--muted); font-weight: 600; }
   #c_stall .sch { font-size: 17px; font-weight: 700; margin: 2px 0 6px; } #c_stall .sch.ok { color: var(--ok); } #c_stall .sch.warn { color: var(--warn); } #c_stall .sch.wait { color: var(--muted); }
   #c_stall .fact { font-size: 14.5px; line-height: 1.55; } #c_stall .note2 { font-size: 12.5px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+  .wmini { border-top: 1px solid #F5D8C4; }
+  .wbig { font-size: 15px; } .wbig b { font-size: 28px; }
+  .wform { display: flex; gap: 8px; align-items: center; margin-top: 10px; } .wform input { flex: 1; min-width: 0; height: 44px; font-size: 18px; border: 1px solid var(--line2); border-radius: 10px; padding: 0 12px; font-family: inherit; }
+  .whist { margin-top: 10px; border-top: 1px solid var(--line); } .wrow { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; border-bottom: 1px solid var(--line); }
+  .pcres .kick { font-size: 13px; color: var(--muted); font-weight: 600; } .pcres .ph { font-size: 17px; font-weight: 700; color: #5B3FB0; margin: 2px 0 6px; } .pcres.no .ph { color: var(--warn); }
+  .pcres ul { margin: 0; padding-left: 20px; font-size: 14.5px; line-height: 1.55; } .note2 { font-size: 12.5px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .wbox.trip { background: #EAF1FB; color: #1D3B66; } .trippick { margin-top: 10px; background: #F4F7FC; border-radius: 12px; padding: 10px 12px; }
+  .wkcard { margin-top: 12px; padding: 12px 14px; } .wkcard .kick { font-size: 13px; color: var(--muted); font-weight: 600; } .wkh { font-size: 16px; font-weight: 700; margin-top: 2px; }
+  .wkprev { font-size: 13.5px; margin-top: 6px; background: var(--ground); border-radius: 10px; padding: 6px 10px; }
+  .wkr { padding: 8px 0; border-top: 1px solid var(--line); } .wkr:first-of-type { border-top: 0; }
+  .wkn { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; } .wkn span { color: var(--warn); } .wkn span.ok { color: var(--ok); }
+  .wkd { display: flex; gap: 6px; margin-top: 6px; } .wkd div { flex: 1; text-align: center; font-size: 11px; color: var(--muted); }
+  .wkd i { display: grid; place-items: center; height: 24px; border-radius: 7px; background: var(--ground); font-style: normal; font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+  .wkd i.y { background: #1E7B4D; color: #fff; } .wkd i.x { background: #F3D9D6; color: var(--red); } .wkd i.t { border: 2px dashed var(--line2); background: #fff; }
   .maccard { background: linear-gradient(180deg,#F5FAF7,#fff 40%); border-color: #D7E9DF; }
   /* การ์ด "วันนี้ตามแผนไหม" — แยกสีตามสถานะ: แดง เกิน/งดเพิ่ม · ส้ม ไม่ตามแผน · เทา ระหว่างวัน · เขียว ตามแผน */
   .pcard { position: relative; margin: -42px 0 0; padding: 12px 14px 6px; border-radius: 18px; border: 0; box-shadow: 0 6px 22px rgba(20,54,48,.16); }
@@ -723,7 +737,7 @@ function api(fn, args, again) {
 }
 function api1(fn, args) {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), fn === 'coachSend' || fn === 'getTip' ? 150000 : 60000);
+  const timer = setTimeout(() => ctrl.abort(), fn === 'coachSend' || fn === 'getTip' || fn === 'comparePhotos' ? 150000 : 60000);
   return fetch(API_URL, {
     method: 'POST', redirect: 'follow', signal: ctrl.signal,
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -786,7 +800,7 @@ let D = null, tab = 'today', dDate = '', openRow = '', sumRange = 90, netErr = '
 const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 const TH_D = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 const MEALS = [['breakfast', 'เช้า', '🌅'], ['lunch', 'กลางวัน', '☀️'], ['dinner', 'เย็น', '🌙'], ['snack', 'ของว่าง', '🍪']];
-const KIND = { food: ['อาหาร', '🍚'], exercise: ['ออกกำลัง', '🏃'], water: ['น้ำ', '💧'], weight: ['น้ำหนัก', '⚖️'], fast: ['อดอาหาร', '⏱️'] };
+const KIND = { food: ['อาหาร', '🍚'], exercise: ['ออกกำลัง', '🏃'], water: ['น้ำ', '💧'], weight: ['น้ำหนัก', '⚖️'], fast: ['อดอาหาร', '⏱️'], waist: ['รอบเอว', '📏'] };
 // สัดส่วนแมโคร: โปรตีนคงที่ 2 ก./กก. มวลไม่รวมไขมัน · เปลี่ยนแค่ % ไขมัน ที่เหลือเป็นคาร์บ (ตรงกับ SPLIT_ ใน GAS)
 const SPLIT = [['bal', 'สมดุล', 0.30], ['low', 'คาร์บต่ำ', 0.40], ['high', 'คาร์บสูง', 0.20]];
 const splitOf = s => SPLIT.find(x => x[0] === s.macro_split) || SPLIT[0];
@@ -1036,7 +1050,7 @@ function weightBounce(tg, td) {
     body = `ไขมัน ${up} กก. ต้องกินเกินราว ${fmt(Math.round(up * 7700 / 100) * 100)} แคล` + (part ? ' · เมื่อวานจดไม่ครบ เลยเทียบแคลไม่ได้' : ` แต่เมื่อวานกิน ${fmt(t.kcal)} อยู่ในเป้า ${fmt(Math.round(budget))}`);
   }
   return `<div class="wbc"><div class="wtop2"><div><div class="t2">น้ำหนักเช้านี้</div><b>${cur.w}</b> <small class="t2">กก.</small></div><div style="text-align:right"><div style="color:var(--warn);font-weight:700">+${up}</div><div class="t2">จาก${dayDiff(prev.date, td) === 1 ? 'เมื่อวาน' : 'ครั้งก่อน'}</div></div></div>
-    <div class="wbox"><b>${head}</b><div>${body}</div>${causes.length ? `<div style="margin-top:8px">สิ่งที่เจอ</div><div class="wchips">${causes.map(c => `<span>${esc(c)}</span>`).join('')}</div><div style="font-size:12px;margin-top:8px;opacity:.85">อย่างนี้ทำให้ร่างกายเก็บน้ำได้ชั่วคราว 1–3 วัน</div>` : `<div style="font-size:12px;margin-top:6px;opacity:.85">น้ำหนักแกว่งวันละ 0.5–1 กก. เป็นปกติ (เกลือ แป้ง ขับถ่าย เวลาชั่ง)</div>`}</div>
+    ${tripBack() ? tripBackNote() : ''}<div class="wbox"><b>${head}</b><div>${body}</div>${causes.length ? `<div style="margin-top:8px">สิ่งที่เจอ</div><div class="wchips">${causes.map(c => `<span>${esc(c)}</span>`).join('')}</div><div style="font-size:12px;margin-top:8px;opacity:.85">อย่างนี้ทำให้ร่างกายเก็บน้ำได้ชั่วคราว 1–3 วัน</div>` : `<div style="font-size:12px;margin-top:6px;opacity:.85">น้ำหนักแกว่งวันละ 0.5–1 กก. เป็นปกติ (เกลือ แป้ง ขับถ่าย เวลาชั่ง)</div>`}</div>
     ${wTrend(dw, td)}</div>`;
 }
 // น้ำหนักวันปกติ: ลง / นิ่ง / ยังไม่ได้ชั่งวันนี้ — คิดด้วยเลขเดียวกัน (ไขมัน 1 กก. ≈ 7,700 แคล)
@@ -1045,6 +1059,7 @@ function weightCalm(tg, td, dw, cur, prev) {
   let head, body, right = '';
   if (ago > 0) {
     head = ago >= 7 ? `ไม่ได้ชั่ง ${ago} วันแล้ว` : 'วันนี้ยังไม่ได้ชั่ง';
+    right = `<button class="btn sm" onclick="tripOpen=!tripOpen;keepScroll()">🧳 ไปต่างจังหวัด</button>`;
     body = `ชั่งทุกเช้าหลังเข้าห้องน้ำ ก่อนกินดื่ม ให้เทียบกันได้ แอปจะดูเฉลี่ย 7 วันให้ ไม่ต้องกังวลตัวเลขรายวัน${perDay ? ` · ตามเป้า ไขมันลดได้ราว ${r1(perDay * 7)} กก./สัปดาห์` : ''}`;
   } else if (d <= -0.3) {
     right = `<div style="color:var(--ok);font-weight:700">${d}</div><div class="t2">จาก${dayDiff(prev.date, td) === 1 ? 'เมื่อวาน' : 'ครั้งก่อน'}</div>`;
@@ -1057,6 +1072,7 @@ function weightCalm(tg, td, dw, cur, prev) {
   }
   return `<div class="wbc"><div class="wtop2"><div><div class="t2">${ago ? 'น้ำหนักล่าสุด · ' + dayLabel(cur.date) : 'น้ำหนักเช้านี้'}</div><b>${cur.w}</b> <small class="t2">กก.</small></div><div style="text-align:right">${right}</div></div>
     <div class="wbox ${ago ? 'idle' : ''}"><b>${head}</b><div>${body}</div></div>
+    ${tripOpen ? tripPicker() : ''}${tripBack() ? tripBackNote() : ''}
     ${wTrend(dw, td)}</div>`;
 }
 // เฉลี่ย 7 วัน เทียบสัปดาห์ก่อน + กราฟเล็ก 14 วัน
@@ -1200,11 +1216,12 @@ function planCard(tg, t, td, budget) {
     if (nd <= 0) G.ok.push(['ขยับสัปดาห์นี้', '✓ ' + fmt(mw.min) + ' นาที', '']);
     else (mw.left <= 2 && nd / mw.left > 60 ? G.warn : G.wait).push(['ขยับสัปดาห์นี้', fmt(mw.min) + '/' + fmt(mw.goal) + ' นาที', 'อีกวันละ ~' + Math.ceil(nd / mw.left) + ' นาที']); }
   if (s.if_on) G.ok.push(['IF', 'กำลังอดอยู่', '']); else if (ifDue()) G.warn.push(['IF', 'ถึงเวลาเริ่มแล้ว', 'เริ่มอด ' + ifAt() + ' ตามแผน']);
+  if (tripNow()) ['warn', 'wait', 'ok'].forEach(k => G[k] = G[k].filter(r => /แคลอรี่|โปรตีน/.test(r[0])));  // เดินทาง: เหลือแค่แคล + โปรตีน
   const lv = G.red.length ? 'red' : G.warn.length ? 'warn' : 'ok';
   const head = { red: '⛔ มี ' + G.red.length + ' อย่างเกินแผน', warn: '⚠️ มี ' + G.warn.length + ' อย่างยังไม่ตามแผน', ok: '✅ วันนี้ตามแผน' }[lv];
   const row = r => `<div class="prow"><span class="n">${r[0]}${r[2] ? `<span class="d">${r[2]}</span>` : ''}</span><span class="v">${r[1]}</span></div>`;
   const grp = (k, title) => G[k].length ? `<div class="pgrp ${k}"><div class="gt">${title}</div>${G[k].map(row).join('')}${k === 'red' && dont.length ? dont.map(x => `<div class="pdont">${/^👉/.test(x) ? '' : '🚫 '}${x}</div>`).join('') : ''}</div>` : '';
-  return `<div class="card pcard"><div class="kick">📋 วันนี้ตามแผนไหม</div><div class="ph ${lv}">${head}</div>
+  return `<div class="card pcard"><div class="kick">${tripNow() ? '🧳 โหมดเดินทาง · เป้าแค่จดทุกมื้อ + โปรตีน' : '📋 วันนี้ตามแผนไหม'}</div><div class="ph ${lv}">${head}</div>
     ${grp('red', left < 0 && pShort >= 15 && !night ? '⛔ เกินแล้ว — มื้อต่อไปคุมเข้ม' : '⛔ เกินแล้ว — ห้ามเพิ่ม')}${grp('warn', '⚠️ ไม่ตามแผน')}${grp('wait', '⏳ ระหว่างวัน (ยังมีเวลา)')}${grp('ok', '✅ ตามแผน')}</div>`;
 }
 function todayHtml() {
@@ -1219,10 +1236,10 @@ function todayHtml() {
           <div><span>${t.step ? 'ออกกำลัง+ก้าว' : 'ออกกำลัง'} ÷ 2</span><b>+ ${fmt(exAll(t) / 2)}</b></div><div><span>${over ? 'เกิน' : 'เหลือ'}</span><b>${fmt(Math.abs(left))}</b></div></div></div>
     </div></div>
     <div class="wrap">
-      ${(pc => pc ? pc + `<div class="after-p">${coachCard(tg)}</div>` : coachCard(tg))(planCard(tg, t, td, budget))}
+      ${(pc => pc ? pc + `<div class="after-p">${wkCard(tg)}${coachCard(tg)}</div>` : coachCard(tg) + wkCard(tg))(planCard(tg, t, td, budget))}
       ${hasGarmin() ? rhrAlertCard(td) : ''}
       ${alertsHtml(tg)}
-      ${weightBounce(tg, td)}
+      ${tripNow() ? tripCard() : weightBounce(tg, td)}
       <div class="sec"><h3>🥗 แมโครวันนี้</h3><a class="lnk" onclick="go('diary')">ไดอารี่ ›</a></div>
       ${macroBars(t, tg)}
       ${hasGarmin() ? `<div class="sec"><h3>⌚ ร่างกายวันนี้</h3><a class="lnk" onclick="go('sum');setTimeout(()=>{const e=document.getElementById('c_rhr');if(e)e.scrollIntoView()},50)">กราฟ ›</a></div>${bodyCardToday(td)}${hungerCard(td)}${rhrCalmCard(td)}` : ''}
@@ -1266,6 +1283,110 @@ function setMove(v) {
   sync('saveSettings', [{ move_goal: v }], () => { D.settings.move_goal = v; });
   toast('✅ เป้าขยับ ' + v + ' นาที/สัปดาห์ · ดูที่หน้าวันนี้'); render();
 }
+// ===== รอบเอว (Log kind 'waist', ซม.) — วัดตรงสะดือ ทุก 2 สัปดาห์พร้อมรูป =====
+const waists = () => logs().filter(l => l.kind === 'waist' && num(l.waist) > 0).sort((a, b) => (a.date + a.time) < (b.date + b.time) ? -1 : 1);
+const waistAt = d => { const w = waists().filter(x => x.date <= d).pop(); return w ? num(w.waist) : null; };
+let waistIn = '';
+function waistMini() {
+  const w = waists(), l = w[w.length - 1], f = w[0];
+  return `<button class="row wmini" onclick="go('body');setTimeout(()=>{const e=document.getElementById('waistc');if(e)e.scrollIntoView({block:'center'})},60)"><div class="ico">📏</div><div class="grow"><div class="t1">${l ? 'รอบเอว ' + num(l.waist) + ' ซม.' + (f !== l ? ` <small style="color:${num(l.waist) <= num(f.waist) ? 'var(--ok)' : 'var(--warn)'}">${r1(num(l.waist) - num(f.waist)) > 0 ? '+' : ''}${r1(num(l.waist) - num(f.waist))} จากครั้งแรก</small>` : '') : 'ยังไม่ได้วัดรอบเอว'}</div>
+    <div class="t2">${l ? dayLabel(l.date) + (dayDiff(l.date, todayIso()) >= 14 ? ' · ครบ 2 สัปดาห์ วัดใหม่ได้' : '') : 'แม่นกว่ารูป บอกไขมันหน้าท้องได้ดี'}</div></div><span>›</span></button>`;
+}
+function waistCard() {
+  const w = waists(), l = w[w.length - 1], f = w[0];
+  const hist = w.slice(-6).reverse().map(x => `<div class="wrow"><span>${thDate(x.date)}</span><b>${num(x.waist)} ซม.</b></div>`).join('');
+  return `<div class="card pad" id="waistc">
+    ${l ? `<div class="wbig"><b>${num(l.waist)}</b> ซม. ${f !== l ? `<span style="color:${num(l.waist) <= num(f.waist) ? 'var(--ok)' : 'var(--warn)'}">${r1(num(l.waist) - num(f.waist)) > 0 ? '+' : ''}${r1(num(l.waist) - num(f.waist))} ซม. จาก ${thDate(f.date)}</span>` : ''}</div>
+      <div class="t2" style="white-space:normal">เกณฑ์ผู้ชายเอเชีย ไม่เกิน 90 ซม. (IDF 2006) · ${num(l.waist) > 90 ? 'อีก ' + r1(num(l.waist) - 90) + ' ซม.' : 'ผ่านเกณฑ์แล้ว 🎉'}</div>` : ''}
+    <div class="wform"><input type="text" inputmode="decimal" placeholder="${l ? num(l.waist) : 'เช่น 110'}" value="${esc(waistIn)}" oninput="waistIn=this.value"><span>ซม.</span><button class="btn pri" onclick="saveWaist()">บันทึก</button></div>
+    <div class="note2" style="margin-top:8px">วัดตอนเช้าก่อนกิน สายวัดผ่านสะดือ ขนานพื้น หายใจออกสบาย ๆ ไม่แขม่วท้อง · วัดทุก 2 สัปดาห์พร้อมถ่ายรูป</div>
+    ${hist ? `<div class="whist">${hist}</div>` : ''}</div>`;
+}
+function saveWaist() {
+  const v = num(waistIn); if (v < 40 || v > 250) return alert('ใส่รอบเอวเป็นเซนติเมตร เช่น 110');
+  const o = { log_id: newLogId(), date: todayIso(), time: nowHM(), kind: 'waist', name: 'รอบเอว', waist: Math.round(v * 10) / 10, source: 'tap' };
+  waistIn = ''; sync('saveLog', [o], () => D.log.push(o)); toast('📏 บันทึกรอบเอวแล้ว');
+}
+
+// ===== AI เทียบรูปหุ่น (comparePhotos ใน Coach.gs) =====
+let pcBusy = false;
+function pcBlock(a, b) {
+  const r = S().pc_last, mine = r && r.a === a.photo_id && r.b === b.photo_id;
+  if (!D.gemini) return '';
+  const res = mine ? `<div class="pcres ${r.comparable ? '' : 'no'}"><div class="kick">🤖 โค้ชเทียบ ${thDate(r.dA)} → ${thDate(r.dB)}</div><div class="ph">${esc(r.head)}</div>
+      ${(r.changes || []).length ? `<ul>${r.changes.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}${r.tip ? `<div class="note2">📷 ${esc(r.tip)}</div>` : ''}
+      <div class="note2">AI ดูจากรูปเท่านั้น ไม่บอก % ไขมัน · ตัวเลขจริงดูจากน้ำหนัก + รอบเอว</div></div>` : '';
+  return `<div class="card pad" style="margin-top:10px">${res}${pcBusy ? `<div class="aiwork"><b>🤖 โค้ชกำลังเทียบรูป…</b><small>ประมาณ 10–30 วินาที · ใช้แอปส่วนอื่นต่อได้เลย</small><i></i></div>`
+    : `<button class="btn ${mine ? '' : 'pri'} full" style="margin-top:${mine ? 10 : 0}px" onclick="pcRun('${a.photo_id}','${b.photo_id}')">🤖 ${mine ? 'ให้โค้ชเทียบใหม่' : 'ให้โค้ชเทียบ 2 รูปนี้'}</button>`}</div>`;
+}
+function pcRun(a, b) {
+  const pa = (D.photos || []).find(p => p.photo_id === a), pb = (D.photos || []).find(p => p.photo_id === b); if (!pa || !pb) return;
+  const wAt = d => { const w = dailyWeights().filter(x => x.date <= d).pop(); return w ? w.w : ''; };
+  pcBusy = true; keepScroll();
+  api('comparePhotos', [a, b, { wA: wAt(pa.date), wB: wAt(pb.date), waistA: waistAt(pa.date) || '', waistB: waistAt(pb.date) || '' }])
+    .then(r => { pcBusy = false; D.settings.pc_last = r; lsSet(DATA_STORE, JSON.stringify(D)); keepScroll(); })
+    .catch(e => { pcBusy = false; keepScroll(); alert(e.message || 'เทียบไม่สำเร็จ ลองใหม่'); });
+}
+
+// ===== โหมดเดินทาง (Settings.trip {from, to}) — ไม่ต้องชั่ง เป้าแค่จดทุกมื้อ + โปรตีน =====
+let tripOpen = false, tripStart = 0;
+const tripOf = () => { const t = S().trip; return t && t.from && t.to ? t : null; };
+const tripNow = () => { const t = tripOf(), d = todayIso(); return !!(t && d >= t.from && d <= t.to); };
+const tripBack = () => { const t = tripOf(), d = todayIso(); return !!(t && d > t.to && d <= addDays(t.to, 3)); };
+function setTrip(v) { sync('saveSettings', [{ trip: v }], () => { D.settings.trip = v; }); tripOpen = false; toast(v ? '🧳 ตั้งโหมดเดินทางแล้ว' : 'จบโหมดเดินทางแล้ว'); render(); }
+function tripPicker() {
+  const st = addDays(todayIso(), tripStart);
+  return `<div class="trippick"><div class="t1">🧳 โหมดเดินทาง — ไม่ต้องชั่ง แอปไม่เตือน เป้าเหลือแค่จดทุกมื้อ + โปรตีน</div>
+    <div class="sugg" style="margin-top:6px">${[[0, 'เริ่มวันนี้'], [1, 'เริ่มพรุ่งนี้']].map(([v, n]) => `<button class="chip ${tripStart === v ? 'on' : ''}" onclick="tripStart=${v};keepScroll()">${n}</button>`).join('')}</div>
+    <div class="t2" style="margin:8px 0 4px">ไปกี่วัน (ถึงวันไหน)</div>
+    <div class="sugg">${[2, 3, 4, 5, 7, 10].map(n => `<button class="chip" onclick="setTrip({from:'${st}',to:'${addDays(st, n - 1)}'})">${n} วัน · ถึง ${thDate(addDays(st, n - 1)).replace(/ \d+$/, '')}</button>`).join('')}</div></div>`;
+}
+function tripCard() {
+  const t = tripOf(), left = dayDiff(todayIso(), t.to);
+  return `<div class="wbc"><div class="wbox trip"><b>🧳 โหมดเดินทาง · ${left ? 'อีก ' + (left + 1) + ' วัน (ถึง ' + thDate(t.to) + ')' : 'วันสุดท้าย'}</b>
+    <div>ไม่ต้องชั่ง (ชั่งข้างนอกเสื้อผ้า กระเป๋า เวลาต่าง เทียบไม่ได้) · เป้าแค่ <b>จดทุกมื้อ</b> (ถ่ายรูปส่งโค้ชก็พอ) + <b>โปรตีนให้ถึง</b> · ร้านตามสั่ง: กะเพราไก่ไข่ต้ม ข้าวน้อย · 7-11: อกไก่ ไข่ต้ม นมจืด</div>
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" onclick="setTrip({from:'${t.from}',to:'${addDays(todayIso(), -1)}'})">กลับบ้านแล้ว</button><button class="btn sm" onclick="setTrip({from:'${t.from}',to:'${addDays(t.to, 1)}'})">+1 วัน</button></div></div></div>`;
+}
+const tripBackNote = () => `<div class="wbox trip" style="margin-bottom:8px"><b>🏠 เพิ่งกลับจากเดินทาง</b><div>น้ำหนัก 3–5 วันแรกอาจขึ้น 1–2 กก. ส่วนใหญ่เป็นน้ำจากอาหารเค็มและแป้ง จะลงเองถ้ากินตามเป้า ดูเฉลี่ย 7 วันแทน</div></div>`;
+
+// ===== เป้าสัปดาห์ (แบบโค้ช DPP / Look AHEAD: เลือกเอง 1–2 อย่าง วัดได้ แอปนับให้) — Settings.wk_goal {week, ids, n} =====
+const WK = [
+  ['log', '📝 จดครบทุกมื้อ', (d, tg, t) => t.n > 0 && !partialDay(d, tg)],
+  ['protein', '💪 โปรตีนถึงเป้า', (d, tg, t) => t.protein >= tg.protein * 0.9],
+  ['kcal', '🍽️ ไม่เกินเป้าแคล', (d, tg, t) => t.n > 0 && !partialDay(d, tg) && t.kcal <= tg.kcal + exAll(t) / 2],
+  ['water', '💧 น้ำถึงเป้า', (d, tg, t) => t.water >= (num(S().water_goal) || 2500)],
+  ['sleep', '😴 นอน ≥ 7 ชม.', d => num((dailyOf(d) || {}).sleep_min) >= 420],
+  ['move', '🚶 ขยับครบเป้าสัปดาห์', null]
+];
+let wkPick = [];
+const monOf = d => addDays(d, -((new Date(d + 'T12:00:00').getDay() + 6) % 7));
+function wkEval(id, mon, tg) {
+  const g = WK.find(x => x[0] === id), td = todayIso(), days = [];
+  if (!g) return null;
+  if (!g[2]) { const w = moveWeek(); return { id, name: g[1], weekly: true, val: w.min, goal: w.goal, done: w.min >= w.goal }; }
+  for (let i = 0; i < 7; i++) { const d = addDays(mon, i); if (d > td) { days.push(null); continue; } const ok = g[2](d, tg, dayT(d)); days.push(ok ? 1 : d === td ? null : 0); }
+  return { id, name: g[1], days, cnt: days.filter(v => v === 1).length };
+}
+function wkCard(tg) {
+  const s = S(), td = todayIso(), mon = monOf(td), wg = s.wk_goal, n = (wg && wg.n) || 5;
+  if (!wg || wg.week !== mon || !(wg.ids || []).length) {
+    let prev = '';
+    if (wg && wg.week === addDays(mon, -7) && (wg.ids || []).length) prev = `<div class="wkprev">สัปดาห์ที่แล้ว: ${wg.ids.map(id => { const r = wkEval(id, wg.week, tg); return r ? (r.weekly ? r.name.replace(/^\S+\s/, '') + (r.done ? ' ✓' : '') : r.name.replace(/^\S+\s/, '') + ' ' + r.cnt + '/' + n + (r.cnt >= n ? ' ✓' : '')) : ''; }).join(' · ')}</div>`;
+    return `<div class="card wkcard"><div class="kick">🎯 เป้าสัปดาห์นี้</div><div class="wkh">เลือก 1–2 อย่างที่จะทำให้ได้ ${n} วัน</div>${prev}
+      <div class="sugg" style="margin-top:8px">${WK.map(([id, nm]) => `<button class="chip ${wkPick.includes(id) ? 'on' : ''}" onclick="wkToggle('${id}')">${nm}</button>`).join('')}</div>
+      <button class="btn pri full" style="margin-top:10px" ${wkPick.length ? '' : 'disabled'} onclick="wkSave()">เริ่มสัปดาห์นี้</button>
+      <div class="note2" style="margin-top:6px">โค้ชลดน้ำหนักในงานวิจัย (DPP, Look AHEAD) ให้ตั้งเป้าเล็กที่วัดได้ทีละ 1–2 อย่าง แล้วเช็กทุกสัปดาห์</div></div>`;
+  }
+  const TD = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
+  const rows = wg.ids.map(id => wkEval(id, mon, tg)).filter(Boolean).map(r => r.weekly
+    ? `<div class="wkr"><div class="wkn">${r.name}<span class="${r.done ? 'ok' : ''}">${fmt(r.val)}/${fmt(r.goal)} นาที${r.done ? ' 🎉' : ''}</span></div></div>`
+    : `<div class="wkr"><div class="wkn">${r.name}<span class="${r.cnt >= n ? 'ok' : ''}">${r.cnt >= n ? 'ครบ ' + r.cnt + ' วัน 🎉' : r.cnt + '/' + n + ' วัน'}</span></div>
+      <div class="wkd">${r.days.map((v, i) => `<div><i class="${v === 1 ? 'y' : v === 0 ? 'x' : addDays(mon, i) === td ? 't' : ''}">${v === 1 ? '✓' : v === 0 ? '–' : ''}</i><span>${TD[i]}</span></div>`).join('')}</div></div>`).join('');
+  return `<div class="card wkcard"><div class="kick" style="display:flex;justify-content:space-between">🎯 เป้าสัปดาห์นี้<a class="lnk" style="font-size:13px" onclick="wkPick=${esc(JSON.stringify(wg.ids))};wkReset()">เปลี่ยน</a></div>${rows}</div>`;
+}
+function wkToggle(id) { wkPick = wkPick.includes(id) ? wkPick.filter(x => x !== id) : wkPick.concat(id).slice(-2); keepScroll(); }
+function wkSave() { const v = { week: monOf(todayIso()), ids: wkPick.slice(0, 2), n: 5 }; sync('saveSettings', [{ wk_goal: v }], () => { D.settings.wk_goal = v; }); wkPick = []; toast('🎯 ตั้งเป้าสัปดาห์แล้ว'); render(); }
+function wkReset() { const v = Object.assign({}, S().wk_goal, { ids: [] }); D.settings.wk_goal = v; keepScroll(); }
 function stepCard(td) {
   if (!(D.daily || []).length) return `<div class="card stepcard"><button class="row" onclick="openShortcut()"><div class="ico">⌚</div><div class="grow"><div class="t1">ดึงก้าว + การนอนจากนาฬิกา</div><div class="t2">ตั้งทางลัดครั้งเดียว ข้อมูลไหลเข้าเอง</div></div><span>›</span></button>${moveCard()}</div>`;
   const goal = num(S().step_goal) || 8000, si = stepInfo(td), x = dailyOf(td);
@@ -1503,7 +1624,7 @@ function bodyCard() {
   const nx = nextPhotoDate(), due = nx <= todayIso();
   return `<div class="card bodycard"><div class="pgrid">${POSES.map(([k, n]) => { const l = photosOf(k); return slotHtml(k, n, l[l.length - 1], `takePhoto('${k}')`); }).join('')}</div>
     <div class="prow2"><div class="grow t2" style="white-space:normal">ถ่ายทุก 2 สัปดาห์ · ครั้งถัดไป <b style="color:${due ? '#C2410C' : 'var(--ink)'}">${due ? 'วันนี้' : thDate(nx)}</b></div>
-      <button class="btn sm photo-btn" onclick="go('body')">📷 ${due ? 'ถ่ายรูปหุ่น' : 'ดูทั้งหมด'}</button></div></div>`;
+      <button class="btn sm photo-btn" onclick="go('body')">📷 ${due ? 'ถ่ายรูปหุ่น' : 'ดูทั้งหมด'}</button></div>${waistMini()}</div>`;
 }
 function takePhoto(pose) { upPose = pose; document.getElementById('bodyFile').click(); }
 function makeThumb(file) {
@@ -1552,6 +1673,8 @@ function bodyHtml() {
           ${list.length > 2 ? `<div class="flbl" style="margin-top:12px">เปลี่ยนรูปฝั่งซ้าย</div><div class="hscroll">${list.slice(0, -1).map(p => `<button class="chip ${p === left ? 'on' : ''}" onclick="bLeft='${p.photo_id}';render()">${thDate(p.date)}</button>`).join('')}</div>` : ''}
           </div>`
         : `<div class="empty">ยังไม่มีรูปท่านี้ — แตะช่องด้านบนเพื่อถ่าย</div>`}
+      ${list.length > 1 && left !== last ? pcBlock(left, last) : ''}
+      <div class="sec"><h3>📏 รอบเอว</h3></div>${waistCard()}
     </div>`;
 }
 const fullCache = {};
@@ -1757,7 +1880,7 @@ function alertsHtml(tg) {
   const out = [], td = todayIso(), dw = dailyWeights();
   // น้ำหนักนิ่ง: ใช้ผล "เช็กแผน" (แท็บสรุป) แทนเตือนแบบเดิม
   const sc = stallCheck(tg);
-  if (sc.ok && sc.stall) out.push(`<div class="alert warn">⚖️ น้ำหนักแทบไม่ลง ${sc.span} วัน (${r1(sc.e)} → ${r1(sc.l)}) — <a class="lnk" onclick="go('sum');setTimeout(()=>{const e=document.getElementById('c_stall');if(e)e.scrollIntoView()},50)">ดูเช็กแผน ›</a></div>`);
+  if (sc.ok && sc.stall && !tripNow() && !tripBack()) out.push(`<div class="alert warn">⚖️ น้ำหนักแทบไม่ลง ${sc.span} วัน (${r1(sc.e)} → ${r1(sc.l)}) — <a class="lnk" onclick="go('sum');setTimeout(()=>{const e=document.getElementById('c_stall');if(e)e.scrollIntoView()},50)">ดูเช็กแผน ›</a></div>`);
   // กินต่ำกว่าเป้ามากหลายวัน
   let low = 0, seen = 0;
   for (let i = 1; i <= 4; i++) { const t = totals(dayLogs(addDays(td, -i))); if (t.n && !partialDay(addDays(td, -i), tg)) { seen++; if (t.kcal < tg.kcal - 500) low++; } }
@@ -1782,6 +1905,7 @@ function logRow(l, compact) {
   if (l.kind === 'food') { sub = [esc(l.qty || ''), macroTxt(l)].filter(Boolean).join(' · '); right = `${fmt(num(l.kcal))} <small>แคล</small>`; }
   if (l.kind === 'exercise') { title += l.minutes ? ` <small>${num(l.minutes)} นาที</small>` : ''; right = `${fmt(num(l.kcal))} <small>แคล</small>`; }
   if (l.kind === 'water') { title = 'น้ำ'; right = `${fmt(num(l.ml))} <small>มล.</small>`; }
+  if (l.kind === 'waist') { title = `รอบเอว ${num(l.waist)} ซม.`; }
   if (l.kind === 'weight') { title = `${num(l.weight)} กก.${num(l.fat_pct) ? ` <small>ไขมัน ${num(l.fat_pct)}%</small>` : ''}`; }
   const on = openRow === l.log_id;
   return `<button class="row" onclick="toggleRow('${l.log_id}')"><div class="ico">${l.kind === 'food' ? (MEALS.find(m => m[0] === l.meal) || MEALS[3])[2] : k[1]}</div>
@@ -3229,6 +3353,7 @@ function setHtml() {
   return `<div class="hd"><div class="hd-in"><div class="hd-top"><button class="hd-btn" onclick="SS=null;go('today')">‹</button><div class="hd-title">ตั้งค่า</div></div></div></div>
     <div class="wrap">
       <div class="card verrow"><div class="grow"><div class="t1">เวอร์ชันแอป</div><div class="t2">อัปเดตล่าสุด ${buildTxt(APP_BUILD)}</div></div><button class="btn" onclick="checkUpdate(true)">เช็กอัปเดต</button></div>
+      <div class="card verrow" style="flex-wrap:wrap"><div class="grow"><div class="t1">🧳 โหมดเดินทาง</div><div class="t2">${tripNow() ? 'เปิดอยู่ ถึง ' + thDate(tripOf().to) : 'ไปต่างจังหวัด ไม่มีเครื่องชั่ง'}</div></div>${tripNow() ? `<button class="btn" onclick="setTrip({from:'${tripOf().from}',to:'${addDays(todayIso(), -1)}'})">ปิด</button>` : `<button class="btn" onclick="tripOpen=!tripOpen;render()">ตั้ง</button>`}${tripOpen && !tripNow() ? `<div style="flex-basis:100%">${tripPicker()}</div>` : ''}</div>
       <div class="flbl">เป้าหมาย</div>
       <div class="card fcard">${fr('น้ำหนักเป้า', 'goal_weight', 'กก.')}
         <div class="frow"><span>ลดเดือนละ</span><div class="chips" style="flex:1;justify-content:flex-end">${[1, 2, 3, 4].map(r => `<button class="chip ${num(s.rate) === r ? 'on' : ''}" style="padding:0 12px${r > maxRate + 0.05 && num(s.rate) !== r ? ';opacity:.4' : ''}" onclick="SS.rate=${r};render()">${r}</button>`).join('')}</div><span class="sfx">กก.</span></div>

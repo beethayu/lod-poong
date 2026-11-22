@@ -3,7 +3,7 @@
 
 const SH_ = {
   LOG: { name: 'Log', head: ['log_id', 'date', 'time', 'kind', 'meal', 'name', 'qty', 'kcal', 'protein', 'carb', 'fat',
-    'ml', 'weight', 'fat_pct', 'muscle', 'minutes', 'source', 'msg_id', 'photo_id', 'note', 'created_at'] },
+    'ml', 'weight', 'fat_pct', 'muscle', 'minutes', 'source', 'msg_id', 'photo_id', 'note', 'created_at', 'waist'] },
   CHAT: { name: 'Chat', head: ['msg_id', 'at', 'role', 'text', 'photo_id', 'log_ids', 'undone'] },
   SET: { name: 'Settings', head: ['key', 'value'] },
   TIP: { name: 'Tips', head: ['date', 'text', 'created_at'] },
@@ -15,7 +15,7 @@ const SH_ = {
     'int_min', 'floors', 'spo2', 'resp', 'garmin_at'] }
 };
 const TXT_COLS_ = ['date', 'time', 'at', 'key', 'value', 'qty', 'steps_at', 'sleep_from', 'sleep_to', 'hrv_status', 'garmin_at'];
-const KINDS_ = ['food', 'exercise', 'water', 'weight', 'fast'];
+const KINDS_ = ['food', 'exercise', 'water', 'weight', 'fast', 'waist'];
 const MEALS_ = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 // ค่าเริ่มต้น (จากเครื่องชั่ง Xiaomi 18 ต.ค. 2569)
@@ -215,7 +215,7 @@ function cleanLog_(o) {
     meal: kind === 'food' ? (MEALS_.indexOf(o.meal) >= 0 ? o.meal : mealOf_(o.time || nowTime_())) : '',
     name: String(o.name || '').trim().slice(0, 120),
     qty: String(o.qty || '').trim().slice(0, 60),
-    kcal: '', protein: '', carb: '', fat: '', ml: '', weight: '', fat_pct: '', muscle: '', minutes: '',
+    kcal: '', protein: '', carb: '', fat: '', ml: '', weight: '', fat_pct: '', muscle: '', minutes: '', waist: '',
     source: o.source || 'manual',
     msg_id: o.msg_id || '',
     photo_id: o.photo_id || '',
@@ -242,6 +242,10 @@ function cleanLog_(o) {
     out.fat_pct = o.fat_pct === '' || o.fat_pct == null ? '' : num_(o.fat_pct);
     out.muscle = o.muscle === '' || o.muscle == null ? '' : num_(o.muscle);
     out.name = 'น้ำหนัก';
+  } else if (kind === 'waist') {
+    out.waist = Math.round(num_(o.waist) * 10) / 10;
+    if (out.waist < 40 || out.waist > 250) throw new Error('รอบเอวไม่ถูกต้อง (ซม.)');
+    out.name = 'รอบเอว';
   }
   return out;
 }
